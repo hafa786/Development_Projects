@@ -34,11 +34,31 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Refrences_Example.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Refrences_Example.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Refrences_Example.js">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="296">
-              <caret line="19" column="47" lean-forward="false" selection-start-line="19" selection-start-column="47" selection-end-line="19" selection-end-column="47" />
+              <caret line="19" column="46" lean-forward="false" selection-start-line="19" selection-start-column="46" selection-end-line="19" selection-end-column="46" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ThisKeywordsExample.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ThisKeywordsExample.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="162">
+              <caret line="10" column="21" lean-forward="false" selection-start-line="10" selection-start-column="21" selection-end-line="10" selection-end-column="21" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Prototyping.js" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Prototyping.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="260">
+              <caret line="23" column="3" lean-forward="true" selection-start-line="23" selection-start-column="3" selection-end-line="23" selection-end-column="3" />
               <folding />
             </state>
           </provider>
@@ -59,6 +79,8 @@
         <option value="$PROJECT_DIR$/JavescriptBasics.js" />
         <option value="$PROJECT_DIR$/MultipleRequestsExplanation.js" />
         <option value="$PROJECT_DIR$/Refrences_Example.js" />
+        <option value="$PROJECT_DIR$/ThisKeywordsExample.js" />
+        <option value="$PROJECT_DIR$/Prototyping.js" />
       </list>
     </option>
   </component>
@@ -121,20 +143,26 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Node.js.Refrences_Example.js">
+  <component name="RunManager" selected="Node.js.Prototyping.js">
     <configuration name="JavescriptBasics.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-js-file="JavescriptBasics.js" working-dir="$PROJECT_DIR$" />
     <configuration name="MultipleRequestsExplanation.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-js-file="MultipleRequestsExplanation.js" working-dir="$PROJECT_DIR$" />
+    <configuration name="Prototyping.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-js-file="Prototyping.js" working-dir="$PROJECT_DIR$" />
     <configuration name="Refrences_Example.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-js-file="Refrences_Example.js" working-dir="$PROJECT_DIR$" />
-    <list size="3">
+    <configuration name="ThisKeywordsExample.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-js-file="ThisKeywordsExample.js" working-dir="$PROJECT_DIR$" />
+    <list size="5">
       <item index="0" class="java.lang.String" itemvalue="Node.js.JavescriptBasics.js" />
       <item index="1" class="java.lang.String" itemvalue="Node.js.MultipleRequestsExplanation.js" />
       <item index="2" class="java.lang.String" itemvalue="Node.js.Refrences_Example.js" />
+      <item index="3" class="java.lang.String" itemvalue="Node.js.ThisKeywordsExample.js" />
+      <item index="4" class="java.lang.String" itemvalue="Node.js.Prototyping.js" />
     </list>
     <recent_temporary>
-      <list size="3">
-        <item index="0" class="java.lang.String" itemvalue="Node.js.Refrences_Example.js" />
-        <item index="1" class="java.lang.String" itemvalue="Node.js.MultipleRequestsExplanation.js" />
-        <item index="2" class="java.lang.String" itemvalue="Node.js.JavescriptBasics.js" />
+      <list size="5">
+        <item index="0" class="java.lang.String" itemvalue="Node.js.Prototyping.js" />
+        <item index="1" class="java.lang.String" itemvalue="Node.js.ThisKeywordsExample.js" />
+        <item index="2" class="java.lang.String" itemvalue="Node.js.Refrences_Example.js" />
+        <item index="3" class="java.lang.String" itemvalue="Node.js.MultipleRequestsExplanation.js" />
+        <item index="4" class="java.lang.String" itemvalue="Node.js.JavescriptBasics.js" />
       </list>
     </recent_temporary>
   </component>
@@ -151,12 +179,12 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1521400640237</updated>
-      <workItem from="1521400641556" duration="4728000" />
+      <workItem from="1521400641556" duration="6877000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="4728000" />
+    <option name="totallyTimeSpent" value="6877000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="75" y="44" width="1281" height="704" extended-state="0" />
@@ -211,7 +239,23 @@
     <entry file="file://$PROJECT_DIR$/Refrences_Example.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="296">
-          <caret line="19" column="47" lean-forward="false" selection-start-line="19" selection-start-column="47" selection-end-line="19" selection-end-column="47" />
+          <caret line="19" column="46" lean-forward="false" selection-start-line="19" selection-start-column="46" selection-end-line="19" selection-end-column="46" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ThisKeywordsExample.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="162">
+          <caret line="10" column="21" lean-forward="false" selection-start-line="10" selection-start-column="21" selection-end-line="10" selection-end-column="21" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Prototyping.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="260">
+          <caret line="23" column="3" lean-forward="true" selection-start-line="23" selection-start-column="3" selection-end-line="23" selection-end-column="3" />
           <folding />
         </state>
       </provider>
