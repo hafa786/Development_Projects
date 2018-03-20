@@ -1,7 +1,9 @@
-function user_one() {
+module.exports ={
+    user_one: function() {
     console.log("Hafiz");
-}
-function user_two() {
+},
+    user_two :function() {
     console.log("Sikandar");
-}
-module.exports.s = user_one;
+},
+    fav_user : "Hafa"
+};
