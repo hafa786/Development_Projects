@@ -13,32 +13,12 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="Modules_Main.js" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Modules_Main.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="36">
-              <caret line="2" column="18" lean-forward="false" selection-start-line="2" selection-start-column="18" selection-end-line="2" selection-end-column="18" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Modules_one.js" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Modules_one.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="72">
-              <caret line="4" column="12" lean-forward="false" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="12" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
+        <option value="package_json" />
         <option value="JavaScript File" />
       </list>
     </option>
@@ -54,6 +34,9 @@
         <option value="$PROJECT_DIR$/AppCreatingHttpServer.js" />
         <option value="$PROJECT_DIR$/Modules_one.js" />
         <option value="$PROJECT_DIR$/Modules_Main.js" />
+        <option value="$PROJECT_DIR$/RESTFulApi/package.json" />
+        <option value="$PROJECT_DIR$/RESTFulApi/users.json" />
+        <option value="$PROJECT_DIR$/RESTFulApi/server.js" />
       </list>
     </option>
   </component>
@@ -116,26 +99,26 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Node.js.Modules_Main.js">
+  <component name="RunManager" selected="Node.js.server.js">
     <configuration name="AppCreatingHttpServer.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-js-file="AppCreatingHttpServer.js" working-dir="$PROJECT_DIR$" />
     <configuration name="Modules_Main.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-js-file="Modules_Main.js" working-dir="$PROJECT_DIR$" />
     <configuration name="Prototyping.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-js-file="Prototyping.js" working-dir="$PROJECT_DIR$" />
-    <configuration name="Refrences_Example.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-js-file="Refrences_Example.js" working-dir="$PROJECT_DIR$" />
     <configuration name="ThisKeywordsExample.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-js-file="ThisKeywordsExample.js" working-dir="$PROJECT_DIR$" />
+    <configuration name="server.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-js-file="server.js" working-dir="$PROJECT_DIR$/RESTFulApi" />
     <list size="5">
-      <item index="0" class="java.lang.String" itemvalue="Node.js.Refrences_Example.js" />
-      <item index="1" class="java.lang.String" itemvalue="Node.js.ThisKeywordsExample.js" />
-      <item index="2" class="java.lang.String" itemvalue="Node.js.Prototyping.js" />
-      <item index="3" class="java.lang.String" itemvalue="Node.js.AppCreatingHttpServer.js" />
-      <item index="4" class="java.lang.String" itemvalue="Node.js.Modules_Main.js" />
+      <item index="0" class="java.lang.String" itemvalue="Node.js.ThisKeywordsExample.js" />
+      <item index="1" class="java.lang.String" itemvalue="Node.js.Prototyping.js" />
+      <item index="2" class="java.lang.String" itemvalue="Node.js.AppCreatingHttpServer.js" />
+      <item index="3" class="java.lang.String" itemvalue="Node.js.Modules_Main.js" />
+      <item index="4" class="java.lang.String" itemvalue="Node.js.server.js" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Node.js.Modules_Main.js" />
-        <item index="1" class="java.lang.String" itemvalue="Node.js.AppCreatingHttpServer.js" />
-        <item index="2" class="java.lang.String" itemvalue="Node.js.Prototyping.js" />
-        <item index="3" class="java.lang.String" itemvalue="Node.js.ThisKeywordsExample.js" />
-        <item index="4" class="java.lang.String" itemvalue="Node.js.Refrences_Example.js" />
+        <item index="0" class="java.lang.String" itemvalue="Node.js.server.js" />
+        <item index="1" class="java.lang.String" itemvalue="Node.js.Modules_Main.js" />
+        <item index="2" class="java.lang.String" itemvalue="Node.js.AppCreatingHttpServer.js" />
+        <item index="3" class="java.lang.String" itemvalue="Node.js.Prototyping.js" />
+        <item index="4" class="java.lang.String" itemvalue="Node.js.ThisKeywordsExample.js" />
       </list>
     </recent_temporary>
   </component>
@@ -152,22 +135,21 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1521400640237</updated>
-      <workItem from="1521400641556" duration="10822000" />
+      <workItem from="1521400641556" duration="12684000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="10822000" />
+    <option name="totallyTimeSpent" value="12684000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="75" y="44" width="1281" height="704" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24980484" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24980484" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Docker" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -253,6 +235,22 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="72">
           <caret line="4" column="12" lean-forward="false" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/RESTFulApi/users.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="10" column="24" lean-forward="false" selection-start-line="10" selection-start-column="24" selection-end-line="10" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/RESTFulApi/server.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="198">
+          <caret line="11" column="24" lean-forward="false" selection-start-line="11" selection-start-column="24" selection-end-line="11" selection-end-column="24" />
           <folding />
         </state>
       </provider>
