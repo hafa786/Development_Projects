@@ -10,8 +10,7 @@ option = input("Please enter your option :  ")
 print('\n')
 var_one = input("Please enter your first number :  ")
 var_two = input("Please enter your second number :  ")
-# print(option)
-
+print "\n*************Result**************"
 
 if (option == 1):
     add_value = var_one + var_two
