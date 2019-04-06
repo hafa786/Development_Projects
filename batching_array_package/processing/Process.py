@@ -21,6 +21,7 @@ class Process:
     
     # discarding the largest record over 1MB
     def discarding_and_batching_records(self):
+        shutil.rmtree('results_files/')
         all_files = os.listdir("records_files")
         number_batch = 0
         total = 0
