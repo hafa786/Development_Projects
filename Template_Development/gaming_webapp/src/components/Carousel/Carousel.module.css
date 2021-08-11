@@ -1,0 +1,12 @@
+.carousel {
+    height: 400px;
+    width: 100%;
+}
+.carouselItem {
+    width: 100%;
+    height: 400px;
+}
+.carouselItem > img {
+    width: inherit;
+    height: inherit;
+}

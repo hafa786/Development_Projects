@@ -1,0 +1,12 @@
+.home {
+    background-color: black;
+    height:unset;
+    margin: 0 100px;
+    color: white;
+}
+.upcomingEvents {
+    margin-top: 120px;
+}
+.browseEvents, .leadersBoard, .greatness {
+
+}

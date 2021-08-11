@@ -1,0 +1,20 @@
+.header {
+    height: 90px;
+    width: 100%;
+    background-color: black;
+    display: inline;
+}
+.headerTopBar {
+    display: flex;
+    color: white;
+    margin: 0px 100px;
+}
+.logo {
+    width: 200px;
+    height: 90px;
+    margin: 0 80px;   
+}
+.logo > img {
+    width: inherit;
+    height: inherit;
+}
