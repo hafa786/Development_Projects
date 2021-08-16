@@ -1,18 +1,28 @@
 .header {
     height: 90px;
     width: 100%;
-    background-color: black;
     display: inline;
 }
 .headerTopBar {
+    position: relative;
     display: flex;
-    color: white;
     margin: 0px 100px;
+}
+.contact{
+    position: absolute;
+    right: 0;
+    float: right;
 }
 .logo {
     width: 200px;
-    height: 90px;
-    margin: 0 80px;   
+    height: 80px;
+    margin: 0 100px;
+    font-family:cursive;
+    font-weight: 900;
+    font-size: 32px;
+    line-height: 64px;
+    color: #00AA46;
+
 }
 .logo > img {
     width: inherit;

@@ -1,6 +1,5 @@
 import React from 'react';
 import style from './Header.module.css';
-import logo from '../../assets/logo-1.png'
 import Navigation from '../Navigation/Navigation';
 
 function Header() {
@@ -18,7 +17,7 @@ function Header() {
                 </div>
             </div>
             <div className={style.logo}>
-                <img src={logo} alt='Gaming zone' />
+                Gaming zone
             </div>
             <Navigation />
         </div>

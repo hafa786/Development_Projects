@@ -12,10 +12,10 @@ function App() {
       <Router>
         <Switch>
         <Route exact path='/' component={Home}/>
-        <Route path='/panda' component={Home}/>
-        <Route path='/gorilla' component={Home}/>
-        <Route path='/beer' component={Home}/>
-        <Route path='/rabbits' component={Home}/>
+        <Route path='/incoming-events' component={Home}/>
+        <Route path='/ongoing-events' component={Home}/>
+        <Route path='/games' component={Home}/>
+        <Route path='/contact' component={Home}/>
         </Switch>
       </Router>
       <Footer />

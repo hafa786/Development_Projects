@@ -5,16 +5,15 @@ import { Navbar, Nav, Container } from 'react-bootstrap';
 function Navigation() {
     return(
         <>
-            <Navbar collapseOnSelect expand='sm' bg='dark' variant='dark' >
+            <Navbar collapseOnSelect expand='sm' bg='light' variant='light' >
                 <Container>
                     <Navbar.Toggle aria-controls='responsive-navbar-nav' />
                     <Navbar.Collapse id='responsive-navbar-nav' >
                         <Nav>
                             <Nav.Link href='/'>Home</Nav.Link>
-                            <Nav.Link href='/panda'>Panda</Nav.Link>
-                            <Nav.Link href='/gorilla'>Gorilla</Nav.Link>
-                            <Nav.Link href='/beer'>Beer</Nav.Link>
-                            <Nav.Link href='/rabbits'>Rabbits</Nav.Link>
+                            <Nav.Link href='/incoming-events'>incoming events</Nav.Link>
+                            <Nav.Link href='/ongoing-events'>Ongoing events</Nav.Link>
+                            <Nav.Link href='/games'>Games</Nav.Link>
                             <Nav.Link href='/contact'>Contact us</Nav.Link>
                         </Nav>
                     </Navbar.Collapse>

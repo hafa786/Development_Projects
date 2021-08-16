@@ -1,8 +1,7 @@
 .home {
-    background-color: black;
     height:unset;
     margin: 0 100px;
-    color: white;
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
 }
 .upcomingEvents {
     margin-top: 120px;

@@ -1,7 +1,26 @@
 .footer {
     width: 100%;
-    background-color: darkgrey;
+    background-color: #00AA46;
+    display: flex;
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+}
+.footerHeadring {
+    padding-top: 16px;
+    color: #fff;
 }
 .footerItem {
-    padding: 10px;
+    margin-left: 100px;
+}
+.links {
+    padding-left: 0px;
+    color: #fff;
+}
+.links > svg {
+    font-size: 18px;
+    
+}
+.copyRight {
+    background-color: #00AA46;
+    text-align: center;
+    color: #fff;
 }
