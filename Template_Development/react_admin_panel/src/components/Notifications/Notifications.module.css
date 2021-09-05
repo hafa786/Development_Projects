@@ -1,0 +1,14 @@
+.infoBar {
+    display: flex;
+    background-color: #D0F2FF;
+    padding: 16px;
+}
+.infoBar > svg {
+    font-size: 20px;
+    margin-right: 8px;
+}
+.infoBarMessage {
+    font-size: 16px;
+    line-height: 18px;
+    font-weight: 400;
+}

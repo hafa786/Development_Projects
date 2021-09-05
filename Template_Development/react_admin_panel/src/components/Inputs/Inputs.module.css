@@ -1,0 +1,19 @@
+.formControl {
+    text-align: left;
+    margin: 8px 0px;
+    padding: 8px 0px;
+}
+.formControl > input {
+    height: 32px;
+    width: 96%;
+    padding: 8px;
+}
+.formControl > label {
+    margin-bottom: 8px;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 24px;
+}
+.formControl > input::placeholder {
+    padding: 0px;
+}

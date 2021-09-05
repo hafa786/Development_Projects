@@ -1,0 +1,83 @@
+.loginForm {
+    display: grid;
+    
+}
+.formControl {
+    text-align: left;
+    margin: 8px 0px;
+    padding: 8px 0px;
+}
+.formControl > input {
+    height: 32px;
+    width: 96%;
+    padding: 8px;
+}
+.formControl > label {
+    margin-bottom: 8px;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 24px;
+}
+.formControl > input::placeholder {
+    padding: 0px;
+}
+.forgetPassword {
+    text-align: left;
+    margin: -18px 0px 18px;
+}
+.successLink {
+    color: rgb(0, 171, 85);
+    font-weight: 600;
+    font-size: 16px;
+    float: right;
+}
+.submitForm{
+    text-align: left;
+    margin: 8px 0px;
+}
+.successButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    outline: 0px;
+    border: 0px;
+    margin: 0px;
+    cursor: pointer;
+    user-select: none;
+    vertical-align: middle;
+    appearance: none;
+    text-decoration: none;
+    font-weight: 700;
+    line-height: 1.71429;
+    font-size: 0.9375rem;
+    text-transform: capitalize;
+    font-family: "Public Sans", sans-serif;
+    min-width: 64px;
+    padding: 8px 22px;
+    border-radius: 8px;
+    color: rgb(255, 255, 255);
+    background-color: rgb(0, 171, 85);
+    width: 100%;
+    box-shadow: rgb(0 171 85 / 24%) 0px 8px 16px 0px;
+    height: 48px;
+    transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+}
+.primaryButton {
+    background-color: #0069D9;
+    color: #fff;
+    padding: 8px 16px;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 20px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+}
+.primaryButton:hover {
+    color: #0069D9;
+    background-color: #fff;
+    border: 2px solid #0069D9;
+}
