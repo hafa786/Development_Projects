@@ -101,7 +101,7 @@ class Posts{
         return  $results_average_post_per_user;
         
     }
-    public function formatting_posts_results($first,$second,$third,$fourth){
+    public function formatting_posts_results($first, $second, $third, $fourth){
         return [
             "averageCharacterLength" => $first,
             "longestPostcByCharacterLength" => $second,
