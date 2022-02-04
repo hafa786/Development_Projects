@@ -142,8 +142,8 @@ const Dashboard = () => {
 			<div className={tokenData !== undefined ? style.displayData : style.disable}>
 				<h3>Registered token details:</h3>
 				<strong>Client Id: </strong> {tokenData?.client_id}<br></br>
-				<strong>Client Id: </strong> {tokenData?.email}<br></br>
-				<strong>Client Id: </strong> {tokenData?.sl_token}
+				<strong>Email: </strong> {tokenData?.email}<br></br>
+				<strong>Sl_token: </strong> {tokenData?.sl_token}
 				<div className={style.lineSeperator} />
 			</div>
 			
