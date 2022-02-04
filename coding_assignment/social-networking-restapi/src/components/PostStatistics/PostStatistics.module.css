@@ -1,0 +1,10 @@
+.disable {
+    display: none;
+}
+
+.postCard {
+    display: flex;
+}
+.postCardUser {
+    padding: 16px 8px
+}

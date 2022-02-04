@@ -1,0 +1,13 @@
+.App {
+  display: block;
+  width: 800px;
+  height: auto;
+  margin: 32px auto;
+}
+.App-header {
+  background-color: #fff;
+  display: flex;
+  text-align: left;
+  font-size: calc(10px + 2vmin);
+}
+

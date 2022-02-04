@@ -1,0 +1,39 @@
+.dashboard {
+    display: contents;
+    width: 100%;
+}
+.fetchToken {
+    padding: 16px 0;
+    text-align: left;
+}
+.disable {
+    display: none;
+}
+.lineSeperator {
+    height: 1px;
+    width: 100%;
+    background-color: #e1e1e1;
+    margin: 8px 0;
+}
+.displayData {
+    display: grid;
+    margin: 16px 0;
+    padding: 16px 0;
+    color: green;
+}
+.fetchTokenData {
+    display: inline-table;
+    width: 100%;
+}
+label {
+    display: flex;
+}
+.textarea {
+    height: 200px;
+    width: 100%;
+    margin: 16px 0;
+    padding: 8px;
+}
+.actions {
+    margin: 0 16px 0 0;
+}

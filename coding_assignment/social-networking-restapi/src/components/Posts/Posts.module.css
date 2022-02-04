@@ -1,0 +1,67 @@
+.disable {
+    display: none;
+}
+.posts {
+    margin: 16px 0px;
+}
+.postCard {
+    display: flex;
+}
+.postCardUser {
+    padding: 16px 8px
+}
+.pagination {
+    display: flex;
+}
+.page {
+    padding: 14px 28px;
+    border: 1px solid #D32429;
+    margin: 0 8px 0 0;
+    color: #D32429;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24p;
+    cursor: pointer;
+}
+.activePage {
+    padding: 16px 32px;
+    border: 1px solid #D32429;
+    margin: 0 8px 0 0;
+    color: #fff;
+    background-color: #D32429;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 20p;
+    cursor: pointer;
+}
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+  
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+  
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+.lineSeperator {
+    height: 1px;
+    width: 100%;
+    background-color: #e1e1e1;
+    margin: 8px 0;
+}
+.message {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+.postsList {
+    width: 100%;
+    margin: 32px auto;
+}

@@ -1,0 +1,16 @@
+.input {
+    padding: 8px;
+    margin: 8px 0px;
+    width: 80%;
+    display: flex;
+}
+.input:focus {
+    border: none;
+}
+.error {
+    color: #D32429;
+    font-size: 14px;
+}
+.select {
+    padding: 6px
+}
