@@ -1,0 +1,39 @@
+.timingBoard {
+    color: black;
+    width: 400px;
+    background: white;
+    padding: 48px;
+    border-radius: 16px;
+    font-family: 'Roboto', sans-serif;
+}
+.material-icons {
+    color: #A1A2A4;
+    font-size: 30px;
+    padding:  0 8px 0 0;
+}
+.heading {
+    display: flex;
+    text-align: left;
+    border-bottom: solid 3px #A1A2A4;
+    padding: 8px 0;
+    font-weight: 700;
+}
+.timing-list {
+    display: flow-root;
+    padding: 8px 0;
+}
+.day {
+    display: flex;
+    float: left;
+    font-size: 24px;
+    font-weight: 500;
+}
+.time {
+    float: right;
+    font-size: 20px;
+    font-weight: 400;
+}
+.line-break {
+    height: 2px;
+    background-color: #EEEEEE;
+}
