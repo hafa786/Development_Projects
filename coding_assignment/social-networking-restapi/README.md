@@ -18,7 +18,7 @@ In the project directory, you can run:
 
 ```
     |-- build
-    |-- documents
+    |-- documentation
     |-- node_modules
     |-- public
     |-- src
@@ -57,6 +57,12 @@ In the project directory, you can run:
     |-- README.md
     |-- server.js
 ```
+
+
+#### Documentation
+
+Please check `documentation` folder.
+
 
 #### Future work
 
