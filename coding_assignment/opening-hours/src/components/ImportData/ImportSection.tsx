@@ -1,7 +1,7 @@
 import axios from 'axios';
 import react, { useEffect, useState } from 'react';
 
-import './ImportSection.css';
+import style from './ImportSection.module.css';
 
 const ImportSection = () => {
     const [data, setData] = useState<any>();
@@ -17,7 +17,7 @@ const ImportSection = () => {
         }
     });
     return (
-        <div className="importSection">
+        <div className={style.importSection}>
             <input type="text" placeholder="Enter the data" />
             <button>Import</button>
         </div>

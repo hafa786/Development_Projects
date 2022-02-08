@@ -1,11 +1,11 @@
 import './App.css';
-import TimingBoard from './components/TimingBoard/TimingBoard';
+import OpeningHours from './views/OpeningHours';
 
 function App() {
   return (
     <div className="App">
       <div className="app-body">
-        <TimingBoard />
+        <OpeningHours />
       </div>
     </div>
   );
