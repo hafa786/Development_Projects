@@ -27,6 +27,7 @@
     float: left;
     font-size: 24px;
     font-weight: 500;
+    text-transform: capitalize;
 }
 .time {
     float: right;
@@ -36,4 +37,11 @@
 .lineBreak {
     height: 2px;
     background-color: #EEEEEE;
+}
+.tooltip {
+    text-transform: uppercase;
+    color: #5BCB02;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 4px;
 }

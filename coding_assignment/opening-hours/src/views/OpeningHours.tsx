@@ -1,15 +1,13 @@
-
+import React from 'react';
 import TimingBoard from '../components/TimeTable/TimeTable';
 import style from './OpeningHours.module.css';
 
 const OpeningHours = () => {
-
-    return (
-        <div className={style.OpeningHours}>
-            <TimingBoard />
-        </div>
-    );
-     
+	return (
+		<div className={style.OpeningHours}>
+			<TimingBoard />
+		</div>
+	);
 }
 
 export default OpeningHours;
