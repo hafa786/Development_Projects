@@ -5,7 +5,8 @@ import style from './TimeTable.module.css';
 
 type TimeTableListItemProps = {
 	data: FormatedData,
-}
+};
+
 const TimeTableListItem = ({data}: TimeTableListItemProps) => {
 	const durationToString = (duration: number) => {
 		const hours = duration / 3600;
@@ -46,6 +47,6 @@ const TimeTableListItem = ({data}: TimeTableListItemProps) => {
 			<div className={style.time}>{formating}</div>
 		</div>
 	);
-}
+};
 
 export default TimeTableListItem;

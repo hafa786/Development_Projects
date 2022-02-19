@@ -5,7 +5,7 @@ import { FormatedData } from '../../utills/types';
 
 type TimeTableListProps = {
 	data: FormatedData[]
-}
+};
 
 const TimeTableList = ({data} : TimeTableListProps) => {
 	return (
@@ -15,6 +15,6 @@ const TimeTableList = ({data} : TimeTableListProps) => {
 			)}
 		</div>
 	);
-}
+};
 
 export default TimeTableList;
