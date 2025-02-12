@@ -1,0 +1,59 @@
+.header {
+  width: 100%;
+  display: grid;
+}
+.topbar {
+  height: 40px;
+  float: right;
+}
+.topBarItem {
+  &.active {
+    text-decoration: underline;
+  }
+  margin-right: 16px;
+}
+
+.leftTopBar {
+  display: flex;
+  float: left;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 20px;
+  color: #007ac9;
+}
+.rightTopBar {
+  display: flex;
+  float: right;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 20px;
+  color: #007ac9;
+}
+
+.menu {
+  display: flex;
+  background: #0086ce;
+  margin-top: 16px;
+  padding: 16px;
+  position: relative;
+}
+
+.logo {
+  width: 120px;
+  color: white;
+  border-radius: 32px;
+}
+
+.mainMenu {
+  display: flex;
+}
+.menuItem {
+  font-weight: 600;
+  font-size: 16px;
+  padding: 20px;
+  color: #fff;
+}
+.additionalMenu {
+  position: absolute;
+  right: 0;
+}
