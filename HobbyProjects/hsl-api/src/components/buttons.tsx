@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import '../styles/global.scss'; // Import SCSS file
 
 interface PrimaryButtonProps {
@@ -14,14 +13,9 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 }) => {
   return (
     <div className="primary-button">
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className={`stylish-button ${variant}`}
-        onClick={onClick}
-      >
+      <button className={`stylish-button ${variant}`} onClick={onClick}>
         {text}
-      </motion.button>
+      </button>
     </div>
   );
 };
