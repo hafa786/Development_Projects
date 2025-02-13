@@ -6,12 +6,16 @@ interface TextInputProps {
   type: string;
   placeholder: string;
   required: boolean;
+  val: string;
+  eventHandler: any;
 }
 export const TextInput: React.FC<TextInputProps> = ({
   lable,
   type,
   placeholder,
   required = false,
+  val,
+  eventHandler,
 }) => {
   return (
     <div className="text-input">
@@ -21,6 +25,8 @@ export const TextInput: React.FC<TextInputProps> = ({
           id="styledInput"
           placeholder={placeholder}
           required={required}
+          value={val}
+          onChange={eventHandler}
         />
         <label htmlFor="styledInput">{lable}</label>
       </div>
