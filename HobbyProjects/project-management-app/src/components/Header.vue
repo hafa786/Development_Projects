@@ -1,6 +1,8 @@
 <template>
     <div class="header">
-        <h2>Footer</h2>
+        <div class="menu">
+
+        </div>
     </div>
 </template>
 
@@ -12,6 +14,5 @@
     background-size: cover;
     background-position: center;
     min-height: 800px;
-    margin-top: 0px;
 }
 </style>
