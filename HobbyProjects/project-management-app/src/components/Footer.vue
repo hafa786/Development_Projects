@@ -1,6 +1,6 @@
 <template>
     <div class="footer">
-        <h2>Hello from MyComponent!</h2>
+        <h2>Footer</h2>
     </div>
 </template>
 
@@ -8,9 +8,7 @@
 
 <style scoped>
 .footer {
-    height: 100;
-    padding: 20px;
-    background-color: #f4f4f4;
-    border-radius: 8px;
+    min-height: 400px;
+    margin-top: 0px;
 }
 </style>
