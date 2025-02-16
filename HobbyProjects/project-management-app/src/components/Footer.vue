@@ -459,8 +459,6 @@ const socialLinks = [
 
 <style scoped>
 .footer {
-    /* font-family: Charlie Text;
-    display: grid; */
     display: flex;
     width: 80%;
     margin: 0 auto;
