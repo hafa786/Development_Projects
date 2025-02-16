@@ -1,0 +1,12 @@
+$primary-color: #42b983;
+
+body {
+    font-family: "Playfair Display", serif;
+    background-color: #f4f4f4;
+    color: #333;
+    margin: 0px;
+}
+
+h1 {
+    color: $primary-color;
+}
