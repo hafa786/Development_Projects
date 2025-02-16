@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { useCounterStore } from "../store/counter";
+import Welcome from "../components/Welcome.vue";
+import Client from "../components/Clients.vue";
+import MeetTeam from "../components/MeetTeam.vue";
 
 const counter = useCounterStore();
 </script>
 
 <template>
     <div class="container">
-        <!-- <h1>Home Page</h1>
-    <p>Counter: {{ counter.count }}</p>
-    <button @click="counter.increment">Increment</button>
-    <button @click="counter.decrement">Decrement</button>
-    <router-link to="/about">Go to About</router-link> -->
+        <Welcome />
+        <Clients />
+        <MeetTeam />
     </div>
 </template>
 
