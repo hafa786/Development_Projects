@@ -6,6 +6,5 @@ const router = Router();
 const mapController = Container.get(MapController);
 
 router.post("/", mapController.singleFileUploadMiddleware(), (req, res) => mapController.uploadSingleFile(req, res));
-router.get("/:scale", mapController.convertMapTemperature);
 
 export default router;

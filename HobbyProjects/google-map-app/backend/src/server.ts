@@ -4,6 +4,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mapRoutes from "./routes/mapRoutes";
+import readFileRoutes from './routes/readFileRoutes'
 import path from "path";
 
 dotenv.config();
@@ -16,11 +17,13 @@ app.use(cors());
 app.use(express.json());
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Routes
 app.get("/", (req: Request, res: Response) => {
     res.send("Hello, TypeScript Node.js Server!");
 });
 app.use("/api/upload", mapRoutes);
+app.use("/api/fetch", readFileRoutes);
 
 // Start Server
 app.listen(PORT, () => {
