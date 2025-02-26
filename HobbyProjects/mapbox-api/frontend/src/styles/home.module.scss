@@ -1,0 +1,40 @@
+.home {
+    position: relative;
+    .container {
+        width: 80%;
+        margin: 0 auto;
+        min-height: 1080px;
+        .map > img {
+            width: 100%;
+        }
+        select {
+            font-size: 14px;
+            background: white;
+            height: 32px;
+            border: 1px solid #e5e5e5;
+            width: 220px;
+            float: right;
+            margin-top: 16px;
+        }
+        .mapbox {
+            margin: 32px 0;
+        }
+        .noFileExist {
+            margin: 16px auto;
+            font-size: medium;
+            line-height: 32px;
+            font-weight: 500;
+        }
+        .button {
+            margin-top: 16px;
+            background-color: #0a2a3d;
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 24px;
+            cursor: pointer;
+        }
+    }
+}
