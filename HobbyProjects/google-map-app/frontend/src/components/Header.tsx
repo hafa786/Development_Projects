@@ -6,7 +6,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import FileUploadSharpIcon from '@mui/icons-material/FileUploadSharp';
 
 type HeaderProps = {
-    handler: any;
+    handler: () => void;
 };
 const Header: React.FC<HeaderProps> = ({ handler }) => {
     const [toggle, setToggle] = useState<boolean>(false);
