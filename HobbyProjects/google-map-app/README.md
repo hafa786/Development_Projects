@@ -13,11 +13,13 @@ To run this project whole, you need to install or have following:
     - Go to Mapbox.
     - Sign up for a free account if you don’t already have one and this free account will give free 50K api calls.
 
-## Frontend - React + Typescript Application
+## Frontend - React + Typescript + Sass Application
 
 Go in the project directory, you can run:
 
 ### Run locally
+
+#### `cd frontend`
 
 #### `npm install`
 
@@ -53,6 +55,8 @@ It ensures uniform code style across the project.
 
 ### Deployment with docker
 
+#### `cd frontend`
+
 Before deploying the backend application through dockerization, be ensured that you have already installed docker.
 
 `docker compose up`
@@ -62,9 +66,40 @@ Open [http://localhost:3000](http://localhost:3000) to view it.
 
 Note: before run the docker compose command, be assured that you have created `.env` file and add the following required environment variable mentioned in npm start locally section.
 
+### Structure
+
+```
+├── node_moodules
+├── src: # source code
+    └── components # list of React components
+        ├── Buttons.tsx
+        ├── Footer.tsx
+        ├── Header.tsx
+        ├── Menu.tsx
+        ├── ModalPopup.tsx
+        ├── PopupContent.tsx
+        ├── TemperatureMap.tsx
+    └── Images # all media files especially image
+    └── models # might contain the modals object
+    └── pages # list of all the pages
+    └── types # contain all the type of main object
+    └── server.ts # Main server file to list the endpoints
+    └── App.tsx # main app component (app entry points)
+├── public # Temprary store json file
+├── .gitignore # it ignore file
+├── package.json # Project metadata and dependencies
+├── tsconfig.json # TypeScript configuration
+├── docker-compose.yml # Docker script file
+├── Dockerfile # Docker script file
+├── .prettierrc # prettier rc file
+├── .prettierignore # prettier ignore code file
+```
+
 ## Backend - Nodejs + Typescript Application using ExpressJs
 
 ### Run locally
+
+#### `cd backend`
 
 #### `npm install`
 
@@ -96,15 +131,29 @@ Open [http://localhost:5000](http://localhost:5000) to view it.
     └── models # might contain the modals object
     └── routes # contains the various routes
         ├── fileRoutes.ts # contain the route configure with controller
-    └── services # Services to use inside application controller
-    └── types # Contains data types files
-    └── server.ts # Main server file to list the endpoints
+    └── services # services to use inside application controller
+    └── types # contains data types files
+    └── server.ts # main server file to list the endpoints
 ├── uploads # Temprary store json file
 ├── .gitignore # it ignore file
-├── package.json # Project metadata and dependencies
+├── package.json #pProject metadata and dependencies
 ├── tsconfig.json # TypeScript configuration
 ├── docker-compose.yml # Docker script file
 ├── Dockerfile # Docker script file
+
+```
+
+### Endpoints
+
+To read the json data in uploaded json file.
+
+```
+curl --location --request POST 'http://localhost:5000/api/upload'  -F "largefile=@/path/to/cities.json"
+
+```
+
+```
+curl --location --request GET 'http://localhost:5000/api/fetch'
 
 ```
 
@@ -113,7 +162,9 @@ Open [http://localhost:5000](http://localhost:5000) to view it.
 Due to limitation of time and other factors, there are many improvement or addition can be made to this project to increase scope of the project. For example:
 
 - <b>Testing</b>: In future, adding tests to test the each of the UI components using `testing-library/react`
+- <b>Use single docker script file</b>: If i got a chance i can write one file to run the both docker container once.
 - <b>Improve code quality</b>: In future, adding eslint to the UI components would be plus to handle many future risks.
 - <b>State management</b>: In future, adding React Context API + useReducer or Redux Toolkit.
+- <b>Security</b>: Add authorization to access the endpoints by AWS Access token etc.
+- <b>Deploy AWS</b>: Deploy by writing cdk constructs.
 - <b>Styling library</b>: In future, add some stylish .
-- To be continue...
