@@ -147,6 +147,17 @@ Open [http://localhost:5000](http://localhost:5000) to view it.
 
 To read the json data in uploaded json file.
 
+The file should be in following format:
+
+```
+[{
+        "city": "London",
+        "lat": 51.5074,
+        "lon": -0.1278,
+        "temp": 12
+}]
+```
+
 ```
 curl --location --request POST 'http://localhost:5000/api/upload'  -F "largefile=@/path/to/cities.json"
 
