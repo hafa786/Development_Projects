@@ -8,6 +8,7 @@ import { MapData } from '../types/map';
 import ModalPopup from '../components/ModalPopup';
 import { messages } from '../types/messages';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import Footer from '../components/Footer';
 
 const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || '';
 const options = [
@@ -63,6 +64,9 @@ const Home: React.FC = () => {
                     type: 'SUCCESS',
                     text: `✅ File uploaded successfully!`,
                 });
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
             } else {
                 setMessage({
                     type: 'ERROR',
@@ -129,8 +133,8 @@ const Home: React.FC = () => {
         }
     }, [mapData]);
     return (
-        <div>
-            <Header />
+        <div className={styles.home}>
+            <Header handler={() => [setOpen(true), setMessage(null)]} />
             <div className={styles.container}>
                 {mapData ? (
                     <>
@@ -163,8 +167,8 @@ const Home: React.FC = () => {
                 ) : (
                     <div className={styles.noFileExist}>
                         <p>
-                            Sorry! There is no map data file, please upload new
-                            data file!
+                            Sorry! There is no data file, please upload new data
+                            file to display the city's temperature map!
                         </p>
                         <button
                             onClick={() => [setOpen(true), setMessage(null)]}
@@ -180,6 +184,7 @@ const Home: React.FC = () => {
                                     handler={handleUploadFile}
                                     file={file}
                                     handleFile={handleFileChange}
+                                    cancelHandler={() => setOpen(false)}
                                 />
                             }
                             message={message}
@@ -188,6 +193,7 @@ const Home: React.FC = () => {
                     </div>
                 )}
             </div>
+            <Footer />
         </div>
     );
 };

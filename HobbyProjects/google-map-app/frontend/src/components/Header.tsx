@@ -2,8 +2,13 @@ import React from 'react';
 import { useState } from 'react';
 import Menu from './Menu';
 import styles from '../styles/components.module.scss';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import FileUploadSharpIcon from '@mui/icons-material/FileUploadSharp';
 
-const Header: React.FC = () => {
+type HeaderProps = {
+    handler: any;
+};
+const Header: React.FC<HeaderProps> = ({ handler }) => {
     const [toggle, setToggle] = useState<boolean>(false);
     return (
         <div className={styles.header}>
@@ -11,7 +16,15 @@ const Header: React.FC = () => {
                 <div className={styles.logo}>Logo</div>
                 <div className={styles.menu}>
                     <Menu toggle={toggle} onClick={() => setToggle(!toggle)} />
-                    <div className=""></div>
+                </div>
+                <div className={toggle ? styles.menuItems : styles.disabled}>
+                    <div className={styles.item} onClick={handler}>
+                        <FileUploadSharpIcon /> Upload file
+                    </div>
+                    <div className={styles.item}>
+                        <AccountCircleIcon />
+                        Profile
+                    </div>
                 </div>
             </div>
         </div>
