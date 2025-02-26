@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 import * as path from 'path';
 
 @Service()
-export class ReadFileService {
+export class FileService {
     private folderPath: string = path.resolve(__dirname, '../../', 'uploads');
     async readJsonFile(): Promise<any> {
         const latestFile = await this.getLatestFile(this.folderPath)
