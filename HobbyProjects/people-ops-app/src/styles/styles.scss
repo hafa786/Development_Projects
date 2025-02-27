@@ -1,0 +1,15 @@
+// imports
+@import 'variables';
+@import 'mixins';
+@import 'base';
+@import 'layout';
+@import 'components';
+
+$primary-color: #3498db;
+$font-stack: 'Arial, sans-serif';
+
+body {
+    font-family: $font-stack;
+    background-color: $primary-color;
+    color: white;
+}

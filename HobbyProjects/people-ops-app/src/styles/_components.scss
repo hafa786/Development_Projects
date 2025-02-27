@@ -1,0 +1,15 @@
+// Component styles
+
+.custom-button {
+    background-color: #ff4757;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+
+    &:hover {
+        background-color: #e84118;
+    }
+}
