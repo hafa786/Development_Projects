@@ -23,7 +23,7 @@ const Home: React.FC = () => {
     const [message, setMessage] = useState<messages | null>(null);
     const [open, setOpen] = useState<boolean>(false);
 
-    // handle the display temprature unit
+    // handle the display temperature unit
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             setFile(e.target.files[0]);
@@ -81,7 +81,7 @@ const Home: React.FC = () => {
         }
     };
 
-    const handleTempratureDisplay = (e: any) => {
+    const handleTemperatureDisplay = (e: any) => {
         e.preventDefault();
         setUnit(e.target.value);
         switch (e.target.value) {
@@ -140,7 +140,7 @@ const Home: React.FC = () => {
                     <>
                         <select
                             value={unit}
-                            onChange={handleTempratureDisplay}
+                            onChange={handleTemperatureDisplay}
                             className={styles.select}
                         >
                             {options.map((option) => (

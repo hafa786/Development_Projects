@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   react-app:
-    container_name: react-temprature-map 
+    container_name: react-temperature-map 
     build:
       context: .
       dockerfile: Dockerfile
