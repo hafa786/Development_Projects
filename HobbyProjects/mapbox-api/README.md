@@ -1,4 +1,4 @@
-# Getting Started with Temprature Map App
+# Getting Started with Temperature Map App
 
 This project includes two parts one is frontend while other is backend.
 
