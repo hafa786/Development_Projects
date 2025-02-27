@@ -1,15 +1,9 @@
 {
     "extends": ["react-app", "plugin:prettier/recommended"],
+    "plugins": ["prettier"],
     "rules": {
-        "prettier/prettier": [
-            "error",
-            {
-                "semi": true,
-                "singleQuote": true,
-                "trailingComma": "es5",
-                "tabWidth": 4,
-                "printWidth": 80
-            }
-        ]
+      "prettier/prettier": "error",
+      "no-unused-vars": "warn",
+      "react/react-in-jsx-scope": "off"
     }
-}
+  }
