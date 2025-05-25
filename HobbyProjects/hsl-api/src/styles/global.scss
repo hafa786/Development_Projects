@@ -1,0 +1,132 @@
+// Define variables
+$primary-color: #0086ce;
+$secondary-color: #f4f4f4;
+$links-color: rgb(0, 122, 201);
+
+// Apply styles
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: $secondary-color;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+// Header styles
+.header {
+  background: $primary-color;
+  padding: 20px;
+  color: white;
+  text-align: center;
+}
+
+// Footer styles
+.footer {
+  background: $primary-color;
+  padding: 15px;
+  text-align: center;
+  color: white;
+}
+
+// home
+.home {
+  padding: 20px;
+  min-height: 1020px;
+}
+
+// components
+.route-search-form {
+  display: flex;
+  width: 50%;
+  border-right: 1px solid;
+}
+.search-form {
+  width: max-content;
+}
+// text input field
+.input-container {
+  position: relative;
+  width: 300px;
+}
+
+input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: 0.3s ease-in-out;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.text-input {
+  padding: 16px;
+}
+
+input:focus {
+  border-color: #007bff;
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+label {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #777;
+  pointer-events: none;
+  transition: 0.3s ease-in-out;
+}
+
+input:focus + label,
+input:not(:placeholder-shown) + label {
+  top: 5px;
+  left: 12px;
+  font-size: 12px;
+  color: #007bff;
+  background: #f4f4f4;
+  padding: 0 5px;
+}
+
+.actions {
+  padding: 16px;
+  display: flex;
+}
+
+// buttons
+
+.primary-button > button {
+  transform: none;
+  padding: 8px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  background-color: #0086ce;
+  color: #fff;
+  border-color: #0086ce;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.text-button {
+  transform: none;
+  padding: 8px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  background-color: #fff;
+  border-color: #fff;
+  border-radius: 4px;
+  margin-right: 16px;
+  cursor: pointer;
+}
+.text-button:hover {
+  transform: none;
+  padding: 8px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  background-color: #0086ce;
+  color: #fff;
+  border-radius: 4px;
+  margin-right: 16px;
+  cursor: pointer;
+}
