@@ -91,8 +91,10 @@ const socialLinks = [
 <style scoped>
 .copyright-container {
     display: flex;
-    width: 80%;
+    width: 100%;
     margin: 0 auto;
+    background-color: #42B883;
+    border-top: 1px solid #fff;
 }
 .copyright {
     display: flex;
@@ -112,5 +114,6 @@ const socialLinks = [
 }
 .copyright-links > .link-wrapper > a {
     margin: 0 8px;
+    color: #fff;
 }
 </style>

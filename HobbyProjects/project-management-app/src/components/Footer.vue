@@ -460,26 +460,29 @@ const socialLinks = [
 <style scoped>
 .footer {
     display: flex;
-    width: 80%;
+    width: 100%;
     margin: 0 auto;
+    background-color: #42B883;
+    padding-bottom: 16px;
 }
 .container {
     display: flex;
     width: 100%;
-    padding: 0 32px;
+    padding: 0 48px;
 }
 .box {
     text-align: left;
     width: 33%;
 }
 .heading {
-    color: #42b883;
+    color: #fff;
 }
 .link-wrapper > a {
-    color: #000;
+    color: #fff;
 }
 .link-wrapper > a:hover {
-    color: #42b883;
+    color: #fff;
+    text-decoration: underline;
 }
 .copyright {
     display: flex;
