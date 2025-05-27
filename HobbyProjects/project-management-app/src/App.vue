@@ -13,6 +13,7 @@ import CopyRight from "./components/CopyRight.vue";
         <Welcome />
         <Clients />
         <MeetTeam />
+        <router-view />
         <Footer />
         <CopyRight />
     </div>

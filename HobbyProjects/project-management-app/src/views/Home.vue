@@ -1,19 +1,15 @@
 <script setup lang="ts">
 import { useCounterStore } from "../store/counter";
-import Welcome from "../components/Welcome.vue";
-import Client from "../components/Clients.vue";
-import MeetTeam from "../components/MeetTeam.vue";
 
 const counter = useCounterStore();
 </script>
 
 <template>
-    <div class="container">
-        <Welcome />
-        <Clients />
-        <MeetTeam />
+    <div>
+      <h2>Home Page</h2>
+      <p>Welcome to the homepage!</p>
     </div>
-</template>
+  </template>
 
 <style lang="scss">
 .container {

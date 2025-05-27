@@ -1,21 +1,19 @@
 <script setup lang="ts">
 import { ref } from "vue";
-const isOpen = ref(false);
-const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "About", path: "/about" },
-    { name: "Services", path: "/services" },
-    { name: "Contact", path: "/contact" },
-];
+import { useRouter } from 'vue-router';
 
-const toggleMenu = () => {
-    isOpen.value = !isOpen.value;
-};
+const isOpen = ref(false);
+const router = useRouter();
+const goToPage = () => {
+      router.push('/log-in'); // or { name: 'About' } if you're using named routes
+    };
+
 </script>
+
 
 <template>
     <div class="header">
-        <div class="logo">
+        <div class="logo" @click="() => router.push('/')">
             <img src="/images/vue.svg" />
         </div>
         <div class="menu">
@@ -30,7 +28,7 @@ const toggleMenu = () => {
                 <button class="primary-button filled">Get for free</button>
             </div>
 
-            <a class="link-signin">Sign in</a>
+            <a class="link-signin" @click="goToPage">Log in</a>
         </div>
     </div>
 </template>
@@ -48,6 +46,7 @@ const toggleMenu = () => {
 }
 .logo {
     width: 5%;
+    cursor: pointer;
 }
 .logo > img {
     width: 32px;
@@ -64,6 +63,7 @@ const toggleMenu = () => {
     font-size: 16px;
     line-height: 16px;
     font-weight: 400;
+    cursor: pointer;
 }
 .info {
     display: flex;
@@ -80,6 +80,7 @@ const toggleMenu = () => {
     font-size: 16px;
     line-height: 16px;
     font-weight: 400;
+    cursor: pointer;
 }
 .welcome {
     height: 100px;
@@ -128,5 +129,6 @@ link-signin .primary-button:hover,
 .primary-button:focus {
     background-color: #fff;
     color: #42b883;
+    cursor: pointer;
 }
 </style>

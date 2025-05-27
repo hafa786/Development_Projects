@@ -1,11 +1,6 @@
-import { createApp } from "vue";
-import App from "./App.vue";
-import router from "./router";
-import { createPinia } from "pinia";
-import "./styles/main.scss"; // Import global styles
-import "material-design-icons-iconfont/dist/material-design-icons.css";
+// src/main.ts
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
 
-const app = createApp(App);
-app.use(createPinia());
-app.use(router);
-app.mount("#app");
+createApp(App).use(router).mount('#app')
