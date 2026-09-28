@@ -1,0 +1,37 @@
+# macOS
+.DS_Store
+
+# IntelliJ
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Java
+target/
+*.class
+*.jar
+
+# Node
+node_modules/
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Docker
+docker-data/
+
+# Test
+coverage/
+
+# Temporary
+tmp/
+temp/
