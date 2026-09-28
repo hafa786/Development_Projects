@@ -1,5 +1,7 @@
 package com.darmisolutions.darmihire.auth;
 
+import com.darmisolutions.darmihire.auth.dto.AuthResponse;
+import com.darmisolutions.darmihire.auth.dto.LoginRequest;
 import com.darmisolutions.darmihire.auth.dto.RegisterRequest;
 import com.darmisolutions.darmihire.auth.dto.UserRegistrationResponse;
 import jakarta.validation.Valid;
@@ -17,8 +19,13 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public UserRegistrationResponse register(
-            @Valid @RequestBody RegisterRequest request
-    ) {
+            @Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
+    }
+
+    @PostMapping("/login")
+    public AuthResponse login(
+            @Valid @RequestBody LoginRequest request) {
+        return authService.login(request);
     }
 }
