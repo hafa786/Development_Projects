@@ -1,0 +1,25 @@
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: darmihire-postgres
+
+    environment:
+      POSTGRES_DB: darmihire
+      POSTGRES_USER: darmihire
+      POSTGRES_PASSWORD: darmihire
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - darmihire_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U darmihire -d darmihire"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  darmihire_postgres_data:
