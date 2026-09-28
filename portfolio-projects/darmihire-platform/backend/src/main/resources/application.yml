@@ -1,0 +1,33 @@
+spring:
+
+  application:
+    name: darmihire-backend
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/darmihire}
+    username: ${DB_USERNAME:darmihire}
+    password: ${DB_PASSWORD:darmihire}
+
+  jpa:
+    open-in-view: false
+
+    hibernate:
+      ddl-auto: validate
+
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
