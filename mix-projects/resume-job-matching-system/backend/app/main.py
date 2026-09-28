@@ -1,9 +1,9 @@
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from .parser import extract_text
-from .matcher import analyze
+from .ai_matcher import analyze_with_ai
 
-app = FastAPI(title="Resume + Job Matcher API", version="1.0.0")
+app = FastAPI(title="Resume + Job Matcher API", version="2.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 @app.get("/health")
@@ -27,4 +27,4 @@ async def analyze_resume(resume: UploadFile = File(...), job_description: str = 
         raise HTTPException(400, "Could not read the resume.") from exc
     if not text.strip():
         raise HTTPException(422, "No readable text found in the resume.")
-    return analyze(text, job_description)
+    return analyze_with_ai(text, job_description)

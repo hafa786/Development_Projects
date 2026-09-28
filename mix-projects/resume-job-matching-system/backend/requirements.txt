@@ -5,3 +5,5 @@ pypdf==6.0.0
 python-docx==1.2.0
 pytest==8.4.2
 httpx==0.28.1
+openai>=1.100.0,<2.0.0
+pydantic>=2.11.0,<3.0.0

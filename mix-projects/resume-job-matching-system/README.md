@@ -1,108 +1,117 @@
-# Resume + Job Matching System — Phase 1 MVP
+# ResumeMatch AI — Phase 2
 
-A deterministic full-stack MVP that compares a PDF/DOCX resume with a pasted job description. It extracts known technical skills, shows matched and missing skills, and calculates an explainable match score.
+A full-stack Resume + Job Matching System built with FastAPI and Next.js. Phase 2 preserves the explainable keyword matcher from Phase 1 and adds structured LLM extraction, embedding-based semantic similarity, and grounded AI recommendations.
 
-## Stack
-- Backend: Python, FastAPI, pypdf, python-docx
-- Frontend: Next.js, React, TypeScript
-- Deployment: Docker + Docker Compose
-- Tests: pytest
+## Phase 2 features
 
-## Matching formula
-`match_score = matched_job_skills / detected_job_skills * 100`
+- Upload PDF or DOCX resumes (max 5 MB)
+- Paste a job description
+- Structured LLM extraction into typed Pydantic models
+  - resume headline, skills, experience and education
+  - job title, required/preferred skills, experience and responsibilities
+- Deterministic required-skill coverage
+- Embedding cosine similarity between resume and job description
+- Weighted overall score: 65% structured skill coverage + 35% semantic similarity
+- AI explanation, strengths, gaps and recommendations
+- Guardrail prompt: never invent candidate experience
+- Automatic Phase 1 fallback when no OpenAI API key is configured
+- FastAPI + Next.js/TypeScript + Docker Compose
+- Unit tests that run without an API key
 
-This Phase 1 score is intentionally deterministic. It does not claim semantic equivalence or infer experience that is not present in the resume.
+## Architecture
+
+```text
+PDF/DOCX Resume ──> Text Parser ─────────────┐
+                                              │
+Job Description ──────────────────────────────┤
+                                              v
+                                  ┌──────────────────────┐
+                                  │ Structured LLM      │
+                                  │ Resume + Job models │
+                                  └──────────┬───────────┘
+                                             │
+                       ┌─────────────────────┼─────────────────────┐
+                       v                     v                     v
+                Skill coverage        Embeddings / cosine    AI explanation
+                       │                     │                 + recommendations
+                       └──────────┬──────────┘
+                                  v
+                         Weighted match score
+                         65% skills + 35% semantic
+```
 
 ## Run with Docker
-Prerequisite: Docker Desktop / Docker Engine with Compose.
+
+1. Copy the environment template:
 
 ```bash
-git clone <your-repository-url>
-cd resume-job-matcher
+cp .env.example .env
+```
+
+2. Add your API key to `.env`:
+
+```env
+OPENAI_API_KEY=your_key_here
+OPENAI_MODEL=gpt-5.6-luna
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+```
+
+3. Start the app:
+
+```bash
 docker compose up --build
 ```
 
 Open:
+
 - Frontend: `http://localhost:3000`
 - API docs: `http://localhost:8000/docs`
 - Health: `http://localhost:8000/health`
 
-Stop with:
-```bash
-docker compose down
-```
+Without `OPENAI_API_KEY`, the application still runs and returns the Phase 1 deterministic analysis.
 
 ## Run locally
-### Backend
+
+Backend:
+
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Run tests:
-```bash
-cd backend
-pytest -q
-```
+Frontend:
 
-### Frontend
-In another terminal:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Then open `http://localhost:3000`.
-
 ## API
-`POST /api/analyze` using `multipart/form-data`:
-- `resume`: PDF or DOCX, max 5 MB
+
+`POST /api/analyze` as `multipart/form-data`:
+
+- `resume`: PDF or DOCX
 - `job_description`: text
 
-Example response:
-```json
-{
-  "match_score": 75,
-  "matched_skills": ["Java", "Spring Boot", "Docker"],
-  "missing_skills": ["Kafka"],
-  "resume_skills": ["Java", "Spring Boot", "Docker"],
-  "job_skills": ["Java", "Spring Boot", "Docker", "Kafka"],
-  "summary": "Matched 3 of 4 detected job skills."
-}
+The response includes `overall_score`, `keyword_score`, `semantic_score`, matched/missing skills, structured profiles, explanation, strengths, gaps, and recommendations.
+
+## Tests
+
+```bash
+cd backend
+pytest -q
 ```
 
-## Project structure
-```text
-resume-job-matcher/
-├── backend/
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── parser.py
-│   │   ├── matcher.py
-│   │   └── skills.py
-│   ├── tests/test_matcher.py
-│   ├── requirements.txt
-│   └── Dockerfile
-├── frontend/
-│   ├── app/
-│   │   ├── page.tsx
-│   │   ├── layout.tsx
-│   │   └── globals.css
-│   ├── package.json
-│   └── Dockerfile
-├── docker-compose.yml
-└── README.md
-```
+Tests deliberately do not require an OpenAI API key.
 
-## Current limitations
-- Scanned/image-only PDFs are not OCR'd.
-- Skill detection uses a curated dictionary rather than an LLM.
-- The score measures detected required-skill coverage only.
-- No authentication or database in Phase 1.
+## Important scoring note
 
-## Phase 2 ideas
-Add structured LLM extraction, semantic embeddings, experience/education analysis, richer recommendations, and safeguards that never recommend inventing skills or experience.
+The overall percentage is a product heuristic, not a hiring probability. Semantic similarity measures textual/meaning similarity; it does not prove candidate qualification. Keep the component scores visible so users can understand why a result was produced.
+
+## Phase 3 ideas
+
+PostgreSQL persistence, authentication, analysis history, multiple resumes/jobs, saved reports, and background processing.
