@@ -3,6 +3,7 @@ package com.darmisolutions.darmihire.auth;
 import com.darmisolutions.darmihire.auth.dto.AuthResponse;
 import com.darmisolutions.darmihire.auth.dto.LoginRequest;
 import com.darmisolutions.darmihire.auth.dto.MeResponse;
+import com.darmisolutions.darmihire.auth.dto.RefreshTokenRequest;
 import com.darmisolutions.darmihire.auth.dto.RegisterRequest;
 import com.darmisolutions.darmihire.auth.dto.UserRegistrationResponse;
 import jakarta.validation.Valid;
@@ -34,17 +35,27 @@ public class AuthController {
 
     @GetMapping("/me")
     public MeResponse me(
-                Authentication authentication
-        ) {
+            Authentication authentication) {
 
-            User user =
-                    (User) authentication.getPrincipal();
+        User user = (User) authentication.getPrincipal();
 
-            return new MeResponse(
-                    user.getId(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.getEmail()
-            );
-        }
+        return new MeResponse(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail());
+    }
+
+    @PostMapping("/refresh")
+    public AuthResponse refresh(
+            @Valid @RequestBody RefreshTokenRequest request) {
+        return authService.refresh(request);
+    }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(
+            @Valid @RequestBody RefreshTokenRequest request) {
+        authService.logout(request);
+    }
 }

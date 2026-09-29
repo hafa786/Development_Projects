@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.darmisolutions.darmihire.auth.dto.AuthResponse;
 import com.darmisolutions.darmihire.auth.dto.LoginRequest;
+import com.darmisolutions.darmihire.auth.dto.RefreshTokenRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ public class AuthService {
         private final UserRepository userRepository;
         private final PasswordEncoder passwordEncoder;
         private final JwtService jwtService;
+        private final RefreshTokenService refreshTokenService;
 
         @Transactional
         public UserRegistrationResponse register(RegisterRequest request) {
@@ -73,11 +75,49 @@ public class AuthService {
                                         "Invalid email or password");
                 }
 
-                String token = jwtService.generateAccessToken(user);
+                String accessToken =
+                        jwtService.generateAccessToken(user);
+
+                String refreshToken =
+                        refreshTokenService.create(user);
 
                 return new AuthResponse(
-                                token,
-                                "Bearer",
-                                900);
+                        accessToken,
+                        refreshToken,
+                        "Bearer",
+                        900
+                );
+        }
+
+        @Transactional
+        public AuthResponse refresh(
+                RefreshTokenRequest request
+        ) {
+
+        RefreshToken refreshToken =
+                refreshTokenService.validate(
+                        request.refreshToken()
+                );
+
+        User user = refreshToken.getUser();
+
+        String accessToken =
+                jwtService.generateAccessToken(user);
+
+        return new AuthResponse(
+                accessToken,
+                request.refreshToken(),
+                "Bearer",
+                900
+        );
+        }
+
+        @Transactional
+        public void logout(
+                RefreshTokenRequest request
+        ) {
+        refreshTokenService.revoke(
+                request.refreshToken()
+        );
         }
 }
