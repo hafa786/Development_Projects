@@ -1,6 +1,10 @@
 package com.darmisolutions.darmihire.location;
 
-import com.darmisolutions.darmihire.location.dto.*;
+import com.darmisolutions.darmihire.audit.AuditAction;
+import com.darmisolutions.darmihire.audit.AuditService;
+import com.darmisolutions.darmihire.location.dto.CreateLocationRequest;
+import com.darmisolutions.darmihire.location.dto.LocationResponse;
+import com.darmisolutions.darmihire.location.dto.UpdateLocationRequest;
 import com.darmisolutions.darmihire.security.AuthorizationService;
 import com.darmisolutions.darmihire.security.Permission;
 import com.darmisolutions.darmihire.tenant.Tenant;
@@ -17,21 +21,39 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class LocationService {
 
-    private final LocationRepository repository;
+    private final LocationRepository locationRepository;
+
     private final TenantRepository tenantRepository;
+
     private final TenantContext tenantContext;
+
     private final AuthorizationService authorizationService;
+
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<LocationResponse> findAll() {
 
-        return repository
+        UUID tenantId =
+                requireTenantId();
+
+        return locationRepository
                 .findAllByTenantIdOrderByName(
-                        tenantContext.getTenantId()
+                        tenantId
                 )
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public LocationResponse findById(
+            UUID id
+    ) {
+
+        return toResponse(
+                findLocation(id)
+        );
     }
 
     @Transactional
@@ -43,17 +65,41 @@ public class LocationService {
                 Permission.MANAGE_LOCATIONS
         );
 
-        Tenant tenant = tenantRepository
-                .findById(tenantContext.getTenantId())
-                .orElseThrow();
+        UUID tenantId =
+                requireTenantId();
 
-        Location location = new Location();
+        Tenant tenant =
+                tenantRepository
+                        .findById(tenantId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Tenant not found"
+                                )
+                        );
+
+        Location location =
+                new Location();
 
         location.setTenant(tenant);
-        apply(location, request);
+
+        applyCreateRequest(
+                location,
+                request
+        );
+
+        Location savedLocation =
+                locationRepository.save(
+                        location
+                );
+
+        auditService.log(
+                AuditAction.LOCATION_CREATED,
+                "Location",
+                savedLocation.getId()
+        );
 
         return toResponse(
-                repository.save(location)
+                savedLocation
         );
     }
 
@@ -67,33 +113,85 @@ public class LocationService {
                 Permission.MANAGE_LOCATIONS
         );
 
-        Location location = findEntity(id);
+        Location location =
+                findLocation(id);
 
-        location.setName(request.name().trim());
-        location.setCity(request.city());
-        location.setCountry(request.country());
-        location.setTimezone(request.timezone());
-        location.setRemote(request.remote());
+        location.setName(
+                request.name().trim()
+        );
 
-        return toResponse(location);
+        location.setCity(
+                normalizeNullable(
+                        request.city()
+                )
+        );
+
+        location.setCountry(
+                normalizeNullable(
+                        request.country()
+                )
+        );
+
+        location.setTimezone(
+                normalizeNullable(
+                        request.timezone()
+                )
+        );
+
+        location.setRemote(
+                request.remote()
+        );
+
+        Location savedLocation =
+                locationRepository.save(
+                        location
+                );
+
+        auditService.log(
+                AuditAction.LOCATION_UPDATED,
+                "Location",
+                savedLocation.getId()
+        );
+
+        return toResponse(
+                savedLocation
+        );
     }
 
     @Transactional
-    public void delete(UUID id) {
+    public void delete(
+            UUID id
+    ) {
 
         authorizationService.require(
                 Permission.MANAGE_LOCATIONS
         );
 
-        repository.delete(findEntity(id));
+        Location location =
+                findLocation(id);
+
+        UUID locationId =
+                location.getId();
+
+        locationRepository.delete(
+                location
+        );
+
+        auditService.log(
+                AuditAction.LOCATION_DELETED,
+                "Location",
+                locationId
+        );
     }
 
-    private Location findEntity(UUID id) {
+    private Location findLocation(
+            UUID id
+    ) {
 
-        return repository
+        return locationRepository
                 .findByIdAndTenantId(
                         id,
-                        tenantContext.getTenantId()
+                        requireTenantId()
                 )
                 .orElseThrow(() ->
                         new IllegalArgumentException(
@@ -102,16 +200,67 @@ public class LocationService {
                 );
     }
 
-    private void apply(
+    private void applyCreateRequest(
             Location location,
             CreateLocationRequest request
     ) {
 
-        location.setName(request.name().trim());
-        location.setCity(request.city());
-        location.setCountry(request.country());
-        location.setTimezone(request.timezone());
-        location.setRemote(request.remote());
+        location.setName(
+                request.name().trim()
+        );
+
+        location.setCity(
+                normalizeNullable(
+                        request.city()
+                )
+        );
+
+        location.setCountry(
+                normalizeNullable(
+                        request.country()
+                )
+        );
+
+        location.setTimezone(
+                normalizeNullable(
+                        request.timezone()
+                )
+        );
+
+        location.setRemote(
+                request.remote()
+        );
+    }
+
+    private UUID requireTenantId() {
+
+        UUID tenantId =
+                tenantContext.getTenantId();
+
+        if (tenantId == null) {
+
+            throw new IllegalStateException(
+                    "Tenant context is required"
+            );
+        }
+
+        return tenantId;
+    }
+
+    private String normalizeNullable(
+            String value
+    ) {
+
+        if (value == null) {
+            return null;
+        }
+
+        String trimmed =
+                value.trim();
+
+        return trimmed.isEmpty()
+                ? null
+                : trimmed;
     }
 
     private LocationResponse toResponse(

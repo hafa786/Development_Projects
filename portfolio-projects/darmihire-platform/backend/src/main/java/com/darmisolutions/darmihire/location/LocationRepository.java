@@ -9,7 +9,9 @@ import java.util.UUID;
 public interface LocationRepository
         extends JpaRepository<Location, UUID> {
 
-    List<Location> findAllByTenantIdOrderByName(UUID tenantId);
+    List<Location> findAllByTenantIdOrderByName(
+            UUID tenantId
+    );
 
     Optional<Location> findByIdAndTenantId(
             UUID id,
