@@ -15,7 +15,8 @@ public class AuthorizationService {
             Permission permission
     ) {
 
-        Role role = tenantContext.getRole();
+        Role role =
+                tenantContext.getRole();
 
         if (role == null) {
             return false;
@@ -26,8 +27,11 @@ public class AuthorizationService {
             case COMPANY_ADMIN -> true;
 
             case RECRUITER ->
-                    permission == Permission.MANAGE_USERS ||
-                    permission == Permission.MANAGE_TEAMS;
+                    permission
+                            == Permission.MANAGE_USERS
+                    ||
+                    permission
+                            == Permission.MANAGE_TEAMS;
 
             case HIRING_MANAGER,
                  INTERVIEWER,
@@ -40,9 +44,10 @@ public class AuthorizationService {
     ) {
 
         if (!hasPermission(permission)) {
-            // We'll replace SecurityException with ForbiddenException later.
+
             throw new SecurityException(
-                    "Permission denied: " + permission
+                    "Permission denied: "
+                            + permission
             );
         }
     }
