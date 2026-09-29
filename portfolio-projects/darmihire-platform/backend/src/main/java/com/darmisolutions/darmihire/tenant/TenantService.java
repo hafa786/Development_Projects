@@ -2,65 +2,75 @@ package com.darmisolutions.darmihire.tenant;
 
 import com.darmisolutions.darmihire.tenant.dto.CreateTenantRequest;
 import com.darmisolutions.darmihire.tenant.dto.TenantResponse;
+import com.darmisolutions.darmihire.user.User;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class TenantService {
 
-    private final TenantRepository tenantRepository;
+        private final TenantRepository tenantRepository;
+        private final TenantUserRepository tenantUserRepository;
 
-    @Transactional
-    public TenantResponse create(
-            CreateTenantRequest request
-    ) {
+        @Transactional
+        public TenantResponse create(
+                        CreateTenantRequest request,
+                        User user) {
 
-        String slug = request.slug()
-                .trim()
-                .toLowerCase();
+                String slug = request.slug()
+                                .trim()
+                                .toLowerCase();
 
-        if (tenantRepository.existsBySlug(slug)) {
-            throw new IllegalArgumentException(
-                    "Workspace slug already exists"
-            );
-        }
+                if (tenantRepository.existsBySlug(slug)) {
+                        throw new IllegalArgumentException(
+                                        "Workspace slug already exists");
+                }
 
-        Tenant tenant = new Tenant();
+                Tenant tenant = new Tenant();
 
-        tenant.setName(request.name().trim());
-        tenant.setSlug(slug);
-        tenant.setActive(true);
+                tenant.setName(request.name().trim());
+                tenant.setSlug(slug);
+                tenant.setActive(true);
 
-        Tenant savedTenant =
                 tenantRepository.save(tenant);
 
-        return toResponse(savedTenant);
-    }
+                TenantUser membership = new TenantUser();
 
-    @Transactional(readOnly = true)
-    public List<TenantResponse> findAll() {
+                membership.setTenant(tenant);
+                membership.setUser(user);
+                membership.setRole(Role.COMPANY_ADMIN);
+                membership.setStatus(MembershipStatus.ACTIVE);
+                membership.setJoinedAt(Instant.now());
 
-        return tenantRepository
-                .findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
+                tenantUserRepository.save(membership);
 
-    private TenantResponse toResponse(
-            Tenant tenant
-    ) {
+                return toResponse(tenant);
+        }
 
-        return new TenantResponse(
-                tenant.getId(),
-                tenant.getName(),
-                tenant.getSlug(),
-                tenant.getLogoUrl(),
-                tenant.isActive()
-        );
-    }
+        @Transactional(readOnly = true)
+        public List<TenantResponse> findAll() {
+
+                return tenantRepository
+                                .findAll()
+                                .stream()
+                                .map(this::toResponse)
+                                .toList();
+        }
+
+        private TenantResponse toResponse(
+                        Tenant tenant) {
+
+                return new TenantResponse(
+                                tenant.getId(),
+                                tenant.getName(),
+                                tenant.getSlug(),
+                                tenant.getLogoUrl(),
+                                tenant.isActive());
+        }
 }

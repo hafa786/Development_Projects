@@ -2,9 +2,12 @@ package com.darmisolutions.darmihire.tenant;
 
 import com.darmisolutions.darmihire.tenant.dto.CreateTenantRequest;
 import com.darmisolutions.darmihire.tenant.dto.TenantResponse;
+import com.darmisolutions.darmihire.user.User;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,9 +22,12 @@ public class TenantController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TenantResponse create(
-            @Valid @RequestBody CreateTenantRequest request
-    ) {
-        return tenantService.create(request);
+            @Valid @RequestBody CreateTenantRequest request,
+            Authentication authentication) {
+
+        User user = (User) authentication.getPrincipal();
+
+        return tenantService.create(request, user);
     }
 
     @GetMapping
