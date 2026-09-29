@@ -2,6 +2,7 @@ package com.darmisolutions.darmihire.tenant;
 
 import com.darmisolutions.darmihire.tenant.dto.CreateTenantRequest;
 import com.darmisolutions.darmihire.tenant.dto.TenantResponse;
+import com.darmisolutions.darmihire.tenant.dto.UserTenantResponse;
 import com.darmisolutions.darmihire.user.User;
 
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -72,5 +74,22 @@ public class TenantService {
                                 tenant.getSlug(),
                                 tenant.getLogoUrl(),
                                 tenant.isActive());
+        }
+
+        @Transactional(readOnly = true)
+        public List<UserTenantResponse> findForUser(
+                        UUID userId) {
+
+                return tenantUserRepository
+                                .findAllByUserIdAndStatus(
+                                                userId,
+                                                MembershipStatus.ACTIVE)
+                                .stream()
+                                .map(membership -> new UserTenantResponse(
+                                                membership.getTenant().getId(),
+                                                membership.getTenant().getName(),
+                                                membership.getTenant().getSlug(),
+                                                membership.getRole()))
+                                .toList();
         }
 }

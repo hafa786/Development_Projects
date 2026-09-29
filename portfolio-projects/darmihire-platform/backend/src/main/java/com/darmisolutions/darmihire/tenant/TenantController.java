@@ -2,6 +2,7 @@ package com.darmisolutions.darmihire.tenant;
 
 import com.darmisolutions.darmihire.tenant.dto.CreateTenantRequest;
 import com.darmisolutions.darmihire.tenant.dto.TenantResponse;
+import com.darmisolutions.darmihire.tenant.dto.UserTenantResponse;
 import com.darmisolutions.darmihire.user.User;
 
 import jakarta.validation.Valid;
@@ -33,5 +34,14 @@ public class TenantController {
     @GetMapping
     public List<TenantResponse> findAll() {
         return tenantService.findAll();
+    }
+
+    @GetMapping
+    public List<UserTenantResponse> findMine(
+            Authentication authentication) {
+
+        User user = (User) authentication.getPrincipal();
+
+        return tenantService.findForUser(user.getId());
     }
 }
