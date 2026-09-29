@@ -2,12 +2,15 @@ package com.darmisolutions.darmihire.auth;
 
 import com.darmisolutions.darmihire.auth.dto.AuthResponse;
 import com.darmisolutions.darmihire.auth.dto.LoginRequest;
+import com.darmisolutions.darmihire.auth.dto.MeResponse;
 import com.darmisolutions.darmihire.auth.dto.RegisterRequest;
 import com.darmisolutions.darmihire.auth.dto.UserRegistrationResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import com.darmisolutions.darmihire.user.User;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -28,4 +31,20 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request) {
         return authService.login(request);
     }
+
+    @GetMapping("/me")
+    public MeResponse me(
+                Authentication authentication
+        ) {
+
+            User user =
+                    (User) authentication.getPrincipal();
+
+            return new MeResponse(
+                    user.getId(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getEmail()
+            );
+        }
 }
