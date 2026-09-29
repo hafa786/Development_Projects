@@ -1,0 +1,34 @@
+package com.darmisolutions.darmihire.audit;
+
+public enum AuditAction {
+
+    TENANT_CREATED,
+
+    USER_INVITED,
+
+    USER_JOINED,
+
+    USER_ROLE_CHANGED,
+
+    DEPARTMENT_CREATED,
+
+    DEPARTMENT_UPDATED,
+
+    DEPARTMENT_DELETED,
+
+    LOCATION_CREATED,
+
+    LOCATION_UPDATED,
+
+    LOCATION_DELETED,
+
+    TEAM_CREATED,
+
+    TEAM_UPDATED,
+
+    TEAM_DELETED,
+
+    TEAM_MEMBER_ADDED,
+
+    TEAM_MEMBER_REMOVED
+}
