@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.darmisolutions.darmihire.auth.dto.AuthResponse;
 import com.darmisolutions.darmihire.auth.dto.LoginRequest;
 import com.darmisolutions.darmihire.auth.dto.RefreshTokenRequest;
+import com.darmisolutions.darmihire.exception.ConflictException;
+import com.darmisolutions.darmihire.exception.UnauthorizedException;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +32,7 @@ public class AuthService {
                                 .toLowerCase();
 
                 if (userRepository.existsByEmailIgnoreCase(email)) {
-                        throw new IllegalArgumentException(
+                        throw new ConflictException(
                                         "Email is already registered");
                 }
 
@@ -60,18 +62,18 @@ public class AuthService {
                 User user = userRepository
                                 .findByEmailIgnoreCase(
                                                 request.email().trim().toLowerCase())
-                                .orElseThrow(() -> new IllegalArgumentException(
+                                .orElseThrow(() -> new UnauthorizedException(
                                                 "Invalid email or password"));
 
                 if (!user.isActive()) {
-                        throw new IllegalArgumentException(
+                        throw new UnauthorizedException(
                                         "User account is disabled");
                 }
 
                 if (!passwordEncoder.matches(
                                 request.password(),
                                 user.getPasswordHash())) {
-                        throw new IllegalArgumentException(
+                        throw new UnauthorizedException(
                                         "Invalid email or password");
                 }
 

@@ -13,6 +13,7 @@ import com.darmisolutions.darmihire.tenant.context.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.darmisolutions.darmihire.exception.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.UUID;
@@ -72,9 +73,7 @@ public class LocationService {
                 tenantRepository
                         .findById(tenantId)
                         .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "Tenant not found"
-                                )
+                                new ResourceNotFoundException("Location not found")
                         );
 
         Location location =
@@ -194,9 +193,7 @@ public class LocationService {
                         requireTenantId()
                 )
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Location not found"
-                        )
+                        new ResourceNotFoundException("Location not found")
                 );
     }
 

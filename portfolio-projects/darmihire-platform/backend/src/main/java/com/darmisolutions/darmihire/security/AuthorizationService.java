@@ -1,5 +1,6 @@
 package com.darmisolutions.darmihire.security;
 
+import com.darmisolutions.darmihire.exception.ForbiddenException;
 import com.darmisolutions.darmihire.tenant.Role;
 import com.darmisolutions.darmihire.tenant.context.TenantContext;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +15,7 @@ public class AuthorizationService {
     public boolean hasPermission(
             Permission permission
     ) {
-
-        Role role =
-                tenantContext.getRole();
+        Role role = tenantContext.getRole();
 
         if (role == null) {
             return false;
@@ -27,11 +26,8 @@ public class AuthorizationService {
             case COMPANY_ADMIN -> true;
 
             case RECRUITER ->
-                    permission
-                            == Permission.MANAGE_USERS
-                    ||
-                    permission
-                            == Permission.MANAGE_TEAMS;
+                    permission == Permission.MANAGE_USERS
+                    || permission == Permission.MANAGE_TEAMS;
 
             case HIRING_MANAGER,
                  INTERVIEWER,
@@ -42,12 +38,9 @@ public class AuthorizationService {
     public void require(
             Permission permission
     ) {
-
         if (!hasPermission(permission)) {
-
-            throw new SecurityException(
-                    "Permission denied: "
-                            + permission
+            throw new ForbiddenException(
+                    "Permission denied: " + permission
             );
         }
     }

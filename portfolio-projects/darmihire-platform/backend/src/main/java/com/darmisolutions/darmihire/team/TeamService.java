@@ -17,6 +17,8 @@ import com.darmisolutions.darmihire.tenant.context.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.darmisolutions.darmihire.exception.ConflictException;
+import com.darmisolutions.darmihire.exception.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.UUID;
@@ -85,7 +87,7 @@ public class TeamService {
                         name
                 )) {
 
-            throw new IllegalArgumentException(
+            throw new ConflictException(
                     "Team already exists"
             );
         }
@@ -94,9 +96,7 @@ public class TeamService {
                 tenantRepository
                         .findById(tenantId)
                         .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "Tenant not found"
-                                )
+                                new ResourceNotFoundException("Tenant not found")
                         );
 
         Team team =
@@ -154,7 +154,7 @@ public class TeamService {
                                 newName
                         )) {
 
-            throw new IllegalArgumentException(
+            throw new ConflictException(
                     "Team already exists"
             );
         }
@@ -228,15 +228,13 @@ public class TeamService {
                                 tenantId
                         )
                         .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "Tenant user not found"
-                                )
+                                new ResourceNotFoundException("Tenant user not found")
                         );
 
         if (tenantUser.getStatus()
                 != MembershipStatus.ACTIVE) {
 
-            throw new IllegalArgumentException(
+            throw new ConflictException(
                     "Only active workspace members can be added to a team"
             );
         }
@@ -247,7 +245,7 @@ public class TeamService {
                         tenantUser.getId()
                 )) {
 
-            throw new IllegalArgumentException(
+            throw new ConflictException(
                     "User is already a member of this team"
             );
         }
@@ -295,9 +293,7 @@ public class TeamService {
                                 tenantId
                         )
                         .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "Tenant user not found"
-                                )
+                                new ResourceNotFoundException("Tenant user not found")
                         );
 
         TeamMember teamMember =
@@ -307,9 +303,7 @@ public class TeamService {
                                 tenantUser.getId()
                         )
                         .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "Team member not found"
-                                )
+                                new ResourceNotFoundException("Team member not found")
                         );
 
         teamMemberRepository.delete(
@@ -333,9 +327,7 @@ public class TeamService {
                         requireTenantId()
                 )
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Team not found"
-                        )
+                        new ResourceNotFoundException("Team not found")
                 );
     }
 
