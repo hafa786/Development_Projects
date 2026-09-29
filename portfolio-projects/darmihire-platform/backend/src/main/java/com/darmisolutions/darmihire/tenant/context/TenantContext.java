@@ -11,14 +11,18 @@ import java.util.UUID;
 public class TenantContext {
 
     private UUID tenantId;
+
     private UUID userId;
+
     private Role role;
 
     public UUID getTenantId() {
         return tenantId;
     }
 
-    public void setTenantId(UUID tenantId) {
+    public void setTenantId(
+            UUID tenantId
+    ) {
         this.tenantId = tenantId;
     }
 
@@ -26,7 +30,9 @@ public class TenantContext {
         return userId;
     }
 
-    public void setUserId(UUID userId) {
+    public void setUserId(
+            UUID userId
+    ) {
         this.userId = userId;
     }
 
@@ -34,7 +40,9 @@ public class TenantContext {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(
+            Role role
+    ) {
         this.role = role;
     }
 }

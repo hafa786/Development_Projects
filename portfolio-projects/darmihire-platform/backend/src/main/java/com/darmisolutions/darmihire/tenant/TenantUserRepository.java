@@ -7,23 +7,38 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface TenantUserRepository
-                extends JpaRepository<TenantUser, UUID> {
+        extends JpaRepository<TenantUser, UUID> {
 
-        Optional<TenantUser> findByTenantIdAndUserId(
-                        UUID tenantId,
-                        UUID userId);
+    Optional<TenantUser>
+    findByTenantIdAndUserId(
+            UUID tenantId,
+            UUID userId
+    );
 
-        List<TenantUser> findAllByTenantId(
-                        UUID tenantId);
+    Optional<TenantUser>
+    findByIdAndTenantId(
+            UUID id,
+            UUID tenantId
+    );
 
-        List<TenantUser> findAllByUserId(
-                        UUID userId);
+    List<TenantUser>
+    findAllByTenantId(
+            UUID tenantId
+    );
 
-        boolean existsByTenantIdAndUserId(
-                        UUID tenantId,
-                        UUID userId);
+    List<TenantUser>
+    findAllByUserId(
+            UUID userId
+    );
 
-        List<TenantUser> findAllByUserIdAndStatus(
-                        UUID userId,
-                        MembershipStatus status);
+    List<TenantUser>
+    findAllByUserIdAndStatus(
+            UUID userId,
+            MembershipStatus status
+    );
+
+    boolean existsByTenantIdAndUserId(
+            UUID tenantId,
+            UUID userId
+    );
 }

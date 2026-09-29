@@ -4,7 +4,6 @@ import com.darmisolutions.darmihire.tenant.dto.CreateTenantRequest;
 import com.darmisolutions.darmihire.tenant.dto.TenantResponse;
 import com.darmisolutions.darmihire.tenant.dto.UserTenantResponse;
 import com.darmisolutions.darmihire.user.User;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,28 +19,59 @@ public class TenantController {
 
     private final TenantService tenantService;
 
+    /*
+     * ---------------------------------------------------------
+     * CREATE WORKSPACE
+     * ---------------------------------------------------------
+     *
+     * POST /api/v1/tenants
+     *
+     * The authenticated user automatically becomes
+     * COMPANY_ADMIN of the newly created workspace.
+     */
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TenantResponse create(
             @Valid @RequestBody CreateTenantRequest request,
-            Authentication authentication) {
+            Authentication authentication
+    ) {
 
-        User user = (User) authentication.getPrincipal();
+        User user =
+                (User) authentication.getPrincipal();
 
-        return tenantService.create(request, user);
+        return tenantService.create(
+                request,
+                user
+        );
     }
 
-    @GetMapping
-    public List<TenantResponse> findAll() {
-        return tenantService.findAll();
-    }
+    /*
+     * ---------------------------------------------------------
+     * GET MY WORKSPACES
+     * ---------------------------------------------------------
+     *
+     * GET /api/v1/tenants
+     *
+     * IMPORTANT:
+     *
+     * We intentionally DO NOT expose a findAll()
+     * endpoint here.
+     *
+     * A user must only see workspaces where they
+     * have an active membership.
+     */
 
     @GetMapping
     public List<UserTenantResponse> findMine(
-            Authentication authentication) {
+            Authentication authentication
+    ) {
 
-        User user = (User) authentication.getPrincipal();
+        User user =
+                (User) authentication.getPrincipal();
 
-        return tenantService.findForUser(user.getId());
+        return tenantService.findForUser(
+                user.getId()
+        );
     }
 }
