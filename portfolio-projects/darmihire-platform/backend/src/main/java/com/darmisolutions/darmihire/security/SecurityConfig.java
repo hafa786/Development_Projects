@@ -14,70 +14,60 @@ import com.darmisolutions.darmihire.tenant.context.TenantContextFilter;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    private final TenantContextFilter tenantContextFilter;
+        private final TenantContextFilter tenantContextFilter;
 
-    private final RestAuthenticationEntryPoint authenticationEntryPoint;
+        private final RestAuthenticationEntryPoint authenticationEntryPoint;
 
-    private final RestAccessDeniedHandler accessDeniedHandler;
+        private final RestAccessDeniedHandler accessDeniedHandler;
 
-    @Bean
-    SecurityFilterChain securityFilterChain(
-            HttpSecurity http
-    ) throws Exception {
+        @Bean
+        SecurityFilterChain securityFilterChain(
+                        HttpSecurity http) throws Exception {
 
-        return http
-                .csrf(csrf ->
-                        csrf.disable()
-                )
+                return http
+                                .csrf(csrf -> csrf.disable())
 
-                .cors(cors -> {
-                })
+                                .cors(cors -> {
+                                })
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
-                )
+                                .sessionManagement(session -> session.sessionCreationPolicy(
+                                                SessionCreationPolicy.STATELESS))
 
-                .exceptionHandling(exception ->
-                        exception
-                                .authenticationEntryPoint(
-                                        authenticationEntryPoint
-                                )
-                                .accessDeniedHandler(
-                                        accessDeniedHandler
-                                )
-                )
+                                .exceptionHandling(exception -> exception
+                                                .authenticationEntryPoint(
+                                                                authenticationEntryPoint)
+                                                .accessDeniedHandler(
+                                                                accessDeniedHandler))
 
-                .authorizeHttpRequests(auth ->
-                        auth
-                                .requestMatchers(
-                                        "/api/v1/auth/register",
-                                        "/api/v1/auth/login",
-                                        "/api/v1/auth/refresh",
-                                        "/actuator/health",
-                                        "/swagger-ui/**",
-                                        "/swagger-ui.html",
-                                        "/v3/api-docs/**"
-                                )
-                                .permitAll()
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(
+                                                                "/api/v1/auth/register",
+                                                                "/api/v1/auth/login",
+                                                                "/api/v1/auth/refresh",
 
-                                .anyRequest()
-                                .authenticated()
-                )
+                                                                "/actuator/health",
 
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                )
+                                                                "/swagger-ui/**",
+                                                                "/swagger-ui.html",
 
-                .addFilterAfter(
-                        tenantContextFilter,
-                        JwtAuthenticationFilter.class
-                )
+                                                                "/v3/api-docs",
+                                                                "/v3/api-docs/**",
+                                                                "/v3/api-docs.yaml")
+                                                .permitAll()
 
-                .build();
-    }
+                                                .anyRequest()
+                                                .authenticated())
+
+                                .addFilterBefore(
+                                                jwtAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class)
+
+                                .addFilterAfter(
+                                                tenantContextFilter,
+                                                JwtAuthenticationFilter.class)
+
+                                .build();
+        }
 }
