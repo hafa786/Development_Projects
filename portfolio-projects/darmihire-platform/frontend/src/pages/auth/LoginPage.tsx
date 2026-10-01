@@ -1,41 +1,47 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowRight,
   Loader2,
 } from "lucide-react";
-import {
-  type FormEvent,
-  useState,
-} from "react";
+import { useForm } from "react-hook-form";
 
 import { AuthCard } from "@/components/auth/AuthCard";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { FormError } from "@/components/auth/FormError";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  type LoginFormData,
+  loginSchema,
+} from "@/features/auth/schemas";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: {
+      errors,
+      isSubmitting,
+    },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
+  async function onSubmit(
+    data: LoginFormData,
   ) {
-    event.preventDefault();
-
-    setIsSubmitting(true);
-
-    try {
-      // Authentication API integration will be added
-      // in a later UI step.
-      console.log({
-        email,
-        password,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Temporary only.
+    // Spring Boot authentication will be connected
+    // in a later step.
+    console.log({
+      email: data.email,
+    });
   }
 
   return (
@@ -46,7 +52,8 @@ export default function LoginPage() {
       >
         <form
           className="space-y-5"
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
         >
           <div className="space-y-2">
             <Label htmlFor="email">
@@ -55,17 +62,26 @@ export default function LoginPage() {
 
             <Input
               id="email"
-              name="email"
               type="email"
               autoComplete="email"
               placeholder="you@company.com"
-              value={email}
-              onChange={(event) =>
-                setEmail(event.target.value)
-              }
-              required
               disabled={isSubmitting}
+              aria-invalid={
+                errors.email ? "true" : "false"
+              }
+              aria-describedby={
+                errors.email
+                  ? "email-error"
+                  : undefined
+              }
+              {...register("email")}
             />
+
+            <div id="email-error">
+              <FormError
+                message={errors.email?.message}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -84,16 +100,25 @@ export default function LoginPage() {
 
             <PasswordInput
               id="password"
-              name="password"
               autoComplete="current-password"
               placeholder="Enter your password"
-              value={password}
-              onChange={(event) =>
-                setPassword(event.target.value)
-              }
-              required
               disabled={isSubmitting}
+              aria-invalid={
+                errors.password ? "true" : "false"
+              }
+              aria-describedby={
+                errors.password
+                  ? "password-error"
+                  : undefined
+              }
+              {...register("password")}
             />
+
+            <div id="password-error">
+              <FormError
+                message={errors.password?.message}
+              />
+            </div>
           </div>
 
           <Button

@@ -1,54 +1,61 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowRight,
   Check,
   Loader2,
 } from "lucide-react";
-import {
-  type FormEvent,
-  useState,
-} from "react";
+import { useForm } from "react-hook-form";
 
 import { AuthCard } from "@/components/auth/AuthCard";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { FormError } from "@/components/auth/FormError";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  type RegisterFormData,
+  registerSchema,
+} from "@/features/auth/schemas";
 
 export default function RegisterPage() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] =
-    useState("");
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: {
+      errors,
+      isSubmitting,
+    },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const password = watch("password");
+  const confirmPassword =
+    watch("confirmPassword");
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
+  const passwordsMatch =
+    confirmPassword.length > 0 &&
+    password === confirmPassword;
+
+  async function onSubmit(
+    data: RegisterFormData,
   ) {
-    event.preventDefault();
-
-    if (password !== confirmPassword) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Temporary only.
-      // The Spring Boot registration API will be
-      // connected in a later step.
-      console.log({
-        firstName,
-        lastName,
-        email,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Temporary only.
+    // API integration will be added later.
+    console.log({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+    });
   }
 
   return (
@@ -59,7 +66,8 @@ export default function RegisterPage() {
       >
         <form
           className="space-y-5"
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
@@ -69,17 +77,30 @@ export default function RegisterPage() {
 
               <Input
                 id="firstName"
-                name="firstName"
                 type="text"
                 autoComplete="given-name"
                 placeholder="Hafiz"
-                value={firstName}
-                onChange={(event) =>
-                  setFirstName(event.target.value)
-                }
-                required
                 disabled={isSubmitting}
+                aria-invalid={
+                  errors.firstName
+                    ? "true"
+                    : "false"
+                }
+                aria-describedby={
+                  errors.firstName
+                    ? "firstName-error"
+                    : undefined
+                }
+                {...register("firstName")}
               />
+
+              <div id="firstName-error">
+                <FormError
+                  message={
+                    errors.firstName?.message
+                  }
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -89,17 +110,30 @@ export default function RegisterPage() {
 
               <Input
                 id="lastName"
-                name="lastName"
                 type="text"
                 autoComplete="family-name"
                 placeholder="Sikandar"
-                value={lastName}
-                onChange={(event) =>
-                  setLastName(event.target.value)
-                }
-                required
                 disabled={isSubmitting}
+                aria-invalid={
+                  errors.lastName
+                    ? "true"
+                    : "false"
+                }
+                aria-describedby={
+                  errors.lastName
+                    ? "lastName-error"
+                    : undefined
+                }
+                {...register("lastName")}
               />
+
+              <div id="lastName-error">
+                <FormError
+                  message={
+                    errors.lastName?.message
+                  }
+                />
+              </div>
             </div>
           </div>
 
@@ -110,22 +144,33 @@ export default function RegisterPage() {
 
             <Input
               id="email"
-              name="email"
               type="email"
               autoComplete="email"
               placeholder="you@company.com"
-              value={email}
-              onChange={(event) =>
-                setEmail(event.target.value)
-              }
-              required
               disabled={isSubmitting}
+              aria-invalid={
+                errors.email ? "true" : "false"
+              }
+              aria-describedby={
+                errors.email
+                  ? "register-email-error"
+                  : undefined
+              }
+              {...register("email")}
             />
 
-            <p className="text-xs text-muted-foreground">
-              You'll use this email to sign in to
-              DarmiHire.
-            </p>
+            <div id="register-email-error">
+              <FormError
+                message={errors.email?.message}
+              />
+            </div>
+
+            {!errors.email && (
+              <p className="text-xs text-muted-foreground">
+                You'll use this email to sign in
+                to DarmiHire.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -135,17 +180,33 @@ export default function RegisterPage() {
 
             <PasswordInput
               id="password"
-              name="password"
               autoComplete="new-password"
               placeholder="Create a password"
-              value={password}
-              onChange={(event) =>
-                setPassword(event.target.value)
-              }
-              minLength={8}
-              required
               disabled={isSubmitting}
+              aria-invalid={
+                errors.password
+                  ? "true"
+                  : "false"
+              }
+              aria-describedby={
+                errors.password
+                  ? "register-password-error"
+                  : undefined
+              }
+              {...register("password")}
             />
+
+            <div id="register-password-error">
+              <FormError
+                message={errors.password?.message}
+              />
+            </div>
+
+            {!errors.password && (
+              <p className="text-xs text-muted-foreground">
+                Use at least 8 characters.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -155,27 +216,32 @@ export default function RegisterPage() {
 
             <PasswordInput
               id="confirmPassword"
-              name="confirmPassword"
               autoComplete="new-password"
               placeholder="Enter your password again"
-              value={confirmPassword}
-              onChange={(event) =>
-                setConfirmPassword(event.target.value)
-              }
-              minLength={8}
-              required
               disabled={isSubmitting}
+              aria-invalid={
+                errors.confirmPassword
+                  ? "true"
+                  : "false"
+              }
+              aria-describedby={
+                errors.confirmPassword
+                  ? "confirm-password-error"
+                  : undefined
+              }
+              {...register("confirmPassword")}
             />
 
-            {confirmPassword &&
-              password !== confirmPassword && (
-                <p className="text-xs text-destructive">
-                  Passwords do not match.
-                </p>
-              )}
+            <div id="confirm-password-error">
+              <FormError
+                message={
+                  errors.confirmPassword?.message
+                }
+              />
+            </div>
 
-            {confirmPassword &&
-              password === confirmPassword && (
+            {!errors.confirmPassword &&
+              passwordsMatch && (
                 <p className="flex items-center gap-1 text-xs text-green-600">
                   <Check className="size-3" />
                   Passwords match.
@@ -186,10 +252,7 @@ export default function RegisterPage() {
           <Button
             type="submit"
             className="w-full"
-            disabled={
-              isSubmitting ||
-              password !== confirmPassword
-            }
+            disabled={isSubmitting}
           >
             {isSubmitting ? (
               <>
