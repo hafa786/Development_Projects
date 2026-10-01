@@ -1,5 +1,5 @@
-import LoginPage from "@/pages/auth/LoginPage";
+import WelcomePage from "./pages/WelcomePage";
 
 export default function App() {
-  return <LoginPage />;
+  return <WelcomePage />;
 }

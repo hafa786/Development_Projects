@@ -34,7 +34,7 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <Dialog>
-      <DialogTrigger asChild>
+      <DialogTrigger>
         {trigger}
       </DialogTrigger>
 
@@ -50,7 +50,7 @@ export function ConfirmDialog({
         </DialogHeader>
 
         <DialogFooter>
-          <DialogClose asChild>
+          <DialogClose>
             <Button
               type="button"
               variant="outline"
@@ -60,7 +60,7 @@ export function ConfirmDialog({
             </Button>
           </DialogClose>
 
-          <DialogClose asChild>
+          <DialogClose>
             <Button
               type="button"
               variant={destructive ? "destructive" : "default"}
