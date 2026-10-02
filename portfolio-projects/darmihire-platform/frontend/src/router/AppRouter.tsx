@@ -1,3 +1,6 @@
+import type {
+  ReactNode,
+} from "react";
 import {
   Navigate,
   Route,
@@ -13,8 +16,15 @@ import UsersPage from "@/pages/UsersPage";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import OnboardingPage from "@/pages/onboarding/OnboardingPage";
-import { ProtectedRoute } from "@/router/ProtectedRoute";
-import { PublicRoute } from "@/router/PublicRoute";
+import {
+  ProtectedRoute,
+} from "@/router/ProtectedRoute";
+import {
+  PublicRoute,
+} from "@/router/PublicRoute";
+import {
+  WorkspaceRoute,
+} from "@/router/WorkspaceRoute";
 import {
   getTenantId,
   isAuthenticated,
@@ -47,12 +57,28 @@ function RootRedirect() {
   );
 }
 
+function WorkspaceProtectedRoute({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <ProtectedRoute>
+      <WorkspaceRoute>
+        {children}
+      </WorkspaceRoute>
+    </ProtectedRoute>
+  );
+}
+
 export function AppRouter() {
   return (
     <Routes>
       <Route
         path="/"
-        element={<RootRedirect />}
+        element={
+          <RootRedirect />
+        }
       />
 
       <Route
@@ -85,51 +111,53 @@ export function AppRouter() {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute>
+          <WorkspaceProtectedRoute>
             <DashboardPage />
-          </ProtectedRoute>
+          </WorkspaceProtectedRoute>
         }
       />
 
       <Route
         path="/users"
         element={
-          <ProtectedRoute>
+          <WorkspaceProtectedRoute>
             <UsersPage />
-          </ProtectedRoute>
+          </WorkspaceProtectedRoute>
         }
       />
 
       <Route
         path="/departments"
         element={
-          <ProtectedRoute>
+          <WorkspaceProtectedRoute>
             <DepartmentsPage />
-          </ProtectedRoute>
+          </WorkspaceProtectedRoute>
         }
       />
 
       <Route
         path="/locations"
         element={
-          <ProtectedRoute>
+          <WorkspaceProtectedRoute>
             <LocationsPage />
-          </ProtectedRoute>
+          </WorkspaceProtectedRoute>
         }
       />
 
       <Route
         path="/teams"
         element={
-          <ProtectedRoute>
+          <WorkspaceProtectedRoute>
             <TeamsPage />
-          </ProtectedRoute>
+          </WorkspaceProtectedRoute>
         }
       />
 
       <Route
         path="*"
-        element={<NotFoundPage />}
+        element={
+          <NotFoundPage />
+        }
       />
     </Routes>
   );

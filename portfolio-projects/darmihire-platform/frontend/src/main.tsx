@@ -6,18 +6,21 @@ import App from "./App";
 import "./index.css";
 
 import { Toaster } from "@/components/ui/sonner";
+import { QueryProvider } from "@/providers/QueryProvider";
 
 createRoot(
   document.getElementById("root")!,
 ).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
+    <QueryProvider>
+      <BrowserRouter>
+        <App />
 
-      <Toaster
-        richColors
-        position="top-right"
-      />
-    </BrowserRouter>
+        <Toaster
+          richColors
+          position="top-right"
+        />
+      </BrowserRouter>
+    </QueryProvider>
   </StrictMode>,
 );
