@@ -7,6 +7,9 @@ import {
   Routes,
 } from "react-router-dom";
 
+import {
+  AppLayout,
+} from "@/components/layout/AppLayout";
 import DashboardPage from "@/pages/DashboardPage";
 import DepartmentsPage from "@/pages/DepartmentsPage";
 import LocationsPage from "@/pages/LocationsPage";
@@ -109,49 +112,47 @@ export function AppRouter() {
       />
 
       <Route
-        path="/dashboard"
         element={
           <WorkspaceProtectedRoute>
+            <AppLayout />
+          </WorkspaceProtectedRoute>
+        }
+      >
+        <Route
+          path="/dashboard"
+          element={
             <DashboardPage />
-          </WorkspaceProtectedRoute>
-        }
-      />
+          }
+        />
 
-      <Route
-        path="/users"
-        element={
-          <WorkspaceProtectedRoute>
+        <Route
+          path="/users"
+          element={
             <UsersPage />
-          </WorkspaceProtectedRoute>
-        }
-      />
+          }
+        />
 
-      <Route
-        path="/departments"
-        element={
-          <WorkspaceProtectedRoute>
+        <Route
+          path="/departments"
+          element={
             <DepartmentsPage />
-          </WorkspaceProtectedRoute>
-        }
-      />
+          }
+        />
 
-      <Route
-        path="/locations"
-        element={
-          <WorkspaceProtectedRoute>
-            <LocationsPage />
-          </WorkspaceProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/teams"
-        element={
-          <WorkspaceProtectedRoute>
+        <Route
+          path="/teams"
+          element={
             <TeamsPage />
-          </WorkspaceProtectedRoute>
-        }
-      />
+          }
+        />
+
+        <Route
+          path="/locations"
+          element={
+            <LocationsPage />
+          }
+        />
+      </Route>
 
       <Route
         path="*"
