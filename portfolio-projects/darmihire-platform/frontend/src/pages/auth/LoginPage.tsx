@@ -4,6 +4,11 @@ import {
   Loader2,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/errors";
@@ -19,13 +24,24 @@ import {
   type LoginFormData,
   loginSchema,
 } from "@/features/auth/schemas";
-import { setTokens } from "@/utils/session";
+import {
+  getTenantId,
+  setTokens,
+} from "@/utils/session";
+
+type LocationState = {
+  from?: string;
+};
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const {
     register,
     handleSubmit,
     setError,
+
     formState: {
       errors,
       isSubmitting,
@@ -43,11 +59,10 @@ export default function LoginPage() {
     data: LoginFormData,
   ) {
     try {
-      const response =
-        await login({
-          email: data.email,
-          password: data.password,
-        });
+      const response = await login({
+        email: data.email,
+        password: data.password,
+      });
 
       setTokens({
         accessToken:
@@ -61,11 +76,42 @@ export default function LoginPage() {
         "Welcome back to DarmiHire.",
       );
 
-      // React Router navigation will be
-      // introduced in the next routing step.
-      //
-      // For now we only confirm that
-      // authentication succeeded.
+      const state =
+        location.state as
+          | LocationState
+          | null;
+
+      const previousRoute =
+        state?.from;
+
+      if (previousRoute) {
+        navigate(
+          previousRoute,
+          {
+            replace: true,
+          },
+        );
+
+        return;
+      }
+
+      if (getTenantId()) {
+        navigate(
+          "/dashboard",
+          {
+            replace: true,
+          },
+        );
+
+        return;
+      }
+
+      navigate(
+        "/onboarding",
+        {
+          replace: true,
+        },
+      );
     } catch (error) {
       if (
         error instanceof ApiError &&
@@ -212,12 +258,12 @@ export default function LoginPage() {
 
           <div className="text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <button
-              type="button"
+            <Link
+              to="/register"
               className="font-medium text-primary hover:underline"
             >
               Create account
-            </button>
+            </Link>
           </div>
         </form>
       </AuthCard>

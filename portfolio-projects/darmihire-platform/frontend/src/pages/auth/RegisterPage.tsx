@@ -5,6 +5,10 @@ import {
   Loader2,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/errors";
@@ -15,15 +19,15 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  registerUser,
-} from "@/features/auth/api";
+import { registerUser } from "@/features/auth/api";
 import {
   type RegisterFormData,
   registerSchema,
 } from "@/features/auth/schemas";
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -62,18 +66,29 @@ export default function RegisterPage() {
   ) {
     try {
       await registerUser({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        password: data.password,
+        firstName:
+          data.firstName,
+
+        lastName:
+          data.lastName,
+
+        email:
+          data.email,
+
+        password:
+          data.password,
       });
 
       toast.success(
-        "Account created successfully. You can now sign in.",
+        "Account created successfully. Please sign in.",
       );
 
-      // Router navigation to /login
-      // will be added in the next routing step.
+      navigate(
+        "/login",
+        {
+          replace: true,
+        },
+      );
     } catch (error) {
       if (
         error instanceof ApiError &&
@@ -234,8 +249,8 @@ export default function RegisterPage() {
 
             {!errors.email && (
               <p className="text-xs text-muted-foreground">
-                You'll use this email
-                to sign in to DarmiHire.
+                You'll use this email to
+                sign in to DarmiHire.
               </p>
             )}
           </div>
@@ -260,7 +275,9 @@ export default function RegisterPage() {
                   ? "register-password-error"
                   : undefined
               }
-              {...register("password")}
+              {...register(
+                "password",
+              )}
             />
 
             <div id="register-password-error">
@@ -351,12 +368,12 @@ export default function RegisterPage() {
 
           <div className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <button
-              type="button"
+            <Link
+              to="/login"
               className="font-medium text-primary hover:underline"
             >
               Sign in
-            </button>
+            </Link>
           </div>
         </form>
       </AuthCard>
