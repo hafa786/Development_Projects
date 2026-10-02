@@ -1,146 +1,78 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  Building2,
-  Loader2,
-} from "lucide-react";
-import {
-  useNavigate,
-} from "react-router-dom";
-import {
-  toast,
-} from "sonner";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Building2, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import { ApiError } from "@/api/errors";
 import { Logo } from "@/components/common/Logo";
 import { Button } from "@/components/ui/button";
-import {
-  createTenant,
-  getMyTenants,
-} from "@/features/tenants/api";
-import {
-  CreateWorkspaceForm,
-} from "@/features/tenants/CreateWorkspaceForm";
-import type {
-  CreateTenantFormData,
-} from "@/features/tenants/schemas";
-import type {
-  UserTenant,
-} from "@/features/tenants/types";
-import {
-  WorkspaceCard,
-} from "@/features/tenants/WorkspaceCard";
-import {
-  clearSession,
-  setTenantId,
-} from "@/utils/session";
+import { createTenant, getMyTenants } from "@/features/tenants/api";
+import { CreateWorkspaceForm } from "@/features/tenants/CreateWorkspaceForm";
+import type { CreateTenantFormData } from "@/features/tenants/schemas";
+import type { UserTenant } from "@/features/tenants/types";
+import { WorkspaceCard } from "@/features/tenants/WorkspaceCard";
+import { clearSession, setTenantId } from "@/utils/session";
+import { tenantQueryKeys } from "@/features/tenants/queryKeys";
 
 export default function OnboardingPage() {
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
-  const queryClient =
-    useQueryClient();
+  const queryClient = useQueryClient();
 
-  const tenantsQuery =
-    useQuery({
-      queryKey: [
-        "tenants",
-        "mine",
-      ],
+  const tenantsQuery = useQuery({
+    queryKey: tenantQueryKeys.mine(),
 
-      queryFn:
-        getMyTenants,
-    });
+    queryFn: getMyTenants,
+  });
 
-  const createMutation =
-    useMutation({
-      mutationFn:
-        createTenant,
+  const createMutation = useMutation({
+    mutationFn: createTenant,
 
-      onSuccess:
-        async (tenant) => {
-          setTenantId(
-            tenant.id,
-          );
+    onSuccess: async (tenant) => {
+      setTenantId(tenant.id);
 
-          await queryClient
-            .invalidateQueries({
-              queryKey: [
-                "tenants",
-                "mine",
-              ],
-            });
+      await queryClient.invalidateQueries({
+        queryKey: tenantQueryKeys.mine(),
+      });
 
-          toast.success(
-            "Workspace created successfully.",
-          );
+      toast.success("Workspace created successfully.");
 
-          navigate(
-            "/dashboard",
-            {
-              replace: true,
-            },
-          );
-        },
-    });
-
-  function handleWorkspaceSelect(
-    tenant: UserTenant,
-  ) {
-    setTenantId(
-      tenant.id,
-    );
-
-    toast.success(
-      `${tenant.name} selected.`,
-    );
-
-    navigate(
-      "/dashboard",
-      {
+      navigate("/dashboard", {
         replace: true,
-      },
-    );
+      });
+    },
+  });
+
+  function handleWorkspaceSelect(tenant: UserTenant) {
+    setTenantId(tenant.id);
+
+    toast.success(`${tenant.name} selected.`);
+
+    navigate("/dashboard", {
+      replace: true,
+    });
   }
 
-  async function handleCreate(
-    data: CreateTenantFormData,
-  ) {
+  async function handleCreate(data: CreateTenantFormData) {
     try {
-      await createMutation
-        .mutateAsync({
-          name: data.name,
-          slug: data.slug,
-        });
+      await createMutation.mutateAsync({
+        name: data.name,
+        slug: data.slug,
+      });
     } catch (error) {
-      if (
-        error instanceof ApiError &&
-        error.status === 409
-      ) {
-        toast.error(
-          "That workspace URL is already in use.",
-        );
+      if (error instanceof ApiError && error.status === 409) {
+        toast.error("That workspace URL is already in use.");
 
         return;
       }
 
-      if (
-        error instanceof ApiError
-      ) {
-        toast.error(
-          error.message,
-        );
+      if (error instanceof ApiError) {
+        toast.error(error.message);
 
         return;
       }
 
-      toast.error(
-        "Unable to create the workspace. Please try again.",
-      );
+      toast.error("Unable to create the workspace. Please try again.");
     }
   }
 
@@ -149,17 +81,12 @@ export default function OnboardingPage() {
 
     queryClient.clear();
 
-    navigate(
-      "/login",
-      {
-        replace: true,
-      },
-    );
+    navigate("/login", {
+      replace: true,
+    });
   }
 
-  if (
-    tenantsQuery.isLoading
-  ) {
+  if (tenantsQuery.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/30">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -170,9 +97,7 @@ export default function OnboardingPage() {
     );
   }
 
-  if (
-    tenantsQuery.isError
-  ) {
+  if (tenantsQuery.isError) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/30 p-6">
         <div className="max-w-md text-center">
@@ -180,31 +105,16 @@ export default function OnboardingPage() {
             <Building2 className="size-5 text-destructive" />
           </div>
 
-          <h1 className="text-xl font-semibold">
-            Unable to load workspaces
-          </h1>
+          <h1 className="text-xl font-semibold">Unable to load workspaces</h1>
 
           <p className="mt-2 text-sm text-muted-foreground">
-            We couldn't load your
-            DarmiHire workspaces.
+            We couldn't load your DarmiHire workspaces.
           </p>
 
           <div className="mt-6 flex justify-center gap-2">
-            <Button
-              onClick={() =>
-                tenantsQuery
-                  .refetch()
-              }
-            >
-              Try again
-            </Button>
+            <Button onClick={() => tenantsQuery.refetch()}>Try again</Button>
 
-            <Button
-              variant="outline"
-              onClick={
-                handleSignOut
-              }
-            >
+            <Button variant="outline" onClick={handleSignOut}>
               Sign out
             </Button>
           </div>
@@ -213,8 +123,7 @@ export default function OnboardingPage() {
     );
   }
 
-  const tenants =
-    tenantsQuery.data ?? [];
+  const tenants = tenantsQuery.data ?? [];
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -222,13 +131,7 @@ export default function OnboardingPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Logo />
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={
-              handleSignOut
-            }
-          >
+          <Button variant="ghost" size="sm" onClick={handleSignOut}>
             Sign out
           </Button>
         </div>
@@ -241,9 +144,7 @@ export default function OnboardingPage() {
           </h1>
 
           <p className="mt-3 text-muted-foreground">
-            Select an existing
-            workspace or create a new
-            one to start using
+            Select an existing workspace or create a new one to start using
             DarmiHire.
           </p>
         </div>
@@ -251,33 +152,21 @@ export default function OnboardingPage() {
         {tenants.length > 0 && (
           <section className="mb-10">
             <div className="mb-4">
-              <h2 className="font-semibold">
-                Your workspaces
-              </h2>
+              <h2 className="font-semibold">Your workspaces</h2>
 
               <p className="mt-1 text-sm text-muted-foreground">
-                Choose the workspace
-                you want to continue
-                with.
+                Choose the workspace you want to continue with.
               </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              {tenants.map(
-                (tenant) => (
-                  <WorkspaceCard
-                    key={
-                      tenant.id
-                    }
-                    tenant={
-                      tenant
-                    }
-                    onSelect={
-                      handleWorkspaceSelect
-                    }
-                  />
-                ),
-              )}
+              {tenants.map((tenant) => (
+                <WorkspaceCard
+                  key={tenant.id}
+                  tenant={tenant}
+                  onSelect={handleWorkspaceSelect}
+                />
+              ))}
             </div>
           </section>
         )}
@@ -298,13 +187,8 @@ export default function OnboardingPage() {
 
         <div className="mx-auto max-w-xl">
           <CreateWorkspaceForm
-            isSubmitting={
-              createMutation
-                .isPending
-            }
-            onSubmit={
-              handleCreate
-            }
+            isSubmitting={createMutation.isPending}
+            onSubmit={handleCreate}
           />
         </div>
       </main>

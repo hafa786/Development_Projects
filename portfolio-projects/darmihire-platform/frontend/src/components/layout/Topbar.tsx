@@ -1,105 +1,63 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  Bell,
-  CircleAlert,
-} from "lucide-react";
-import {
-  useNavigate,
-} from "react-router-dom";
-import {
-  toast,
-} from "sonner";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Bell, CircleAlert } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
-import {
-  Logo,
-} from "@/components/common/Logo";
-import {
-  Button,
-} from "@/components/ui/button";
-import {
-  getCurrentUser,
-  logout,
-} from "@/features/auth/api";
-import {
-  UserMenu,
-} from "@/features/auth/UserMenu";
-import {
-  UserMenuSkeleton,
-} from "@/features/auth/UserMenuSkeleton";
-import {
-  clearSession,
-  getRefreshToken,
-} from "@/utils/session";
+import { Logo } from "@/components/common/Logo";
+import { WorkspaceSwitcher } from "@/components/layout/WorkspaceSwitcher";
+import { Button } from "@/components/ui/button";
+import { getCurrentUser, logout } from "@/features/auth/api";
+import { UserMenu } from "@/features/auth/UserMenu";
+import { UserMenuSkeleton } from "@/features/auth/UserMenuSkeleton";
+import { clearSession, getRefreshToken } from "@/utils/session";
 
 export function Topbar() {
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
-  const queryClient =
-    useQueryClient();
+  const queryClient = useQueryClient();
 
-  const currentUserQuery =
-    useQuery({
-      queryKey: [
-        "auth",
-        "current-user",
-      ],
+  const currentUserQuery = useQuery({
+    queryKey: ["auth", "current-user"],
 
-      queryFn:
-        getCurrentUser,
+    queryFn: getCurrentUser,
 
-      staleTime:
-        5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
 
-      retry: 1,
-    });
+    retry: 1,
+  });
 
-  const logoutMutation =
-    useMutation({
-      mutationFn:
-        async () => {
-          const refreshToken =
-            getRefreshToken();
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const refreshToken = getRefreshToken();
 
-          if (!refreshToken) {
-            return;
-          }
+      if (!refreshToken) {
+        return;
+      }
 
-          await logout({
-            refreshToken,
-          });
-        },
+      await logout({
+        refreshToken,
+      });
+    },
 
-      onError:
-        () => {
-          toast.warning(
-            "You were signed out locally, but the server session could not be closed.",
-          );
-        },
+    onError: () => {
+      toast.warning(
+        "You were signed out locally, but the server session could not be closed.",
+      );
+    },
 
-      onSettled:
-        () => {
-          clearSession();
+    onSettled: () => {
+      clearSession();
 
-          queryClient.clear();
+      queryClient.clear();
 
-          navigate(
-            "/login",
-            {
-              replace: true,
-            },
-          );
-        },
-    });
+      navigate("/login", {
+        replace: true,
+      });
+    },
+  });
 
   function handleSignOut() {
-    if (
-      logoutMutation.isPending
-    ) {
+    if (logoutMutation.isPending) {
       return;
     }
 
@@ -107,20 +65,14 @@ export function Topbar() {
   }
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
+    <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b bg-background px-4 sm:px-6">
       <div className="min-w-0">
         <div className="lg:hidden">
           <Logo />
         </div>
 
         <div className="hidden lg:block">
-          <p className="truncate text-sm font-medium">
-            DarmiHire Workspace
-          </p>
-
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Recruitment workspace
-          </p>
+          <WorkspaceSwitcher />
         </div>
       </div>
 
@@ -135,9 +87,7 @@ export function Topbar() {
           <Bell className="size-4" />
         </Button>
 
-        {currentUserQuery.isLoading && (
-          <UserMenuSkeleton />
-        )}
+        {currentUserQuery.isLoading && <UserMenuSkeleton />}
 
         {currentUserQuery.isError && (
           <Button
@@ -146,10 +96,7 @@ export function Topbar() {
             size="icon"
             aria-label="Unable to load user"
             title="Unable to load user. Click to retry."
-            onClick={() =>
-              currentUserQuery
-                .refetch()
-            }
+            onClick={() => currentUserQuery.refetch()}
           >
             <CircleAlert className="size-4 text-destructive" />
           </Button>
@@ -157,16 +104,9 @@ export function Topbar() {
 
         {currentUserQuery.data && (
           <UserMenu
-            user={
-              currentUserQuery.data
-            }
-            isSigningOut={
-              logoutMutation
-                .isPending
-            }
-            onSignOut={
-              handleSignOut
-            }
+            user={currentUserQuery.data}
+            isSigningOut={logoutMutation.isPending}
+            onSignOut={handleSignOut}
           />
         )}
       </div>

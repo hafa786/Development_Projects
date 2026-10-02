@@ -1,4 +1,6 @@
-import { apiRequest } from "@/api/client";
+import {
+  apiRequest,
+} from "@/api/client";
 
 import type {
   CreateTenantRequest,
