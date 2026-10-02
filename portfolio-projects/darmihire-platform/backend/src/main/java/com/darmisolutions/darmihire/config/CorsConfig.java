@@ -18,7 +18,10 @@ public class CorsConfig {
                 new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of("http://localhost:3000")
+                List.of(
+                        "http://localhost:5173",
+                        "http://localhost:3000"
+                )
         );
 
         configuration.setAllowedMethods(
@@ -41,8 +44,14 @@ public class CorsConfig {
         );
 
         configuration.setExposedHeaders(
-                List.of("Location")
+                List.of(
+                        "Authorization"
+                )
         );
+
+        configuration.setAllowCredentials(true);
+
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();

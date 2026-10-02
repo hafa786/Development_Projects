@@ -31,18 +31,23 @@ public class JwtAuthenticationFilter
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String authorization =
-                request.getHeader("Authorization");
 
-        if (authorization == null ||
-                !authorization.startsWith("Bearer ")) {
+        String authorizationHeader =
+        request.getHeader("Authorization");
 
-            filterChain.doFilter(request, response);
-            return;
+        if (authorizationHeader == null
+                || !authorizationHeader.startsWith("Bearer ")) {
+
+        filterChain.doFilter(
+                request,
+                response
+        );
+
+        return;
         }
 
         String token =
-                authorization.substring(7);
+                authorizationHeader.substring(7);
 
         if (!jwtService.isValid(token)) {
             filterChain.doFilter(request, response);
