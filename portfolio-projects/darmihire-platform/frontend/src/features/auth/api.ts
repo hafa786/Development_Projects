@@ -4,6 +4,7 @@ import type {
   AuthResponse,
   CurrentUser,
   LoginRequest,
+  LogoutRequest,
   RegisterRequest,
 } from "@/features/auth/types";
 
@@ -41,15 +42,13 @@ export async function getCurrentUser():
 }
 
 export async function logout(
-  refreshToken: string,
+  request: LogoutRequest,
 ): Promise<void> {
   await apiRequest<void>(
     "/auth/logout",
     {
       method: "POST",
-      body: {
-        refreshToken,
-      },
+      body: request,
     },
   );
 }

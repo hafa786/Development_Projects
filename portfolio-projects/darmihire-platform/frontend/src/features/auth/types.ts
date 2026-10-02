@@ -21,3 +21,7 @@ export type CurrentUser = {
   firstName: string;
   lastName: string;
 };
+
+export type LogoutRequest = {
+  refreshToken: string;
+};
