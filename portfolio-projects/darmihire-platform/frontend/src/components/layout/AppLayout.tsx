@@ -1,23 +1,17 @@
-import {
-  Outlet,
-} from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
-import {
-  Sidebar,
-} from "@/components/layout/Sidebar";
-import {
-  Topbar,
-} from "@/components/layout/Topbar";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { Topbar } from "@/components/layout/Topbar";
 
 export function AppLayout() {
   return (
-    <div className="flex min-h-screen bg-muted/30">
+    <div className="flex h-screen overflow-hidden bg-muted/30">
       <Sidebar />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar />
 
-        <main className="flex-1 overflow-x-hidden">
+        <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
           <Outlet />
         </main>
       </div>

@@ -1,75 +1,38 @@
-import type {
-  ReactNode,
-} from "react";
-import {
-  Navigate,
-  Route,
-  Routes,
-} from "react-router-dom";
+import type { ReactNode } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 
-import {
-  AppLayout,
-} from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/layout/AppLayout";
 import DashboardPage from "@/pages/DashboardPage";
 import DepartmentsPage from "@/pages/DepartmentsPage";
 import LocationsPage from "@/pages/LocationsPage";
 import NotFoundPage from "@/pages/NotFoundPage";
+import SupportPage from "@/pages/SupportPage";
 import TeamsPage from "@/pages/TeamsPage";
 import UsersPage from "@/pages/UsersPage";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import OnboardingPage from "@/pages/onboarding/OnboardingPage";
-import {
-  ProtectedRoute,
-} from "@/router/ProtectedRoute";
-import {
-  PublicRoute,
-} from "@/router/PublicRoute";
-import {
-  WorkspaceRoute,
-} from "@/router/WorkspaceRoute";
-import {
-  getTenantId,
-  isAuthenticated,
-} from "@/utils/session";
+import { ProtectedRoute } from "@/router/ProtectedRoute";
+import { PublicRoute } from "@/router/PublicRoute";
+import { WorkspaceRoute } from "@/router/WorkspaceRoute";
+import { getTenantId, isAuthenticated } from "@/utils/session";
 
 function RootRedirect() {
   if (!isAuthenticated()) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-      />
-    );
+    return <Navigate to="/login" replace />;
   }
 
   if (!getTenantId()) {
-    return (
-      <Navigate
-        to="/onboarding"
-        replace
-      />
-    );
+    return <Navigate to="/onboarding" replace />;
   }
 
-  return (
-    <Navigate
-      to="/dashboard"
-      replace
-    />
-  );
+  return <Navigate to="/dashboard" replace />;
 }
 
-function WorkspaceProtectedRoute({
-  children,
-}: {
-  children: ReactNode;
-}) {
+function WorkspaceProtectedRoute({ children }: { children: ReactNode }) {
   return (
     <ProtectedRoute>
-      <WorkspaceRoute>
-        {children}
-      </WorkspaceRoute>
+      <WorkspaceRoute>{children}</WorkspaceRoute>
     </ProtectedRoute>
   );
 }
@@ -77,12 +40,7 @@ function WorkspaceProtectedRoute({
 export function AppRouter() {
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          <RootRedirect />
-        }
-      />
+      <Route path="/" element={<RootRedirect />} />
 
       <Route
         path="/login"
@@ -118,48 +76,20 @@ export function AppRouter() {
           </WorkspaceProtectedRoute>
         }
       >
-        <Route
-          path="/dashboard"
-          element={
-            <DashboardPage />
-          }
-        />
+        <Route path="/dashboard" element={<DashboardPage />} />
 
-        <Route
-          path="/users"
-          element={
-            <UsersPage />
-          }
-        />
+        <Route path="/users" element={<UsersPage />} />
 
-        <Route
-          path="/departments"
-          element={
-            <DepartmentsPage />
-          }
-        />
+        <Route path="/departments" element={<DepartmentsPage />} />
 
-        <Route
-          path="/teams"
-          element={
-            <TeamsPage />
-          }
-        />
+        <Route path="/teams" element={<TeamsPage />} />
 
-        <Route
-          path="/locations"
-          element={
-            <LocationsPage />
-          }
-        />
+        <Route path="/locations" element={<LocationsPage />} />
+
+        <Route path="/support" element={<SupportPage />} />
       </Route>
 
-      <Route
-        path="*"
-        element={
-          <NotFoundPage />
-        }
-      />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
