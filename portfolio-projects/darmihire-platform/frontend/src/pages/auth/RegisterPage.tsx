@@ -1,14 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  ArrowRight,
-  Check,
-  Loader2,
-} from "lucide-react";
+import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import {
-  Link,
-  useNavigate,
-} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/errors";
@@ -20,10 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { registerUser } from "@/features/auth/api";
-import {
-  type RegisterFormData,
-  registerSchema,
-} from "@/features/auth/schemas";
+import { type RegisterFormData, registerSchema } from "@/features/auth/schemas";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -34,13 +24,9 @@ export default function RegisterPage() {
     watch,
     setError,
 
-    formState: {
-      errors,
-      isSubmitting,
-    },
+    formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
-    resolver:
-      zodResolver(registerSchema),
+    resolver: zodResolver(registerSchema),
 
     defaultValues: {
       firstName: "",
@@ -51,53 +37,36 @@ export default function RegisterPage() {
     },
   });
 
-  const password =
-    watch("password");
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const password = watch("password");
 
-  const confirmPassword =
-    watch("confirmPassword");
+  const confirmPassword = watch("confirmPassword");
 
   const passwordsMatch =
-    confirmPassword.length > 0 &&
-    password === confirmPassword;
+    confirmPassword.length > 0 && password === confirmPassword;
 
-  async function onSubmit(
-    data: RegisterFormData,
-  ) {
+  async function onSubmit(data: RegisterFormData) {
     try {
       await registerUser({
-        firstName:
-          data.firstName,
+        firstName: data.firstName,
 
-        lastName:
-          data.lastName,
+        lastName: data.lastName,
 
-        email:
-          data.email,
+        email: data.email,
 
-        password:
-          data.password,
+        password: data.password,
       });
 
-      toast.success(
-        "Account created successfully. Please sign in.",
-      );
+      toast.success("Account created successfully. Please sign in.");
 
-      navigate(
-        "/login",
-        {
-          replace: true,
-        },
-      );
+      navigate("/login", {
+        replace: true,
+      });
     } catch (error) {
-      if (
-        error instanceof ApiError &&
-        error.status === 409
-      ) {
+      if (error instanceof ApiError && error.status === 409) {
         setError("email", {
           type: "server",
-          message:
-            "An account with this email already exists.",
+          message: "An account with this email already exists.",
         });
 
         return;
@@ -106,8 +75,7 @@ export default function RegisterPage() {
       if (error instanceof ApiError) {
         setError("root", {
           type: "server",
-          message:
-            error.message,
+          message: error.message,
         });
 
         return;
@@ -115,8 +83,7 @@ export default function RegisterPage() {
 
       setError("root", {
         type: "server",
-        message:
-          "Unable to connect to DarmiHire. Please try again.",
+        message: "Unable to connect to DarmiHire. Please try again.",
       });
     }
   }
@@ -143,9 +110,7 @@ export default function RegisterPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="firstName">
-                First name
-              </Label>
+              <Label htmlFor="firstName">First name</Label>
 
               <Input
                 id="firstName"
@@ -153,35 +118,20 @@ export default function RegisterPage() {
                 autoComplete="given-name"
                 placeholder="Hafiz"
                 disabled={isSubmitting}
-                aria-invalid={
-                  errors.firstName
-                    ? "true"
-                    : "false"
-                }
+                aria-invalid={errors.firstName ? "true" : "false"}
                 aria-describedby={
-                  errors.firstName
-                    ? "firstName-error"
-                    : undefined
+                  errors.firstName ? "firstName-error" : undefined
                 }
-                {...register(
-                  "firstName",
-                )}
+                {...register("firstName")}
               />
 
               <div id="firstName-error">
-                <FormError
-                  message={
-                    errors.firstName
-                      ?.message
-                  }
-                />
+                <FormError message={errors.firstName?.message} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lastName">
-                Last name
-              </Label>
+              <Label htmlFor="lastName">Last name</Label>
 
               <Input
                 id="lastName"
@@ -189,36 +139,21 @@ export default function RegisterPage() {
                 autoComplete="family-name"
                 placeholder="Sikandar"
                 disabled={isSubmitting}
-                aria-invalid={
-                  errors.lastName
-                    ? "true"
-                    : "false"
-                }
+                aria-invalid={errors.lastName ? "true" : "false"}
                 aria-describedby={
-                  errors.lastName
-                    ? "lastName-error"
-                    : undefined
+                  errors.lastName ? "lastName-error" : undefined
                 }
-                {...register(
-                  "lastName",
-                )}
+                {...register("lastName")}
               />
 
               <div id="lastName-error">
-                <FormError
-                  message={
-                    errors.lastName
-                      ?.message
-                  }
-                />
+                <FormError message={errors.lastName?.message} />
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">
-              Work email
-            </Label>
+            <Label htmlFor="email">Work email</Label>
 
             <Input
               id="email"
@@ -226,126 +161,78 @@ export default function RegisterPage() {
               autoComplete="email"
               placeholder="you@company.com"
               disabled={isSubmitting}
-              aria-invalid={
-                errors.email
-                  ? "true"
-                  : "false"
-              }
+              aria-invalid={errors.email ? "true" : "false"}
               aria-describedby={
-                errors.email
-                  ? "register-email-error"
-                  : undefined
+                errors.email ? "register-email-error" : undefined
               }
               {...register("email")}
             />
 
             <div id="register-email-error">
-              <FormError
-                message={
-                  errors.email?.message
-                }
-              />
+              <FormError message={errors.email?.message} />
             </div>
 
             {!errors.email && (
               <p className="text-xs text-muted-foreground">
-                You'll use this email to
-                sign in to DarmiHire.
+                You'll use this email to sign in to DarmiHire.
               </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">
-              Password
-            </Label>
+            <Label htmlFor="password">Password</Label>
 
             <PasswordInput
               id="password"
               autoComplete="new-password"
               placeholder="Create a password"
               disabled={isSubmitting}
-              aria-invalid={
-                errors.password
-                  ? "true"
-                  : "false"
-              }
+              aria-invalid={errors.password ? "true" : "false"}
               aria-describedby={
-                errors.password
-                  ? "register-password-error"
-                  : undefined
+                errors.password ? "register-password-error" : undefined
               }
-              {...register(
-                "password",
-              )}
+              {...register("password")}
             />
 
             <div id="register-password-error">
-              <FormError
-                message={
-                  errors.password
-                    ?.message
-                }
-              />
+              <FormError message={errors.password?.message} />
             </div>
 
             {!errors.password && (
               <p className="text-xs text-muted-foreground">
-                Use at least 8
-                characters.
+                Use at least 8 characters.
               </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">
-              Confirm password
-            </Label>
+            <Label htmlFor="confirmPassword">Confirm password</Label>
 
             <PasswordInput
               id="confirmPassword"
               autoComplete="new-password"
               placeholder="Enter your password again"
               disabled={isSubmitting}
-              aria-invalid={
-                errors.confirmPassword
-                  ? "true"
-                  : "false"
-              }
+              aria-invalid={errors.confirmPassword ? "true" : "false"}
               aria-describedby={
-                errors.confirmPassword
-                  ? "confirm-password-error"
-                  : undefined
+                errors.confirmPassword ? "confirm-password-error" : undefined
               }
-              {...register(
-                "confirmPassword",
-              )}
+              {...register("confirmPassword")}
             />
 
             <div id="confirm-password-error">
-              <FormError
-                message={
-                  errors
-                    .confirmPassword
-                    ?.message
-                }
-              />
+              <FormError message={errors.confirmPassword?.message} />
             </div>
 
-            {!errors.confirmPassword &&
-              passwordsMatch && (
-                <p className="flex items-center gap-1 text-xs text-green-600">
-                  <Check className="size-3" />
-                  Passwords match.
-                </p>
-              )}
+            {!errors.confirmPassword && passwordsMatch && (
+              <p className="flex items-center gap-1 text-xs text-green-600">
+                <Check className="size-3" />
+                Passwords match.
+              </p>
+            )}
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isSubmitting}
-          >
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="animate-spin" />
@@ -360,10 +247,8 @@ export default function RegisterPage() {
           </Button>
 
           <p className="text-center text-xs leading-relaxed text-muted-foreground">
-            By creating an account,
-            you agree to DarmiHire's
-            terms of service and
-            privacy policy.
+            By creating an account, you agree to DarmiHire's terms of service
+            and privacy policy.
           </p>
 
           <div className="text-center text-sm text-muted-foreground">
