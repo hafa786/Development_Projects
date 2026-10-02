@@ -4,7 +4,9 @@ import {
   Loader2,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
+import { ApiError } from "@/api/errors";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { FormError } from "@/components/auth/FormError";
@@ -12,21 +14,25 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { login } from "@/features/auth/api";
 import {
   type LoginFormData,
   loginSchema,
 } from "@/features/auth/schemas";
+import { setTokens } from "@/utils/session";
 
 export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: {
       errors,
       isSubmitting,
     },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+
     defaultValues: {
       email: "",
       password: "",
@@ -36,12 +42,60 @@ export default function LoginPage() {
   async function onSubmit(
     data: LoginFormData,
   ) {
-    // Temporary only.
-    // Spring Boot authentication will be connected
-    // in a later step.
-    console.log({
-      email: data.email,
-    });
+    try {
+      const response =
+        await login({
+          email: data.email,
+          password: data.password,
+        });
+
+      setTokens({
+        accessToken:
+          response.accessToken,
+
+        refreshToken:
+          response.refreshToken,
+      });
+
+      toast.success(
+        "Welcome back to DarmiHire.",
+      );
+
+      // React Router navigation will be
+      // introduced in the next routing step.
+      //
+      // For now we only confirm that
+      // authentication succeeded.
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.status === 401
+      ) {
+        setError("root", {
+          type: "server",
+          message:
+            "Invalid email or password.",
+        });
+
+        return;
+      }
+
+      if (error instanceof ApiError) {
+        setError("root", {
+          type: "server",
+          message:
+            error.message,
+        });
+
+        return;
+      }
+
+      setError("root", {
+        type: "server",
+        message:
+          "Unable to connect to DarmiHire. Please try again.",
+      });
+    }
   }
 
   return (
@@ -55,6 +109,15 @@ export default function LoginPage() {
           onSubmit={handleSubmit(onSubmit)}
           noValidate
         >
+          {errors.root?.message && (
+            <div
+              className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              role="alert"
+            >
+              {errors.root.message}
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="email">
               Email address
@@ -67,7 +130,9 @@ export default function LoginPage() {
               placeholder="you@company.com"
               disabled={isSubmitting}
               aria-invalid={
-                errors.email ? "true" : "false"
+                errors.email
+                  ? "true"
+                  : "false"
               }
               aria-describedby={
                 errors.email
@@ -79,7 +144,9 @@ export default function LoginPage() {
 
             <div id="email-error">
               <FormError
-                message={errors.email?.message}
+                message={
+                  errors.email?.message
+                }
               />
             </div>
           </div>
@@ -104,7 +171,9 @@ export default function LoginPage() {
               placeholder="Enter your password"
               disabled={isSubmitting}
               aria-invalid={
-                errors.password ? "true" : "false"
+                errors.password
+                  ? "true"
+                  : "false"
               }
               aria-describedby={
                 errors.password
@@ -116,7 +185,9 @@ export default function LoginPage() {
 
             <div id="password-error">
               <FormError
-                message={errors.password?.message}
+                message={
+                  errors.password?.message
+                }
               />
             </div>
           </div>

@@ -5,7 +5,9 @@ import {
   Loader2,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
+import { ApiError } from "@/api/errors";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { FormError } from "@/components/auth/FormError";
@@ -13,6 +15,9 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  registerUser,
+} from "@/features/auth/api";
 import {
   type RegisterFormData,
   registerSchema,
@@ -23,12 +28,16 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     watch,
+    setError,
+
     formState: {
       errors,
       isSubmitting,
     },
   } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+    resolver:
+      zodResolver(registerSchema),
+
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -38,7 +47,9 @@ export default function RegisterPage() {
     },
   });
 
-  const password = watch("password");
+  const password =
+    watch("password");
+
   const confirmPassword =
     watch("confirmPassword");
 
@@ -49,13 +60,50 @@ export default function RegisterPage() {
   async function onSubmit(
     data: RegisterFormData,
   ) {
-    // Temporary only.
-    // API integration will be added later.
-    console.log({
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-    });
+    try {
+      await registerUser({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+      });
+
+      toast.success(
+        "Account created successfully. You can now sign in.",
+      );
+
+      // Router navigation to /login
+      // will be added in the next routing step.
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.status === 409
+      ) {
+        setError("email", {
+          type: "server",
+          message:
+            "An account with this email already exists.",
+        });
+
+        return;
+      }
+
+      if (error instanceof ApiError) {
+        setError("root", {
+          type: "server",
+          message:
+            error.message,
+        });
+
+        return;
+      }
+
+      setError("root", {
+        type: "server",
+        message:
+          "Unable to connect to DarmiHire. Please try again.",
+      });
+    }
   }
 
   return (
@@ -69,6 +117,15 @@ export default function RegisterPage() {
           onSubmit={handleSubmit(onSubmit)}
           noValidate
         >
+          {errors.root?.message && (
+            <div
+              className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              role="alert"
+            >
+              {errors.root.message}
+            </div>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="firstName">
@@ -91,13 +148,16 @@ export default function RegisterPage() {
                     ? "firstName-error"
                     : undefined
                 }
-                {...register("firstName")}
+                {...register(
+                  "firstName",
+                )}
               />
 
               <div id="firstName-error">
                 <FormError
                   message={
-                    errors.firstName?.message
+                    errors.firstName
+                      ?.message
                   }
                 />
               </div>
@@ -124,13 +184,16 @@ export default function RegisterPage() {
                     ? "lastName-error"
                     : undefined
                 }
-                {...register("lastName")}
+                {...register(
+                  "lastName",
+                )}
               />
 
               <div id="lastName-error">
                 <FormError
                   message={
-                    errors.lastName?.message
+                    errors.lastName
+                      ?.message
                   }
                 />
               </div>
@@ -149,7 +212,9 @@ export default function RegisterPage() {
               placeholder="you@company.com"
               disabled={isSubmitting}
               aria-invalid={
-                errors.email ? "true" : "false"
+                errors.email
+                  ? "true"
+                  : "false"
               }
               aria-describedby={
                 errors.email
@@ -161,14 +226,16 @@ export default function RegisterPage() {
 
             <div id="register-email-error">
               <FormError
-                message={errors.email?.message}
+                message={
+                  errors.email?.message
+                }
               />
             </div>
 
             {!errors.email && (
               <p className="text-xs text-muted-foreground">
-                You'll use this email to sign in
-                to DarmiHire.
+                You'll use this email
+                to sign in to DarmiHire.
               </p>
             )}
           </div>
@@ -198,13 +265,17 @@ export default function RegisterPage() {
 
             <div id="register-password-error">
               <FormError
-                message={errors.password?.message}
+                message={
+                  errors.password
+                    ?.message
+                }
               />
             </div>
 
             {!errors.password && (
               <p className="text-xs text-muted-foreground">
-                Use at least 8 characters.
+                Use at least 8
+                characters.
               </p>
             )}
           </div>
@@ -229,13 +300,17 @@ export default function RegisterPage() {
                   ? "confirm-password-error"
                   : undefined
               }
-              {...register("confirmPassword")}
+              {...register(
+                "confirmPassword",
+              )}
             />
 
             <div id="confirm-password-error">
               <FormError
                 message={
-                  errors.confirmPassword?.message
+                  errors
+                    .confirmPassword
+                    ?.message
                 }
               />
             </div>
@@ -268,9 +343,10 @@ export default function RegisterPage() {
           </Button>
 
           <p className="text-center text-xs leading-relaxed text-muted-foreground">
-            By creating an account, you agree to
-            DarmiHire's terms of service and privacy
-            policy.
+            By creating an account,
+            you agree to DarmiHire's
+            terms of service and
+            privacy policy.
           </p>
 
           <div className="text-center text-sm text-muted-foreground">
