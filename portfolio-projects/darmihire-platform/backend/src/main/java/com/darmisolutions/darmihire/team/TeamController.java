@@ -2,6 +2,7 @@ package com.darmisolutions.darmihire.team;
 
 import com.darmisolutions.darmihire.team.dto.AddTeamMemberRequest;
 import com.darmisolutions.darmihire.team.dto.CreateTeamRequest;
+import com.darmisolutions.darmihire.team.dto.TeamMemberResponse;
 import com.darmisolutions.darmihire.team.dto.TeamResponse;
 import com.darmisolutions.darmihire.team.dto.UpdateTeamRequest;
 import jakarta.validation.Valid;
@@ -43,8 +44,7 @@ public class TeamController {
 
     @GetMapping("/{id}")
     public TeamResponse findById(
-            @PathVariable UUID id
-    ) {
+            @PathVariable UUID id) {
 
         return teamService.findById(id);
     }
@@ -60,10 +60,7 @@ public class TeamController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TeamResponse create(
-            @Valid
-            @RequestBody
-            CreateTeamRequest request
-    ) {
+            @Valid @RequestBody CreateTeamRequest request) {
 
         return teamService.create(request);
     }
@@ -80,15 +77,11 @@ public class TeamController {
     public TeamResponse update(
             @PathVariable UUID id,
 
-            @Valid
-            @RequestBody
-            UpdateTeamRequest request
-    ) {
+            @Valid @RequestBody UpdateTeamRequest request) {
 
         return teamService.update(
                 id,
-                request
-        );
+                request);
     }
 
     /*
@@ -102,15 +95,30 @@ public class TeamController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
-            @PathVariable UUID id
-    ) {
+            @PathVariable UUID id) {
 
         teamService.delete(id);
     }
 
     /*
      * ---------------------------------------------------------
-     * ADD MEMBER
+     * GET TEAM MEMBERS
+     * ---------------------------------------------------------
+     *
+     * GET /api/v1/teams/{teamId}/members
+     */
+
+    @GetMapping("/{teamId}/members")
+    public List<TeamMemberResponse> findMembers(
+            @PathVariable UUID teamId) {
+
+        return teamService.findMembers(
+                teamId);
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * ADD TEAM MEMBER
      * ---------------------------------------------------------
      *
      * POST /api/v1/teams/{teamId}/members
@@ -121,38 +129,29 @@ public class TeamController {
     public void addMember(
             @PathVariable UUID teamId,
 
-            @Valid
-            @RequestBody
-            AddTeamMemberRequest request
-    ) {
+            @Valid @RequestBody AddTeamMemberRequest request) {
 
         teamService.addMember(
                 teamId,
-                request
-        );
+                request);
     }
 
     /*
      * ---------------------------------------------------------
-     * REMOVE MEMBER
+     * REMOVE TEAM MEMBER
      * ---------------------------------------------------------
      *
-     * DELETE
-     * /api/v1/teams/{teamId}/members/{tenantUserId}
+     * DELETE /api/v1/teams/{teamId}/members/{tenantUserId}
      */
 
-    @DeleteMapping(
-            "/{teamId}/members/{tenantUserId}"
-    )
+    @DeleteMapping("/{teamId}/members/{tenantUserId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeMember(
             @PathVariable UUID teamId,
-            @PathVariable UUID tenantUserId
-    ) {
+            @PathVariable UUID tenantUserId) {
 
         teamService.removeMember(
                 teamId,
-                tenantUserId
-        );
+                tenantUserId);
     }
 }

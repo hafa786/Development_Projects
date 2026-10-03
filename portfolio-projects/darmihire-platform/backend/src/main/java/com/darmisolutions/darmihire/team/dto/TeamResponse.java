@@ -6,4 +6,5 @@ public record TeamResponse(
         UUID id,
         String name,
         String description
-) {}
+) {
+}

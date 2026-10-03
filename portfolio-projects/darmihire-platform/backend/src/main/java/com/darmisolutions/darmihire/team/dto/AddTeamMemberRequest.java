@@ -6,4 +6,5 @@ import java.util.UUID;
 
 public record AddTeamMemberRequest(
         @NotNull UUID tenantUserId
-) {}
+) {
+}

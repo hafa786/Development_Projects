@@ -13,8 +13,7 @@ public interface TeamMemberRepository
             UUID teamId
     );
 
-    Optional<TeamMember>
-    findByTeamIdAndTenantUserId(
+    Optional<TeamMember> findByTeamIdAndTenantUserId(
             UUID teamId,
             UUID tenantUserId
     );
