@@ -1,6 +1,5 @@
-package com.darmisolutions.darmihire.config;
+package com.darmisolutions.darmihire.security;
 
-import com.darmisolutions.darmihire.security.JwtAuthenticationFilter;
 import com.darmisolutions.darmihire.tenant.context.TenantContextFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;

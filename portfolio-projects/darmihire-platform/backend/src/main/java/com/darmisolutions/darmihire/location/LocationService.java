@@ -90,7 +90,7 @@ public class LocationService {
                 locationRepository.save(
                         location
                 );
-
+        
         auditService.log(
                 AuditAction.LOCATION_CREATED,
                 "Location",
