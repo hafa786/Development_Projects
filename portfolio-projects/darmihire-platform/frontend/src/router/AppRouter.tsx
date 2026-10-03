@@ -18,78 +18,78 @@ import { WorkspaceRoute } from "@/router/WorkspaceRoute";
 import { getTenantId, isAuthenticated } from "@/utils/session";
 
 function RootRedirect() {
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" replace />;
-  }
+    if (!isAuthenticated()) {
+        return <Navigate to="/login" replace />;
+    }
 
-  if (!getTenantId()) {
-    return <Navigate to="/onboarding" replace />;
-  }
+    if (!getTenantId()) {
+        return <Navigate to="/onboarding" replace />;
+    }
 
-  return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/dashboard" replace />;
 }
 
 function WorkspaceProtectedRoute({ children }: { children: ReactNode }) {
-  return (
-    <ProtectedRoute>
-      <WorkspaceRoute>{children}</WorkspaceRoute>
-    </ProtectedRoute>
-  );
+    return (
+        <ProtectedRoute>
+            <WorkspaceRoute>{children}</WorkspaceRoute>
+        </ProtectedRoute>
+    );
 }
 
 export function AppRouter() {
-  return (
-    <Routes>
-      <Route path="/" element={<RootRedirect />} />
+    return (
+        <Routes>
+            <Route path="/" element={<RootRedirect />} />
 
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <LoginPage />
-          </PublicRoute>
-        }
-      />
+            <Route
+                path="/login"
+                element={
+                    <PublicRoute>
+                        <LoginPage />
+                    </PublicRoute>
+                }
+            />
 
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <RegisterPage />
-          </PublicRoute>
-        }
-      />
+            <Route
+                path="/register"
+                element={
+                    <PublicRoute>
+                        <RegisterPage />
+                    </PublicRoute>
+                }
+            />
 
-      <Route
-        path="/onboarding"
-        element={
-          <ProtectedRoute>
-            <OnboardingPage />
-          </ProtectedRoute>
-        }
-      />
+            <Route
+                path="/onboarding"
+                element={
+                    <ProtectedRoute>
+                        <OnboardingPage />
+                    </ProtectedRoute>
+                }
+            />
 
-      <Route
-        element={
-          <WorkspaceProtectedRoute>
-            <AppLayout />
-          </WorkspaceProtectedRoute>
-        }
-      >
-        <Route path="/dashboard" element={<DashboardPage />} />
+            <Route
+                element={
+                    <WorkspaceProtectedRoute>
+                        <AppLayout />
+                    </WorkspaceProtectedRoute>
+                }
+            >
+                <Route path="/dashboard" element={<DashboardPage />} />
 
-        <Route path="/users" element={<UsersPage />} />
+                <Route path="/users" element={<UsersPage />} />
 
-        <Route path="/departments" element={<DepartmentsPage />} />
+                <Route path="/departments" element={<DepartmentsPage />} />
 
-        <Route path="/teams" element={<TeamsPage />} />
+                <Route path="/teams" element={<TeamsPage />} />
 
-        <Route path="/locations" element={<LocationsPage />} />
+                <Route path="/locations" element={<LocationsPage />} />
 
-        <Route path="/support" element={<SupportPage />} />
-      </Route>
+                <Route path="/support" element={<SupportPage />} />
+            </Route>
 
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
-  );
+            <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+    );
 }
