@@ -5,6 +5,8 @@ import com.darmisolutions.darmihire.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -19,20 +21,15 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    /*
-     * Every audit event belongs to a tenant/workspace.
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
             name = "tenant_id",
             nullable = false
     )
     private Tenant tenant;
 
-    /*
-     * User can be null.
-     *
-     * This is useful for future system-generated events.
+    /**
+     * Null is allowed for system-generated audit events.
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -40,6 +37,7 @@ public class AuditLog {
 
     @Enumerated(EnumType.STRING)
     @Column(
+            name = "action",
             nullable = false,
             length = 100
     )
@@ -54,12 +52,14 @@ public class AuditLog {
     @Column(name = "entity_id")
     private UUID entityId;
 
-    /*
-     * PostgreSQL JSONB.
+    /**
+     * PostgreSQL JSONB metadata.
      *
-     * We keep it as String for now.
-     * More structured JSON mapping can be added later.
+     * JdbcTypeCode is important here. Without it Hibernate treats
+     * String as VARCHAR, which PostgreSQL cannot automatically insert
+     * into a JSONB column.
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(
             name = "metadata",
             columnDefinition = "jsonb"

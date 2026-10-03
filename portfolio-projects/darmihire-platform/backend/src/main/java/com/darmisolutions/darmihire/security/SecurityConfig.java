@@ -1,6 +1,9 @@
-package com.darmisolutions.darmihire.security;
+package com.darmisolutions.darmihire.config;
 
+import com.darmisolutions.darmihire.security.JwtAuthenticationFilter;
+import com.darmisolutions.darmihire.tenant.context.TenantContextFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -8,66 +11,82 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.darmisolutions.darmihire.tenant.context.TenantContextFilter;
-
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final TenantContextFilter tenantContextFilter;
 
-        private final TenantContextFilter tenantContextFilter;
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http
+    ) throws Exception {
 
-        private final RestAuthenticationEntryPoint authenticationEntryPoint;
+        http
+                .csrf(csrf -> csrf.disable())
 
-        private final RestAccessDeniedHandler accessDeniedHandler;
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
+                )
 
-        @Bean
-        SecurityFilterChain securityFilterChain(
-                        HttpSecurity http) throws Exception {
+                .authorizeHttpRequests(auth ->
+                        auth
+                                .requestMatchers(
+                                        "/api/v1/auth/**",
+                                        "/actuator/health"
+                                )
+                                .permitAll()
+                                .anyRequest()
+                                .authenticated()
+                )
 
-                return http
-                                .csrf(csrf -> csrf.disable())
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                )
 
-                                .cors(cors -> {
-                                })
+                .addFilterAfter(
+                        tenantContextFilter,
+                        JwtAuthenticationFilter.class
+                );
 
-                                .sessionManagement(session -> session.sessionCreationPolicy(
-                                                SessionCreationPolicy.STATELESS))
+        return http.build();
+    }
 
-                                .exceptionHandling(exception -> exception
-                                                .authenticationEntryPoint(
-                                                                authenticationEntryPoint)
-                                                .accessDeniedHandler(
-                                                                accessDeniedHandler))
+    /*
+     * Prevent Spring Boot from registering the JWT filter
+     * separately as a servlet filter.
+     */
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter>
+    jwtAuthenticationFilterRegistration(
+            JwtAuthenticationFilter filter
+    ) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registration =
+                new FilterRegistrationBean<>(filter);
 
-                                .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers(
-                                                                "/api/v1/auth/register",
-                                                                "/api/v1/auth/login",
-                                                                "/api/v1/auth/refresh",
+        registration.setEnabled(false);
 
-                                                                "/actuator/health",
+        return registration;
+    }
 
-                                                                "/swagger-ui/**",
-                                                                "/swagger-ui.html",
+    /*
+     * Prevent Spring Boot from registering the tenant filter
+     * separately as a servlet filter.
+     */
+    @Bean
+    public FilterRegistrationBean<TenantContextFilter>
+    tenantContextFilterRegistration(
+            TenantContextFilter filter
+    ) {
+        FilterRegistrationBean<TenantContextFilter> registration =
+                new FilterRegistrationBean<>(filter);
 
-                                                                "/v3/api-docs",
-                                                                "/v3/api-docs/**",
-                                                                "/v3/api-docs.yaml")
-                                                .permitAll()
+        registration.setEnabled(false);
 
-                                                .anyRequest()
-                                                .authenticated())
-
-                                .addFilterBefore(
-                                                jwtAuthenticationFilter,
-                                                UsernamePasswordAuthenticationFilter.class)
-
-                                .addFilterAfter(
-                                                tenantContextFilter,
-                                                JwtAuthenticationFilter.class)
-
-                                .build();
-        }
+        return registration;
+    }
 }

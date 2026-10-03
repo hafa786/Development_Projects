@@ -5,6 +5,8 @@ import com.darmisolutions.darmihire.audit.AuditService;
 import com.darmisolutions.darmihire.department.dto.CreateDepartmentRequest;
 import com.darmisolutions.darmihire.department.dto.DepartmentResponse;
 import com.darmisolutions.darmihire.department.dto.UpdateDepartmentRequest;
+import com.darmisolutions.darmihire.exception.ConflictException;
+import com.darmisolutions.darmihire.exception.ResourceNotFoundException;
 import com.darmisolutions.darmihire.security.AuthorizationService;
 import com.darmisolutions.darmihire.security.Permission;
 import com.darmisolutions.darmihire.tenant.Tenant;
@@ -13,8 +15,6 @@ import com.darmisolutions.darmihire.tenant.context.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.darmisolutions.darmihire.exception.ConflictException;
-import com.darmisolutions.darmihire.exception.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,251 +23,276 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DepartmentService {
 
-        private final DepartmentRepository departmentRepository;
+    private final DepartmentRepository departmentRepository;
+    private final TenantRepository tenantRepository;
+    private final TenantContext tenantContext;
+    private final AuthorizationService authorizationService;
+    private final AuditService auditService;
 
-        private final TenantRepository tenantRepository;
+    /*
+     * ---------------------------------------------------------
+     * GET ALL
+     * ---------------------------------------------------------
+     */
 
-        private final TenantContext tenantContext;
+    @Transactional(readOnly = true)
+    public List<DepartmentResponse> findAll() {
 
-        private final AuthorizationService authorizationService;
+        UUID tenantId = requireTenantId();
 
-        private final AuditService auditService;
+        return departmentRepository
+                .findAllByTenantIdOrderByName(
+                        tenantId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
 
-        /*
-         * ---------------------------------------------------------
-         * GET ALL
-         * ---------------------------------------------------------
-         */
+    /*
+     * ---------------------------------------------------------
+     * GET ONE
+     * ---------------------------------------------------------
+     */
 
-        @Transactional(readOnly = true)
-        public List<DepartmentResponse> findAll() {
+    @Transactional(readOnly = true)
+    public DepartmentResponse findById(
+            UUID id) {
 
-                UUID tenantId = requireTenantId();
+        Department department = findDepartment(id);
 
-                return departmentRepository
-                                .findAllByTenantIdOrderByName(
-                                                tenantId)
-                                .stream()
-                                .map(this::toResponse)
-                                .toList();
+        return toResponse(
+                department);
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * CREATE
+     * ---------------------------------------------------------
+     */
+
+    @Transactional
+    public DepartmentResponse create(
+            CreateDepartmentRequest request) {
+        authorizationService.require(
+                Permission.MANAGE_DEPARTMENTS);
+
+        UUID tenantId = requireTenantId();
+
+        String name = normalizeRequiredName(request.name());
+
+        if (departmentRepository
+                .existsByTenantIdAndNameIgnoreCase(
+                        tenantId,
+                        name)) {
+
+            throw new ConflictException(
+                    "Department already exists");
         }
 
-        /*
-         * ---------------------------------------------------------
-         * GET ONE
-         * ---------------------------------------------------------
-         */
+        Tenant tenant = tenantRepository
+                .findById(tenantId)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                "Tenant not found"));
 
-        @Transactional(readOnly = true)
-        public DepartmentResponse findById(
-                        UUID id) {
+        Department department = new Department();
 
-                return toResponse(
-                                findDepartment(id));
-        }
+        department.setTenant(tenant);
+        department.setName(name);
+        department.setDescription(
+                normalizeNullable(request.description()));
 
-        /*
-         * ---------------------------------------------------------
-         * CREATE
-         * ---------------------------------------------------------
-         */
+        Department savedDepartment = departmentRepository.save(department);
 
-        @Transactional
-        public DepartmentResponse create(
-                        CreateDepartmentRequest request) {
+        auditService.log(
+                AuditAction.DEPARTMENT_CREATED,
+                "Department",
+                savedDepartment.getId());
 
-                authorizationService.require(
-                                Permission.MANAGE_DEPARTMENTS);
+        return toResponse(savedDepartment);
+    }
+    /*
+     * ---------------------------------------------------------
+     * UPDATE
+     * ---------------------------------------------------------
+     */
 
-                UUID tenantId = requireTenantId();
+    @Transactional
+    public DepartmentResponse update(
+            UUID id,
+            UpdateDepartmentRequest request) {
 
-                String name = request.name().trim();
+        authorizationService.require(
+                Permission.MANAGE_DEPARTMENTS);
 
-                if (departmentRepository
-                                .existsByTenantIdAndNameIgnoreCase(
-                                                tenantId,
-                                                name)) {
+        UUID tenantId = requireTenantId();
 
-                        throw new ConflictException(
-                                        "Department already exists");
-                }
+        Department department = findDepartment(id);
 
-                Tenant tenant = tenantRepository
-                                .findById(tenantId)
-                                .orElseThrow(() -> new IllegalArgumentException(
-                                                "Tenant not found"));
-
-                Department department = new Department();
-
-                department.setTenant(tenant);
-
-                department.setName(name);
-
-                department.setDescription(
-                                normalizeNullable(
-                                                request.description()));
-
-                Department savedDepartment = departmentRepository.save(
-                                department);
-
-                auditService.log(
-                                AuditAction.DEPARTMENT_CREATED,
-                                "Department",
-                                savedDepartment.getId());
-
-                return toResponse(
-                                savedDepartment);
-        }
+        String newName = normalizeRequiredName(
+                request.name());
 
         /*
-         * ---------------------------------------------------------
-         * UPDATE
-         * ---------------------------------------------------------
+         * Only perform the duplicate check when the
+         * department name is actually changing.
          */
+        boolean nameChanged = !department
+                .getName()
+                .equalsIgnoreCase(
+                        newName);
 
-        @Transactional
-        public DepartmentResponse update(
-                        UUID id,
-                        UpdateDepartmentRequest request) {
+        if (nameChanged
+                && departmentRepository
+                        .existsByTenantIdAndNameIgnoreCase(
+                                tenantId,
+                                newName)) {
 
-                authorizationService.require(
-                                Permission.MANAGE_DEPARTMENTS);
-
-                UUID tenantId = requireTenantId();
-
-                Department department = findDepartment(id);
-
-                String newName = request.name().trim();
-
-                if (!department
-                                .getName()
-                                .equalsIgnoreCase(newName)
-                                &&
-                                departmentRepository
-                                                .existsByTenantIdAndNameIgnoreCase(
-                                                                tenantId,
-                                                                newName)) {
-
-                        throw new IllegalArgumentException(
-                                        "Department already exists");
-                }
-
-                department.setName(
-                                newName);
-
-                department.setDescription(
-                                normalizeNullable(
-                                                request.description()));
-
-                Department savedDepartment = departmentRepository.save(
-                                department);
-
-                auditService.log(
-                                AuditAction.DEPARTMENT_UPDATED,
-                                "Department",
-                                savedDepartment.getId());
-
-                return toResponse(
-                                savedDepartment);
+            throw new ConflictException(
+                    "Department already exists");
         }
 
-        /*
-         * ---------------------------------------------------------
-         * DELETE
-         * ---------------------------------------------------------
-         */
+        department.setName(
+                newName);
 
-        @Transactional
-        public void delete(
-                        UUID id) {
+        department.setDescription(
+                normalizeNullable(
+                        request.description()));
 
-                authorizationService.require(
-                                Permission.MANAGE_DEPARTMENTS);
+        Department savedDepartment = departmentRepository.save(
+                department);
 
-                Department department = findDepartment(id);
+        auditService.log(
+                AuditAction.DEPARTMENT_UPDATED,
+                "Department",
+                savedDepartment.getId());
 
-                UUID departmentId = department.getId();
+        return toResponse(
+                savedDepartment);
+    }
 
-                departmentRepository.delete(
-                                department);
+    /*
+     * ---------------------------------------------------------
+     * DELETE
+     * ---------------------------------------------------------
+     */
 
-                auditService.log(
-                                AuditAction.DEPARTMENT_DELETED,
-                                "Department",
-                                departmentId);
+    @Transactional
+    public void delete(
+            UUID id) {
+
+        authorizationService.require(
+                Permission.MANAGE_DEPARTMENTS);
+
+        Department department = findDepartment(id);
+
+        UUID departmentId = department.getId();
+
+        departmentRepository.delete(
+                department);
+
+        auditService.log(
+                AuditAction.DEPARTMENT_DELETED,
+                "Department",
+                departmentId);
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * FIND TENANT-SCOPED DEPARTMENT
+     * ---------------------------------------------------------
+     */
+
+    private Department findDepartment(
+            UUID id) {
+
+        UUID tenantId = requireTenantId();
+
+        return departmentRepository
+                .findByIdAndTenantId(
+                        id,
+                        tenantId)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                "Department not found"));
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * REQUIRE TENANT
+     * ---------------------------------------------------------
+     */
+
+    private UUID requireTenantId() {
+
+        UUID tenantId = tenantContext.getTenantId();
+
+        if (tenantId == null) {
+
+            throw new IllegalStateException(
+                    "Tenant context is required");
         }
 
-        /*
-         * ---------------------------------------------------------
-         * FIND TENANT-SCOPED DEPARTMENT
-         * ---------------------------------------------------------
-         */
+        return tenantId;
+    }
 
-        private Department findDepartment(
-                        UUID id) {
+    /*
+     * ---------------------------------------------------------
+     * NORMALIZE REQUIRED NAME
+     * ---------------------------------------------------------
+     */
 
-                UUID tenantId = requireTenantId();
+    private String normalizeRequiredName(
+            String value) {
 
-                return departmentRepository
-                                .findByIdAndTenantId(
-                                                id,
-                                                tenantId)
-                                .orElseThrow(() -> new ResourceNotFoundException(
-                                                "Department not found")
-                                        );
+        if (value == null) {
+
+            throw new IllegalArgumentException(
+                    "Department name is required");
         }
 
-        /*
-         * ---------------------------------------------------------
-         * REQUIRE TENANT
-         * ---------------------------------------------------------
-         */
+        String trimmed = value.trim();
 
-        private UUID requireTenantId() {
+        if (trimmed.isEmpty()) {
 
-                UUID tenantId = tenantContext.getTenantId();
-
-                if (tenantId == null) {
-
-                        throw new IllegalStateException(
-                                        "Tenant context is required");
-                }
-
-                return tenantId;
+            throw new IllegalArgumentException(
+                    "Department name is required");
         }
 
-        /*
-         * ---------------------------------------------------------
-         * NORMALIZE OPTIONAL TEXT
-         * ---------------------------------------------------------
-         */
+        return trimmed;
+    }
 
-        private String normalizeNullable(
-                        String value) {
+    /*
+     * ---------------------------------------------------------
+     * NORMALIZE OPTIONAL TEXT
+     * ---------------------------------------------------------
+     */
 
-                if (value == null) {
-                        return null;
-                }
+    private String normalizeNullable(
+            String value) {
 
-                String trimmed = value.trim();
-
-                return trimmed.isEmpty()
-                                ? null
-                                : trimmed;
+        if (value == null) {
+            return null;
         }
 
-        /*
-         * ---------------------------------------------------------
-         * ENTITY → RESPONSE
-         * ---------------------------------------------------------
-         */
+        String trimmed = value.trim();
 
-        private DepartmentResponse toResponse(
-                        Department department) {
+        return trimmed.isEmpty()
+                ? null
+                : trimmed;
+    }
 
-                return new DepartmentResponse(
-                                department.getId(),
-                                department.getName(),
-                                department.getDescription());
-        }
+    /*
+     * ---------------------------------------------------------
+     * ENTITY -> RESPONSE
+     * ---------------------------------------------------------
+     */
+
+    private DepartmentResponse toResponse(
+            Department department) {
+
+        return new DepartmentResponse(
+                department.getId(),
+                department.getName(),
+                department.getDescription());
+    }
 }
