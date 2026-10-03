@@ -1,9 +1,9 @@
 import { apiRequest } from "@/api/client";
-
 import type {
   AddTeamMemberRequest,
   CreateTeamRequest,
   Team,
+  TeamMember,
   UpdateTeamRequest,
 } from "@/features/teams/types";
 
@@ -11,6 +11,17 @@ export async function getTeams(): Promise<Team[]> {
   return apiRequest<Team[]>("/teams", {
     tenantScoped: true,
   });
+}
+
+export async function getTeamMembers(
+  teamId: string,
+): Promise<TeamMember[]> {
+  return apiRequest<TeamMember[]>(
+    `/teams/${teamId}/members`,
+    {
+      tenantScoped: true,
+    },
+  );
 }
 
 export async function getTeam(

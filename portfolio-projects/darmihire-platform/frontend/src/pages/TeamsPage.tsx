@@ -1,14 +1,11 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   MoreHorizontal,
   Pencil,
   Plus,
   RefreshCw,
   Trash2,
+  UserRoundCog,
   Users,
 } from "lucide-react";
 import { useState } from "react";
@@ -32,13 +29,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
 import {
   createTeam,
   deleteTeam,
   getTeams,
   updateTeam,
 } from "@/features/teams/api";
+
 import { DeleteTeamDialog } from "@/features/teams/DeleteTeamDialog";
+import { ManageTeamMembersDialog } from "@/features/teams/ManageTeamMembersDialog";
 import { teamQueryKeys } from "@/features/teams/queryKeys";
 import type { TeamFormData } from "@/features/teams/schemas";
 import { TeamDialog } from "@/features/teams/TeamDialog";
@@ -50,20 +50,37 @@ export default function TeamsPage() {
 
   const tenantId = getTenantId();
 
-  const [teamDialogOpen, setTeamDialogOpen] =
-    useState(false);
+  /*
+   * ---------------------------------------------------------
+   * STATE
+   * ---------------------------------------------------------
+   */
 
-  const [selectedTeam, setSelectedTeam] =
-    useState<Team | null>(null);
+  const [teamDialogOpen, setTeamDialogOpen] = useState(false);
 
-  const [deleteDialogOpen, setDeleteDialogOpen] =
-    useState(false);
+  const [membersDialogOpen, setMembersDialogOpen] = useState(false);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+
+  /*
+   * ---------------------------------------------------------
+   * QUERY
+   * ---------------------------------------------------------
+   */
 
   const teamsQuery = useQuery({
     queryKey: teamQueryKeys.list(tenantId!),
     queryFn: getTeams,
     enabled: Boolean(tenantId),
   });
+
+  /*
+   * ---------------------------------------------------------
+   * CREATE TEAM
+   * ---------------------------------------------------------
+   */
 
   const createMutation = useMutation({
     mutationFn: createTeam,
@@ -75,24 +92,24 @@ export default function TeamsPage() {
 
       setTeamDialogOpen(false);
 
+      setSelectedTeam(null);
+
       toast.success("Team created.");
     },
 
     onError: (error: Error) => {
-      toast.error(
-        error.message || "Unable to create team.",
-      );
+      toast.error(error.message || "Unable to create team.");
     },
   });
 
+  /*
+   * ---------------------------------------------------------
+   * UPDATE TEAM
+   * ---------------------------------------------------------
+   */
+
   const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: TeamFormData;
-    }) =>
+    mutationFn: ({ id, data }: { id: string; data: TeamFormData }) =>
       updateTeam(id, {
         name: data.name,
         description: data.description || null,
@@ -104,17 +121,22 @@ export default function TeamsPage() {
       });
 
       setTeamDialogOpen(false);
+
       setSelectedTeam(null);
 
       toast.success("Team updated.");
     },
 
     onError: (error: Error) => {
-      toast.error(
-        error.message || "Unable to update team.",
-      );
+      toast.error(error.message || "Unable to update team.");
     },
   });
+
+  /*
+   * ---------------------------------------------------------
+   * DELETE TEAM
+   * ---------------------------------------------------------
+   */
 
   const deleteMutation = useMutation({
     mutationFn: deleteTeam,
@@ -125,36 +147,54 @@ export default function TeamsPage() {
       });
 
       setDeleteDialogOpen(false);
+
       setSelectedTeam(null);
 
       toast.success("Team deleted.");
     },
 
     onError: (error: Error) => {
-      toast.error(
-        error.message || "Unable to delete team.",
-      );
+      toast.error(error.message || "Unable to delete team.");
     },
   });
 
+  /*
+   * ---------------------------------------------------------
+   * DIALOG HANDLERS
+   * ---------------------------------------------------------
+   */
+
   function openCreateDialog() {
     setSelectedTeam(null);
+
     setTeamDialogOpen(true);
   }
 
   function openEditDialog(team: Team) {
     setSelectedTeam(team);
+
     setTeamDialogOpen(true);
+  }
+
+  function openMembersDialog(team: Team) {
+    setSelectedTeam(team);
+
+    setMembersDialogOpen(true);
   }
 
   function openDeleteDialog(team: Team) {
     setSelectedTeam(team);
+
     setDeleteDialogOpen(true);
   }
 
-  function handleTeamSubmit(
-    data: TeamFormData,
-  ) {
+  /*
+   * ---------------------------------------------------------
+   * SUBMIT TEAM
+   * ---------------------------------------------------------
+   */
+
+  function handleTeamSubmit(data: TeamFormData) {
     if (selectedTeam) {
       updateMutation.mutate({
         id: selectedTeam.id,
@@ -170,6 +210,12 @@ export default function TeamsPage() {
     });
   }
 
+  /*
+   * ---------------------------------------------------------
+   * DELETE TEAM
+   * ---------------------------------------------------------
+   */
+
   function handleDelete() {
     if (!selectedTeam) {
       return;
@@ -178,30 +224,33 @@ export default function TeamsPage() {
     deleteMutation.mutate(selectedTeam.id);
   }
 
-  const isSaving =
-    createMutation.isPending ||
-    updateMutation.isPending;
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
+  /*
+   * ---------------------------------------------------------
+   * RENDER
+   * ---------------------------------------------------------
+   */
 
   return (
     <>
       <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
         <PageHeader
           title="Teams"
-          description="Create and manage teams across your organization."
+          description="Create teams and manage their members across your organization."
           actions={
-            <Button
-              type="button"
-              onClick={openCreateDialog}
-            >
+            <Button type="button" onClick={openCreateDialog}>
               <Plus />
               Add team
             </Button>
           }
         />
 
-        {teamsQuery.isLoading && (
-          <TeamTableSkeleton />
-        )}
+        {/* Loading */}
+
+        {teamsQuery.isLoading && <TeamTableSkeleton />}
+
+        {/* Error */}
 
         {teamsQuery.isError && (
           <div className="rounded-xl border bg-background p-8 text-center">
@@ -209,9 +258,7 @@ export default function TeamsPage() {
               <Users className="size-5 text-destructive" />
             </div>
 
-            <h2 className="mt-4 font-semibold">
-              Unable to load teams
-            </h2>
+            <h2 className="mt-4 font-semibold">Unable to load teams</h2>
 
             <p className="mt-1 text-sm text-muted-foreground">
               Something went wrong while loading your teams.
@@ -229,68 +276,67 @@ export default function TeamsPage() {
           </div>
         )}
 
-        {teamsQuery.isSuccess &&
-          teamsQuery.data.length === 0 && (
-            <EmptyState
-              icon={Users}
-              title="No teams yet"
-              description="Create teams such as Platform, Backend, Product, or Recruitment."
-            />
-          )}
+        {/* Empty state */}
 
-        {teamsQuery.isSuccess &&
-          teamsQuery.data.length > 0 && (
-            <div className="overflow-hidden rounded-xl border bg-background">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Team</TableHead>
+        {teamsQuery.isSuccess && teamsQuery.data.length === 0 && (
+          <EmptyState
+            icon={Users}
+            title="No teams yet"
+            description="Create teams such as Platform, Backend, Product, or Recruitment."
+          />
+        )}
 
-                    <TableHead>
-                      Description
-                    </TableHead>
+        {/* Team table */}
 
-                    <TableHead className="w-16">
-                      <span className="sr-only">
-                        Actions
-                      </span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
+        {teamsQuery.isSuccess && teamsQuery.data.length > 0 && (
+          <div className="overflow-hidden rounded-xl border bg-background">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Team</TableHead>
 
-                <TableBody>
-                  {teamsQuery.data.map((team) => (
-                    <TableRow key={team.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                            <Users className="size-4" />
-                          </div>
+                  <TableHead>Description</TableHead>
 
-                          <span className="font-medium">
-                            {team.name}
-                          </span>
+                  <TableHead className="w-16">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {teamsQuery.data.map((team) => (
+                  <TableRow key={team.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                          <Users className="size-4" />
                         </div>
-                      </TableCell>
 
-                      <TableCell className="max-w-md text-muted-foreground">
-                        {team.description || "—"}
-                      </TableCell>
+                        <span className="font-medium">{team.name}</span>
+                      </div>
+                    </TableCell>
 
-                      <TableCell className="text-right">
-                        <TeamActions
-                          team={team}
-                          onEdit={openEditDialog}
-                          onDelete={openDeleteDialog}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                    <TableCell className="max-w-md text-muted-foreground">
+                      {team.description || "—"}
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      <TeamActions
+                        team={team}
+                        onEdit={openEditDialog}
+                        onManageMembers={openMembersDialog}
+                        onDelete={openDeleteDialog}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
+
+      {/* Create / Edit Team */}
 
       <TeamDialog
         open={teamDialogOpen}
@@ -305,6 +351,30 @@ export default function TeamsPage() {
         }}
         onSubmit={handleTeamSubmit}
       />
+
+      {/* Manage Team Members */}
+
+      <ManageTeamMembersDialog
+        open={membersDialogOpen}
+        team={selectedTeam}
+        onOpenChange={(open) => {
+          setMembersDialogOpen(open);
+
+          if (!open) {
+            setSelectedTeam(null);
+          }
+        }}
+        onAddMember={() => {
+          /*
+           * The Add Team Member dialog
+           * will be connected here once
+           * the workspace-member listing
+           * API is wired.
+           */
+        }}
+      />
+
+      {/* Delete Team */}
 
       <DeleteTeamDialog
         open={deleteDialogOpen}
@@ -323,15 +393,26 @@ export default function TeamsPage() {
   );
 }
 
+/*
+ * ---------------------------------------------------------
+ * TEAM ACTIONS
+ * ---------------------------------------------------------
+ */
+
 type TeamActionsProps = {
   team: Team;
+
   onEdit: (team: Team) => void;
+
+  onManageMembers: (team: Team) => void;
+
   onDelete: (team: Team) => void;
 };
 
 function TeamActions({
   team,
   onEdit,
+  onManageMembers,
   onDelete,
 }: TeamActionsProps) {
   return (
@@ -343,23 +424,24 @@ function TeamActions({
         <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent
-        align="end"
-        className="w-40"
-      >
-        <DropdownMenuItem
-          onSelect={() => onEdit(team)}
-          onClick={() => onEdit(team)}
-        >
+      <DropdownMenuContent align="end" className="w-48">
+        {/* Edit */}
+
+        <DropdownMenuItem onSelect={() => onEdit(team)} onClick={() => onEdit(team)}>
           <Pencil />
           Edit
         </DropdownMenuItem>
 
-        <DropdownMenuItem
-          variant="destructive"
-          onSelect={() => onDelete(team)}
-          onClick={() => onDelete(team)}
-        >
+        {/* Manage Members */}
+
+        <DropdownMenuItem onSelect={() => onManageMembers(team)} onClick={() => onManageMembers(team)}>
+          <UserRoundCog />
+          Manage members
+        </DropdownMenuItem>
+
+        {/* Delete */}
+
+        <DropdownMenuItem variant="destructive" onSelect={() => onDelete(team)} onClick={() => onDelete(team)}>
           <Trash2 />
           Delete
         </DropdownMenuItem>
@@ -368,27 +450,34 @@ function TeamActions({
   );
 }
 
+/*
+ * ---------------------------------------------------------
+ * TABLE SKELETON
+ * ---------------------------------------------------------
+ */
+
 function TeamTableSkeleton() {
   return (
     <div className="overflow-hidden rounded-xl border bg-background">
       <div className="space-y-1 p-4">
-        {Array.from({ length: 4 }).map(
-          (_, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-4 border-b py-4 last:border-b-0"
-            >
-              <Skeleton className="size-9 rounded-lg" />
+        {Array.from({
+          length: 4,
+        }).map((_, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-4 border-b py-4 last:border-b-0"
+          >
+            <Skeleton className="size-9 rounded-lg" />
 
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-3 w-72 max-w-full" />
-              </div>
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-40" />
 
-              <Skeleton className="size-8" />
+              <Skeleton className="h-3 w-72 max-w-full" />
             </div>
-          ),
-        )}
+
+            <Skeleton className="size-8" />
+          </div>
+        ))}
       </div>
     </div>
   );

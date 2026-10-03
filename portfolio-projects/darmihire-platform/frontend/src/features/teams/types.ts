@@ -14,6 +14,14 @@ export type UpdateTeamRequest = {
   description?: string | null;
 };
 
+export type TeamMember = {
+  tenantUserId: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
 export type AddTeamMemberRequest = {
   tenantUserId: string;
 };
