@@ -1,18 +1,12 @@
-import type { ReactNode } from "react";
 import {
   Navigate,
+  Outlet,
   useLocation,
 } from "react-router-dom";
 
 import { isAuthenticated } from "@/utils/session";
 
-type ProtectedRouteProps = {
-  children: ReactNode;
-};
-
-export function ProtectedRoute({
-  children,
-}: ProtectedRouteProps) {
+export function ProtectedRoute() {
   const location = useLocation();
 
   if (!isAuthenticated()) {
@@ -21,11 +15,15 @@ export function ProtectedRoute({
         to="/login"
         replace
         state={{
-          from: location.pathname,
+          from:
+            location.pathname +
+            location.search,
         }}
       />
     );
   }
 
-  return children;
+  return <Outlet />;
 }
+
+export default ProtectedRoute;
