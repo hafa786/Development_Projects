@@ -1,109 +1,107 @@
 import {
-  Navigate,
-  Route,
-  Routes,
+    Route,
+    Routes,
 } from "react-router-dom";
 
 import { AppLayout } from "@/components/layout/AppLayout";
+
 import { ProtectedRoute } from "@/router/ProtectedRoute";
 import { PublicRoute } from "@/router/PublicRoute";
 import { WorkspaceRoute } from "@/router/WorkspaceRoute";
+import RootRoute from "@/router/RootRoute";
+import NotFoundRedirect from "@/router/NotFoundRedirect";
 
 import DashboardPage from "@/pages/DashboardPage";
 import DepartmentsPage from "@/pages/DepartmentsPage";
-import LandingPage from "@/pages/LandingPage";
 import LocationsPage from "@/pages/LocationsPage";
+import MembersPage from "@/pages/MembersPage";
 import TeamsPage from "@/pages/TeamsPage";
 import LoginPage from "@/pages/auth/LoginPage";
-
-// Uncomment when available:
-// import OnboardingPage from "@/pages/onboarding/OnboardingPage";
+import OnboardingPage from "@/pages/onboarding/OnboardingPage";
 
 export function AppRouter() {
-  return (
-    <Routes>
-      {/* =====================================================
-          PUBLIC WEBSITE
-          ===================================================== */}
+    return (
+        <Routes>
 
-      <Route
-        path="/"
-        element={<LandingPage />}
-      />
+            {/* =========================
+          ROOT
+          ========================= */}
 
-      {/* =====================================================
-          AUTH PAGES
-          ===================================================== */}
+            <Route
+                path="/"
+                element={<RootRoute />}
+            />
 
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <LoginPage />
-          </PublicRoute>
-        }
-      />
+            {/* =========================
+          PUBLIC AUTH
+          ========================= */}
 
-      {/* =====================================================
-          AUTHENTICATED ROUTES
-          ===================================================== */}
+            <Route
+                path="/login"
+                element={
+                    <PublicRoute>
+                        <LoginPage />
+                    </PublicRoute>
+                }
+            />
 
-      <Route element={<ProtectedRoute />}>
-        {/*
-        <Route
-          path="/onboarding"
-          element={<OnboardingPage />}
-        />
-        */}
+            {/* =========================
+          AUTHENTICATED
+          ========================= */}
 
-        {/* ===============================================
-            WORKSPACE
-            =============================================== */}
+            <Route element={<ProtectedRoute />}>
 
-        <Route
-          element={
-            <WorkspaceRoute>
-              <AppLayout />
-            </WorkspaceRoute>
-          }
-        >
-          <Route
-            path="/dashboard"
-            element={<DashboardPage />}
-          />
+                <Route
+                    element={
+                        <WorkspaceRoute>
+                            <AppLayout />
+                        </WorkspaceRoute>
+                    }
+                >
 
-          <Route
-            path="/settings/departments"
-            element={<DepartmentsPage />}
-          />
+                    <Route
+                        path="/onboarding"
+                        element={<OnboardingPage />}
+                    />
+                    <Route
+                        path="/dashboard"
+                        element={<DashboardPage />}
+                    />
 
-          <Route
-            path="/settings/locations"
-            element={<LocationsPage />}
-          />
+                    <Route
+                        path="/departments"
+                        element={<DepartmentsPage />}
+                    />
 
-          <Route
-            path="/settings/teams"
-            element={<TeamsPage />}
-          />
-        </Route>
-      </Route>
+                    <Route
+                        path="/members"
+                        element={<MembersPage />}
+                    />
 
-      {/* =====================================================
+                    <Route
+                        path="/locations"
+                        element={<LocationsPage />}
+                    />
+
+                    <Route
+                        path="/teams"
+                        element={<TeamsPage />}
+                    />
+                </Route>
+
+            </Route>
+
+            {/* =========================
           NOT FOUND
-          ===================================================== */}
+          ========================= */}
 
-      <Route
-        path="*"
-        element={
-          <Navigate
-            to="/"
-            replace
-          />
-        }
-      />
-    </Routes>
-  );
+            <Route
+                path="*"
+                element={<NotFoundRedirect />}
+            />
+
+        </Routes>
+    );
 }
 
 export default AppRouter;

@@ -1,13 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  ArrowRight,
-  Loader2,
+    ArrowRight,
+    Loader2,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
-  Link,
-  useLocation,
-  useNavigate,
+    Link,
+    useLocation,
+    useNavigate,
 } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -21,252 +21,288 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login } from "@/features/auth/api";
 import {
-  type LoginFormData,
-  loginSchema,
+    type LoginFormData,
+    loginSchema,
 } from "@/features/auth/schemas";
-import {
-  getTenantId,
-  setTokens,
-} from "@/utils/session";
+import { getMyTenants } from "@/features/tenants/api";
+
+import { getTenantId, setTenantId,setTokens } from "@/utils/session";
 
 type LocationState = {
-  from?: string;
+    from?: string;
 };
 
 export default function LoginPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-  const {
-    register,
-    handleSubmit,
-    setError,
+    const {
+        register,
+        handleSubmit,
+        setError,
 
-    formState: {
-      errors,
-      isSubmitting,
-    },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  async function onSubmit(
-    data: LoginFormData,
-  ) {
-    try {
-      const response = await login({
-        email: data.email,
-        password: data.password,
-      });
-
-      setTokens({
-        accessToken:
-          response.accessToken,
-
-        refreshToken:
-          response.refreshToken,
-      });
-
-      toast.success(
-        "Welcome back to DarmiHire.",
-      );
-
-      const state =
-        location.state as
-          | LocationState
-          | null;
-
-      const previousRoute =
-        state?.from;
-
-      if (previousRoute) {
-        navigate(
-          previousRoute,
-          {
-            replace: true,
-          },
-        );
-
-        return;
-      }
-
-      if (getTenantId()) {
-        navigate(
-          "/dashboard",
-          {
-            replace: true,
-          },
-        );
-
-        return;
-      }
-
-      navigate(
-        "/onboarding",
-        {
-          replace: true,
+        formState: {
+            errors,
+            isSubmitting,
         },
-      );
-    } catch (error) {
-      if (
-        error instanceof ApiError &&
-        error.status === 401
-      ) {
-        setError("root", {
-          type: "server",
-          message:
-            "Invalid email or password.",
-        });
+    } = useForm<LoginFormData>({
+        resolver: zodResolver(loginSchema),
 
-        return;
-      }
+        defaultValues: {
+            email: "",
+            password: "",
+        },
+    });
 
-      if (error instanceof ApiError) {
-        setError("root", {
-          type: "server",
-          message:
-            error.message,
-        });
+    async function onSubmit(
+        data: LoginFormData,
+    ) {
+        try {
+            const response = await login({
+                email: data.email,
+                password: data.password,
+            });
 
-        return;
-      }
+            setTokens({
+                accessToken: response.accessToken,
+                refreshToken: response.refreshToken,
+            });
 
-      setError("root", {
-        type: "server",
-        message:
-          "Unable to connect to DarmiHire. Please try again.",
-      });
+            /*
+             * First check whether a workspace is already selected
+             * in this browser session.
+             */
+            let tenantId = getTenantId();
+
+            /*
+             * A fresh browser session won't have tenantId even though
+             * the user may already belong to a workspace.
+             *
+             * Load the user's workspaces and automatically select the
+             * first available workspace.
+             */
+            if (!tenantId) {
+                const tenants = await getMyTenants();
+
+                if (tenants.length > 0) {
+                    tenantId = tenants[0].id;
+
+                    setTenantId(tenantId);
+                }
+            }
+
+            toast.success(
+                "Welcome back to DarmiHire.",
+            );
+
+            /*
+             * User has a workspace.
+             */
+            if (tenantId) {
+                navigate("/dashboard", {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            /*
+             * User has no workspace yet.
+             */
+            navigate("/onboarding", {
+                replace: true,
+            });
+
+            toast.success(
+                "Welcome back to DarmiHire.",
+            );
+
+            const state =
+                location.state as
+                | LocationState
+                | null;
+
+            const previousRoute = state?.from;
+            const validPreviousRoute =
+                previousRoute &&
+                previousRoute !== "/" &&
+                previousRoute !== "/login" &&
+                previousRoute !== "/register";
+
+            if (validPreviousRoute) {
+                navigate(previousRoute, {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            if (getTenantId()) {
+                navigate("/dashboard", {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            navigate("/onboarding", {
+                replace: true,
+            });
+        } catch (error) {
+            if (
+                error instanceof ApiError &&
+                error.status === 401
+            ) {
+                setError("root", {
+                    type: "server",
+                    message:
+                        "Invalid email or password.",
+                });
+
+                return;
+            }
+
+            if (error instanceof ApiError) {
+                setError("root", {
+                    type: "server",
+                    message:
+                        error.message,
+                });
+
+                return;
+            }
+
+            setError("root", {
+                type: "server",
+                message:
+                    "Unable to connect to DarmiHire. Please try again.",
+            });
+        }
     }
-  }
 
-  return (
-    <AuthLayout>
-      <AuthCard
-        title="Welcome back"
-        description="Sign in to your DarmiHire workspace."
-      >
-        <form
-          className="space-y-5"
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-        >
-          {errors.root?.message && (
-            <div
-              className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-              role="alert"
+    return (
+        <AuthLayout>
+            <AuthCard
+                title="Welcome back"
+                description="Sign in to your DarmiHire workspace."
             >
-              {errors.root.message}
-            </div>
-          )}
+                <form
+                    className="space-y-5"
+                    onSubmit={handleSubmit(onSubmit)}
+                    noValidate
+                >
+                    {errors.root?.message && (
+                        <div
+                            className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                            role="alert"
+                        >
+                            {errors.root.message}
+                        </div>
+                    )}
 
-          <div className="space-y-2">
-            <Label htmlFor="email">
-              Email address
-            </Label>
+                    <div className="space-y-2">
+                        <Label htmlFor="email">
+                            Email address
+                        </Label>
 
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@company.com"
-              disabled={isSubmitting}
-              aria-invalid={
-                errors.email
-                  ? "true"
-                  : "false"
-              }
-              aria-describedby={
-                errors.email
-                  ? "email-error"
-                  : undefined
-              }
-              {...register("email")}
-            />
+                        <Input
+                            id="email"
+                            type="email"
+                            autoComplete="email"
+                            placeholder="you@company.com"
+                            disabled={isSubmitting}
+                            aria-invalid={
+                                errors.email
+                                    ? "true"
+                                    : "false"
+                            }
+                            aria-describedby={
+                                errors.email
+                                    ? "email-error"
+                                    : undefined
+                            }
+                            {...register("email")}
+                        />
 
-            <div id="email-error">
-              <FormError
-                message={
-                  errors.email?.message
-                }
-              />
-            </div>
-          </div>
+                        <div id="email-error">
+                            <FormError
+                                message={
+                                    errors.email?.message
+                                }
+                            />
+                        </div>
+                    </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">
-                Password
-              </Label>
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="password">
+                                Password
+                            </Label>
 
-              <button
-                type="button"
-                className="text-xs font-medium text-primary hover:underline"
-              >
-                Forgot password?
-              </button>
-            </div>
+                            <button
+                                type="button"
+                                className="text-xs font-medium text-primary hover:underline"
+                            >
+                                Forgot password?
+                            </button>
+                        </div>
 
-            <PasswordInput
-              id="password"
-              autoComplete="current-password"
-              placeholder="Enter your password"
-              disabled={isSubmitting}
-              aria-invalid={
-                errors.password
-                  ? "true"
-                  : "false"
-              }
-              aria-describedby={
-                errors.password
-                  ? "password-error"
-                  : undefined
-              }
-              {...register("password")}
-            />
+                        <PasswordInput
+                            id="password"
+                            autoComplete="current-password"
+                            placeholder="Enter your password"
+                            disabled={isSubmitting}
+                            aria-invalid={
+                                errors.password
+                                    ? "true"
+                                    : "false"
+                            }
+                            aria-describedby={
+                                errors.password
+                                    ? "password-error"
+                                    : undefined
+                            }
+                            {...register("password")}
+                        />
 
-            <div id="password-error">
-              <FormError
-                message={
-                  errors.password?.message
-                }
-              />
-            </div>
-          </div>
+                        <div id="password-error">
+                            <FormError
+                                message={
+                                    errors.password?.message
+                                }
+                            />
+                        </div>
+                    </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              <>
-                Sign in
-                <ArrowRight />
-              </>
-            )}
-          </Button>
+                    <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="animate-spin" />
+                                Signing in...
+                            </>
+                        ) : (
+                            <>
+                                Sign in
+                                <ArrowRight />
+                            </>
+                        )}
+                    </Button>
 
-          <div className="text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
-            <Link
-              to="/register"
-              className="font-medium text-primary hover:underline"
-            >
-              Create account
-            </Link>
-          </div>
-        </form>
-      </AuthCard>
-    </AuthLayout>
-  );
+                    <div className="text-center text-sm text-muted-foreground">
+                        Don't have an account?{" "}
+                        <Link
+                            to="/register"
+                            className="font-medium text-primary hover:underline"
+                        >
+                            Create account
+                        </Link>
+                    </div>
+                </form>
+            </AuthCard>
+        </AuthLayout>
+    );
 }
