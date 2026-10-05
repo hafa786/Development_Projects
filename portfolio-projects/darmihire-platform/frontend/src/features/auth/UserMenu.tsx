@@ -80,6 +80,7 @@ export function UserMenu({ user, isSigningOut, onSignOut }: UserMenuProps) {
           variant="destructive"
           disabled={isSigningOut}
           onSelect={onSignOut}
+          onClick={onSignOut}
         >
           <LogOut />
 

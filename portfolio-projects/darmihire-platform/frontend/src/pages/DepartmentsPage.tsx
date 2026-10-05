@@ -319,7 +319,7 @@ function DepartmentActions({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem onSelect={() => onEdit(department)}>
+        <DropdownMenuItem onSelect={() => onEdit(department)} onClick={() => onEdit(department)}>
           <Pencil />
           Edit
         </DropdownMenuItem>
@@ -327,6 +327,7 @@ function DepartmentActions({
         <DropdownMenuItem
           variant="destructive"
           onSelect={() => onDelete(department)}
+          onClick={() => onDelete(department)}
         >
           <Trash2 />
           Delete

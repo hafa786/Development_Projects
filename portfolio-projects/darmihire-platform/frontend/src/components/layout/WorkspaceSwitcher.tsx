@@ -165,6 +165,7 @@ export function WorkspaceSwitcher() {
             <DropdownMenuItem
               key={tenant.id}
               onSelect={() => handleWorkspaceSwitch(tenant)}
+              onClick={() => handleWorkspaceSwitch(tenant)}
               className="gap-3"
             >
               <Avatar className="size-8 rounded-md">
