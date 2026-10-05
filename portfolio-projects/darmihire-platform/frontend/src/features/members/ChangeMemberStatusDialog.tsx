@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,16 +8,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { Button } from "@/components/ui/button";
-
 import type {
   Member,
   MembershipStatus,
-} from "./types";
+} from "@/features/members/types";
 
-type Props = {
-  member: Member | null;
+type ChangeMemberStatusDialogProps = {
   open: boolean;
+  member: Member | null;
   loading?: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (
@@ -25,12 +24,12 @@ type Props = {
 };
 
 export function ChangeMemberStatusDialog({
-  member,
   open,
+  member,
   loading = false,
   onOpenChange,
   onConfirm,
-}: Props) {
+}: ChangeMemberStatusDialogProps) {
   if (!member) {
     return null;
   }
@@ -38,10 +37,13 @@ export function ChangeMemberStatusDialog({
   const isSuspended =
     member.status === "SUSPENDED";
 
-  const newStatus: MembershipStatus =
+  const nextStatus: MembershipStatus =
     isSuspended
       ? "ACTIVE"
       : "SUSPENDED";
+
+  const memberName =
+    `${member.firstName} ${member.lastName}`.trim();
 
   return (
     <Dialog
@@ -59,21 +61,21 @@ export function ChangeMemberStatusDialog({
           <DialogDescription>
             {isSuspended ? (
               <>
-                Restore workspace access for{" "}
+                Activate{" "}
                 <strong>
-                  {member.firstName}{" "}
-                  {member.lastName}
+                  {memberName}
                 </strong>
-                ?
+                ? They will regain workspace
+                access.
               </>
             ) : (
               <>
-                Suspend workspace access for{" "}
+                Suspend{" "}
                 <strong>
-                  {member.firstName}{" "}
-                  {member.lastName}
+                  {memberName}
                 </strong>
-                ?
+                ? They will no longer have
+                active workspace access.
               </>
             )}
           </DialogDescription>
@@ -91,14 +93,14 @@ export function ChangeMemberStatusDialog({
           </Button>
 
           <Button
-            disabled={loading}
             variant={
               isSuspended
                 ? "default"
                 : "destructive"
             }
+            disabled={loading}
             onClick={() =>
-              onConfirm(newStatus)
+              onConfirm(nextStatus)
             }
           >
             {loading

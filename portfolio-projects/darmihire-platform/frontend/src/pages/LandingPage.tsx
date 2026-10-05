@@ -178,7 +178,7 @@ function LandingNavbar() {
                                 variant="outline"
 
                             >
-                                <Link to="/login">
+                                <Link to="/login" style={{cursor: 'pointer'}}>
                                     Sign in
                                 </Link>
                             </Button>
@@ -187,7 +187,7 @@ function LandingNavbar() {
 
                                 className="bg-emerald-600 text-white hover:bg-emerald-700"
                             >
-                                <Link to="/login">
+                                <Link to="/login" style={{cursor: 'pointer'}}>
                                     Get started
                                 </Link>
                             </Button>
@@ -240,7 +240,7 @@ function HeroSection() {
 
                             className="h-12 bg-emerald-600 px-7 text-white hover:bg-emerald-700"
                         >
-                            <Link to="/login" style={{display : 'ruby'}}>
+                            <Link to="/login" style={{display : 'ruby', cursor: 'pointer'}}>
                                 Start hiring
                                 <ArrowRight className="size-4" />
                             </Link>
@@ -249,8 +249,8 @@ function HeroSection() {
                         <Button
                             size="lg"
                             variant="outline"
-
                             className="h-12 px-7"
+                            style={{cursor: 'pointer'}}
                         >
                             <a href="#how-it-works">
                                 See how it works

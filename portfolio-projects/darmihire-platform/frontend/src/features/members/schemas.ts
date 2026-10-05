@@ -18,8 +18,8 @@ export const memberStatusSchema = z.object({
   ]),
 });
 
-export type MemberRoleFormValues =
+export type MemberRoleFormData =
   z.infer<typeof memberRoleSchema>;
 
-export type MemberStatusFormValues =
+export type MemberStatusFormData =
   z.infer<typeof memberStatusSchema>;

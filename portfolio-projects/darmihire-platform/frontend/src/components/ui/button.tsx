@@ -47,6 +47,7 @@ function Button({
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
+    style={{cursor: 'pointer'}}
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}

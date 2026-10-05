@@ -1,76 +1,78 @@
+import { Button } from "@/components/ui/button";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-import type { Member } from "./types";
+import type { Member } from "@/features/members/types";
 
-type Props = {
-  member: Member | null;
+type RemoveMemberDialogProps = {
   open: boolean;
+  member: Member | null;
   loading?: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 };
 
 export function RemoveMemberDialog({
-  member,
   open,
+  member,
   loading = false,
   onOpenChange,
   onConfirm,
-}: Props) {
+}: RemoveMemberDialogProps) {
   if (!member) {
     return null;
   }
 
+  const memberName =
+    `${member.firstName} ${member.lastName}`.trim();
+
   return (
-    <AlertDialog
+    <Dialog
       open={open}
       onOpenChange={onOpenChange}
     >
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            Remove workspace member?
-          </AlertDialogTitle>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            Remove workspace member
+          </DialogTitle>
 
-          <AlertDialogDescription>
-            <strong>
-              {member.firstName}{" "}
-              {member.lastName}
-            </strong>{" "}
-            will lose access to this
-            workspace.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+          <DialogDescription>
+            Are you sure you want to remove{" "}
+            <strong>{memberName}</strong>{" "}
+            from this workspace? This action
+            cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel
+        <DialogFooter>
+          <Button
+            variant="outline"
             disabled={loading}
+            onClick={() =>
+              onOpenChange(false)
+            }
           >
             Cancel
-          </AlertDialogCancel>
+          </Button>
 
-          <AlertDialogAction
+          <Button
+            variant="destructive"
             disabled={loading}
-            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-              event.preventDefault();
-              onConfirm();
-            }}
+            onClick={onConfirm}
           >
             {loading
               ? "Removing..."
               : "Remove member"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

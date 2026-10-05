@@ -2,14 +2,13 @@ import { apiRequest } from "@/api/client";
 
 import type {
   Member,
-  MembershipStatus,
-  MemberRole,
-} from "./types";
+  UpdateMemberRoleRequest,
+  UpdateMemberStatusRequest,
+} from "@/features/members/types";
 
 export async function getMembers(): Promise<Member[]> {
   return apiRequest<Member[]>("/members", {
     method: "GET",
-    authenticated: true,
     tenantScoped: true,
   });
 }
@@ -17,47 +16,51 @@ export async function getMembers(): Promise<Member[]> {
 export async function getMember(
   tenantUserId: string,
 ): Promise<Member> {
-  return apiRequest<Member>(`/members/${tenantUserId}`, {
-    method: "GET",
-    authenticated: true,
-    tenantScoped: true,
-  });
+  return apiRequest<Member>(
+    `/members/${tenantUserId}`,
+    {
+      method: "GET",
+      tenantScoped: true,
+    },
+  );
 }
 
 export async function updateMemberRole(
   tenantUserId: string,
-  role: MemberRole,
+  request: UpdateMemberRoleRequest,
 ): Promise<Member> {
-  return apiRequest<Member>(`/members/${tenantUserId}/role`, {
-    method: "PATCH",
-    authenticated: true,
-    tenantScoped: true,
-    body: {
-      role,
+  return apiRequest<Member>(
+    `/members/${tenantUserId}/role`,
+    {
+      method: "PATCH",
+      body: request,
+      tenantScoped: true,
     },
-  });
+  );
 }
 
 export async function updateMemberStatus(
   tenantUserId: string,
-  status: MembershipStatus,
+  request: UpdateMemberStatusRequest,
 ): Promise<Member> {
-  return apiRequest<Member>(`/members/${tenantUserId}/status`, {
-    method: "PATCH",
-    authenticated: true,
-    tenantScoped: true,
-    body: {
-      status,
+  return apiRequest<Member>(
+    `/members/${tenantUserId}/status`,
+    {
+      method: "PATCH",
+      body: request,
+      tenantScoped: true,
     },
-  });
+  );
 }
 
 export async function removeMember(
   tenantUserId: string,
 ): Promise<void> {
-  return apiRequest<void>(`/members/${tenantUserId}`, {
-    method: "DELETE",
-    authenticated: true,
-    tenantScoped: true,
-  });
+  return apiRequest<void>(
+    `/members/${tenantUserId}`,
+    {
+      method: "DELETE",
+      tenantScoped: true,
+    },
+  );
 }
