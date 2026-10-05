@@ -6,6 +6,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record CreateInvitationRequest(
-        @Email @NotBlank String email,
-        @NotNull Role role
-) {}
+
+        @NotBlank
+        @Email
+        String email,
+
+        @NotNull
+        Role role
+
+) {
+}
