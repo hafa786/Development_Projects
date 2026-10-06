@@ -22,4 +22,25 @@ export const memberQueryKeys = {
       tenantId,
       tenantUserId,
     ] as const,
+
+  invitations: () =>
+    [
+      ...memberQueryKeys.all,
+      "invitations",
+    ] as const,
+
+  invitationList: (
+    tenantId: string | null,
+  ) =>
+    [
+      ...memberQueryKeys.invitations(),
+      tenantId,
+    ] as const,
+
+  invitation: (token: string) =>
+    [
+      ...memberQueryKeys.invitations(),
+      "token",
+      token,
+    ] as const,
 };

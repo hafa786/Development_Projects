@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  RefreshCw,
-  Trash2,
-  UserRoundCog,
-  Users,
+    MoreHorizontal,
+    Pencil,
+    Plus,
+    RefreshCw,
+    Trash2,
+    UserRoundCog,
+    Users,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -15,27 +15,30 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 
 import {
-  createTeam,
-  deleteTeam,
-  getTeams,
-  updateTeam,
+    createTeam,
+    deleteTeam,
+    getTeams,
+    updateTeam,
 } from "@/features/teams/api";
+import {
+    AddTeamMemberDialog,
+} from "@/features/teams/AddTeamMemberDialog";
 
 import { DeleteTeamDialog } from "@/features/teams/DeleteTeamDialog";
 import { ManageTeamMembersDialog } from "@/features/teams/ManageTeamMembersDialog";
@@ -46,351 +49,354 @@ import type { Team } from "@/features/teams/types";
 import { getTenantId } from "@/utils/session";
 
 export default function TeamsPage() {
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
-  const tenantId = getTenantId();
+    const tenantId = getTenantId();
 
-  /*
-   * ---------------------------------------------------------
-   * STATE
-   * ---------------------------------------------------------
-   */
+    /*
+     * ---------------------------------------------------------
+     * STATE
+     * ---------------------------------------------------------
+     */
 
-  const [teamDialogOpen, setTeamDialogOpen] = useState(false);
+    const [teamDialogOpen, setTeamDialogOpen] = useState(false);
 
-  const [membersDialogOpen, setMembersDialogOpen] = useState(false);
+    const [membersDialogOpen, setMembersDialogOpen] = useState(false);
+    const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+    const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+    /*
+     * ---------------------------------------------------------
+     * QUERY
+     * ---------------------------------------------------------
+     */
 
-  /*
-   * ---------------------------------------------------------
-   * QUERY
-   * ---------------------------------------------------------
-   */
-
-  const teamsQuery = useQuery({
-    queryKey: teamQueryKeys.list(tenantId!),
-    queryFn: getTeams,
-    enabled: Boolean(tenantId),
-  });
-
-  /*
-   * ---------------------------------------------------------
-   * CREATE TEAM
-   * ---------------------------------------------------------
-   */
-
-  const createMutation = useMutation({
-    mutationFn: createTeam,
-
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
+    const teamsQuery = useQuery({
         queryKey: teamQueryKeys.list(tenantId!),
-      });
-
-      setTeamDialogOpen(false);
-
-      setSelectedTeam(null);
-
-      toast.success("Team created.");
-    },
-
-    onError: (error: Error) => {
-      toast.error(error.message || "Unable to create team.");
-    },
-  });
-
-  /*
-   * ---------------------------------------------------------
-   * UPDATE TEAM
-   * ---------------------------------------------------------
-   */
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: TeamFormData }) =>
-      updateTeam(id, {
-        name: data.name,
-        description: data.description || null,
-      }),
-
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: teamQueryKeys.list(tenantId!),
-      });
-
-      setTeamDialogOpen(false);
-
-      setSelectedTeam(null);
-
-      toast.success("Team updated.");
-    },
-
-    onError: (error: Error) => {
-      toast.error(error.message || "Unable to update team.");
-    },
-  });
-
-  /*
-   * ---------------------------------------------------------
-   * DELETE TEAM
-   * ---------------------------------------------------------
-   */
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteTeam,
-
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: teamQueryKeys.list(tenantId!),
-      });
-
-      setDeleteDialogOpen(false);
-
-      setSelectedTeam(null);
-
-      toast.success("Team deleted.");
-    },
-
-    onError: (error: Error) => {
-      toast.error(error.message || "Unable to delete team.");
-    },
-  });
-
-  /*
-   * ---------------------------------------------------------
-   * DIALOG HANDLERS
-   * ---------------------------------------------------------
-   */
-
-  function openCreateDialog() {
-    setSelectedTeam(null);
-
-    setTeamDialogOpen(true);
-  }
-
-  function openEditDialog(team: Team) {
-    setSelectedTeam(team);
-
-    setTeamDialogOpen(true);
-  }
-
-  function openMembersDialog(team: Team) {
-    setSelectedTeam(team);
-
-    setMembersDialogOpen(true);
-  }
-
-  function openDeleteDialog(team: Team) {
-    setSelectedTeam(team);
-
-    setDeleteDialogOpen(true);
-  }
-
-  /*
-   * ---------------------------------------------------------
-   * SUBMIT TEAM
-   * ---------------------------------------------------------
-   */
-
-  function handleTeamSubmit(data: TeamFormData) {
-    if (selectedTeam) {
-      updateMutation.mutate({
-        id: selectedTeam.id,
-        data,
-      });
-
-      return;
-    }
-
-    createMutation.mutate({
-      name: data.name,
-      description: data.description || null,
+        queryFn: getTeams,
+        enabled: Boolean(tenantId),
     });
-  }
 
-  /*
-   * ---------------------------------------------------------
-   * DELETE TEAM
-   * ---------------------------------------------------------
-   */
+    /*
+     * ---------------------------------------------------------
+     * CREATE TEAM
+     * ---------------------------------------------------------
+     */
 
-  function handleDelete() {
-    if (!selectedTeam) {
-      return;
+    const createMutation = useMutation({
+        mutationFn: createTeam,
+
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: teamQueryKeys.list(tenantId!),
+            });
+
+            setTeamDialogOpen(false);
+
+            setSelectedTeam(null);
+
+            toast.success("Team created.");
+        },
+
+        onError: (error: Error) => {
+            toast.error(error.message || "Unable to create team.");
+        },
+    });
+
+    /*
+     * ---------------------------------------------------------
+     * UPDATE TEAM
+     * ---------------------------------------------------------
+     */
+
+    const updateMutation = useMutation({
+        mutationFn: ({ id, data }: { id: string; data: TeamFormData }) =>
+            updateTeam(id, {
+                name: data.name,
+                description: data.description || null,
+            }),
+
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: teamQueryKeys.list(tenantId!),
+            });
+
+            setTeamDialogOpen(false);
+
+            setSelectedTeam(null);
+
+            toast.success("Team updated.");
+        },
+
+        onError: (error: Error) => {
+            toast.error(error.message || "Unable to update team.");
+        },
+    });
+
+    /*
+     * ---------------------------------------------------------
+     * DELETE TEAM
+     * ---------------------------------------------------------
+     */
+
+    const deleteMutation = useMutation({
+        mutationFn: deleteTeam,
+
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: teamQueryKeys.list(tenantId!),
+            });
+
+            setDeleteDialogOpen(false);
+
+            setSelectedTeam(null);
+
+            toast.success("Team deleted.");
+        },
+
+        onError: (error: Error) => {
+            toast.error(error.message || "Unable to delete team.");
+        },
+    });
+
+    /*
+     * ---------------------------------------------------------
+     * DIALOG HANDLERS
+     * ---------------------------------------------------------
+     */
+
+    function openCreateDialog() {
+        setSelectedTeam(null);
+
+        setTeamDialogOpen(true);
     }
 
-    deleteMutation.mutate(selectedTeam.id);
-  }
+    function openEditDialog(team: Team) {
+        setSelectedTeam(team);
 
-  const isSaving = createMutation.isPending || updateMutation.isPending;
+        setTeamDialogOpen(true);
+    }
 
-  /*
-   * ---------------------------------------------------------
-   * RENDER
-   * ---------------------------------------------------------
-   */
+    function openMembersDialog(team: Team) {
+        setSelectedTeam(team);
 
-  return (
-    <>
-      <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
-        <PageHeader
-          title="Teams"
-          description="Create teams and manage their members across your organization."
-          actions={
-            <Button type="button" onClick={openCreateDialog}>
-              <Plus />
-              Add team
-            </Button>
-          }
-        />
+        setMembersDialogOpen(true);
+    }
 
-        {/* Loading */}
+    function openDeleteDialog(team: Team) {
+        setSelectedTeam(team);
 
-        {teamsQuery.isLoading && <TeamTableSkeleton />}
+        setDeleteDialogOpen(true);
+    }
 
-        {/* Error */}
+    /*
+     * ---------------------------------------------------------
+     * SUBMIT TEAM
+     * ---------------------------------------------------------
+     */
 
-        {teamsQuery.isError && (
-          <div className="rounded-xl border bg-background p-8 text-center">
-            <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-destructive/10">
-              <Users className="size-5 text-destructive" />
-            </div>
+    function handleTeamSubmit(data: TeamFormData) {
+        if (selectedTeam) {
+            updateMutation.mutate({
+                id: selectedTeam.id,
+                data,
+            });
 
-            <h2 className="mt-4 font-semibold">Unable to load teams</h2>
+            return;
+        }
 
-            <p className="mt-1 text-sm text-muted-foreground">
-              Something went wrong while loading your teams.
-            </p>
+        createMutation.mutate({
+            name: data.name,
+            description: data.description || null,
+        });
+    }
 
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-4"
-              onClick={() => teamsQuery.refetch()}
-            >
-              <RefreshCw />
-              Try again
-            </Button>
-          </div>
-        )}
+    /*
+     * ---------------------------------------------------------
+     * DELETE TEAM
+     * ---------------------------------------------------------
+     */
 
-        {/* Empty state */}
+    function handleDelete() {
+        if (!selectedTeam) {
+            return;
+        }
 
-        {teamsQuery.isSuccess && teamsQuery.data.length === 0 && (
-          <EmptyState
-            icon={Users}
-            title="No teams yet"
-            description="Create teams such as Platform, Backend, Product, or Recruitment."
-          />
-        )}
+        deleteMutation.mutate(selectedTeam.id);
+    }
 
-        {/* Team table */}
+    const isSaving = createMutation.isPending || updateMutation.isPending;
 
-        {teamsQuery.isSuccess && teamsQuery.data.length > 0 && (
-          <div className="overflow-hidden rounded-xl border bg-background">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Team</TableHead>
+    /*
+     * ---------------------------------------------------------
+     * RENDER
+     * ---------------------------------------------------------
+     */
 
-                  <TableHead>Description</TableHead>
+    return (
+        <>
+            <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+                <PageHeader
+                    title="Teams"
+                    description="Create teams and manage their members across your organization."
+                    actions={
+                        <Button type="button" onClick={openCreateDialog}>
+                            <Plus />
+                            Add team
+                        </Button>
+                    }
+                />
 
-                  <TableHead className="w-16">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
+                {/* Loading */}
 
-              <TableBody>
-                {teamsQuery.data.map((team) => (
-                  <TableRow key={team.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                          <Users className="size-4" />
+                {teamsQuery.isLoading && <TeamTableSkeleton />}
+
+                {/* Error */}
+
+                {teamsQuery.isError && (
+                    <div className="rounded-xl border bg-background p-8 text-center">
+                        <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-destructive/10">
+                            <Users className="size-5 text-destructive" />
                         </div>
 
-                        <span className="font-medium">{team.name}</span>
-                      </div>
-                    </TableCell>
+                        <h2 className="mt-4 font-semibold">Unable to load teams</h2>
 
-                    <TableCell className="max-w-md text-muted-foreground">
-                      {team.description || "—"}
-                    </TableCell>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Something went wrong while loading your teams.
+                        </p>
 
-                    <TableCell className="text-right">
-                      <TeamActions
-                        team={team}
-                        onEdit={openEditDialog}
-                        onManageMembers={openMembersDialog}
-                        onDelete={openDeleteDialog}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </div>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="mt-4"
+                            onClick={() => teamsQuery.refetch()}
+                        >
+                            <RefreshCw />
+                            Try again
+                        </Button>
+                    </div>
+                )}
 
-      {/* Create / Edit Team */}
+                {/* Empty state */}
 
-      <TeamDialog
-        open={teamDialogOpen}
-        team={selectedTeam}
-        isSubmitting={isSaving}
-        onOpenChange={(open) => {
-          setTeamDialogOpen(open);
+                {teamsQuery.isSuccess && teamsQuery.data.length === 0 && (
+                    <EmptyState
+                        icon={Users}
+                        title="No teams yet"
+                        description="Create teams such as Platform, Backend, Product, or Recruitment."
+                    />
+                )}
 
-          if (!open) {
-            setSelectedTeam(null);
-          }
-        }}
-        onSubmit={handleTeamSubmit}
-      />
+                {/* Team table */}
 
-      {/* Manage Team Members */}
+                {teamsQuery.isSuccess && teamsQuery.data.length > 0 && (
+                    <div className="overflow-hidden rounded-xl border bg-background">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Team</TableHead>
 
-      <ManageTeamMembersDialog
-        open={membersDialogOpen}
-        team={selectedTeam}
-        onOpenChange={(open) => {
-          setMembersDialogOpen(open);
+                                    <TableHead>Description</TableHead>
 
-          if (!open) {
-            setSelectedTeam(null);
-          }
-        }}
-        onAddMember={() => {
-          /*
-           * The Add Team Member dialog
-           * will be connected here once
-           * the workspace-member listing
-           * API is wired.
-           */
-        }}
-      />
+                                    <TableHead className="w-16">
+                                        <span className="sr-only">Actions</span>
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
 
-      {/* Delete Team */}
+                            <TableBody>
+                                {teamsQuery.data.map((team) => (
+                                    <TableRow key={team.id}>
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                                    <Users className="size-4" />
+                                                </div>
 
-      <DeleteTeamDialog
-        open={deleteDialogOpen}
-        team={selectedTeam}
-        isDeleting={deleteMutation.isPending}
-        onOpenChange={(open) => {
-          setDeleteDialogOpen(open);
+                                                <span className="font-medium">{team.name}</span>
+                                            </div>
+                                        </TableCell>
 
-          if (!open) {
-            setSelectedTeam(null);
-          }
-        }}
-        onConfirm={handleDelete}
-      />
-    </>
-  );
+                                        <TableCell className="max-w-md text-muted-foreground">
+                                            {team.description || "—"}
+                                        </TableCell>
+
+                                        <TableCell className="text-right">
+                                            <TeamActions
+                                                team={team}
+                                                onEdit={openEditDialog}
+                                                onManageMembers={openMembersDialog}
+                                                onDelete={openDeleteDialog}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                )}
+            </div>
+
+            {/* Create / Edit Team */}
+
+            <TeamDialog
+                open={teamDialogOpen}
+                team={selectedTeam}
+                isSubmitting={isSaving}
+                onOpenChange={(open) => {
+                    setTeamDialogOpen(open);
+
+                    if (!open) {
+                        setSelectedTeam(null);
+                    }
+                }}
+                onSubmit={handleTeamSubmit}
+            />
+
+            {/* Manage Team Members */}
+
+            <ManageTeamMembersDialog
+                open={membersDialogOpen}
+                team={selectedTeam}
+                onOpenChange={(open) => {
+                    setMembersDialogOpen(open);
+
+                    if (!open) {
+                        setSelectedTeam(null);
+                    }
+                }}
+                onAddMember={() => {
+                    setAddMemberDialogOpen(true);
+                }}
+            />
+
+            <AddTeamMemberDialog
+                open={addMemberDialogOpen}
+                team={selectedTeam}
+                onOpenChange={
+                    setAddMemberDialogOpen
+                }
+            />
+
+            {/* Delete Team */}
+
+            <DeleteTeamDialog
+                open={deleteDialogOpen}
+                team={selectedTeam}
+                isDeleting={deleteMutation.isPending}
+                onOpenChange={(open) => {
+                    setDeleteDialogOpen(open);
+
+                    if (!open) {
+                        setSelectedTeam(null);
+                    }
+                }}
+                onConfirm={handleDelete}
+            />
+        </>
+    );
 }
 
 /*
@@ -400,54 +406,54 @@ export default function TeamsPage() {
  */
 
 type TeamActionsProps = {
-  team: Team;
+    team: Team;
 
-  onEdit: (team: Team) => void;
+    onEdit: (team: Team) => void;
 
-  onManageMembers: (team: Team) => void;
+    onManageMembers: (team: Team) => void;
 
-  onDelete: (team: Team) => void;
+    onDelete: (team: Team) => void;
 };
 
 function TeamActions({
-  team,
-  onEdit,
-  onManageMembers,
-  onDelete,
+    team,
+    onEdit,
+    onManageMembers,
+    onDelete,
 }: TeamActionsProps) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        className="inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label={`Actions for ${team.name}`}
-      >
-        <MoreHorizontal className="size-4" />
-      </DropdownMenuTrigger>
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger
+                className="inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`Actions for ${team.name}`}
+            >
+                <MoreHorizontal className="size-4" />
+            </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-48">
-        {/* Edit */}
+            <DropdownMenuContent align="end" className="w-48">
+                {/* Edit */}
 
-        <DropdownMenuItem onSelect={() => onEdit(team)} onClick={() => onEdit(team)}>
-          <Pencil />
-          Edit
-        </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => onEdit(team)} onClick={() => onEdit(team)}>
+                    <Pencil />
+                    Edit
+                </DropdownMenuItem>
 
-        {/* Manage Members */}
+                {/* Manage Members */}
 
-        <DropdownMenuItem onSelect={() => onManageMembers(team)} onClick={() => onManageMembers(team)}>
-          <UserRoundCog />
-          Manage members
-        </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => onManageMembers(team)} onClick={() => onManageMembers(team)}>
+                    <UserRoundCog />
+                    Manage members
+                </DropdownMenuItem>
 
-        {/* Delete */}
+                {/* Delete */}
 
-        <DropdownMenuItem variant="destructive" onSelect={() => onDelete(team)} onClick={() => onDelete(team)}>
-          <Trash2 />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+                <DropdownMenuItem variant="destructive" onSelect={() => onDelete(team)} onClick={() => onDelete(team)}>
+                    <Trash2 />
+                    Delete
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
 }
 
 /*
@@ -457,28 +463,28 @@ function TeamActions({
  */
 
 function TeamTableSkeleton() {
-  return (
-    <div className="overflow-hidden rounded-xl border bg-background">
-      <div className="space-y-1 p-4">
-        {Array.from({
-          length: 4,
-        }).map((_, index) => (
-          <div
-            key={index}
-            className="flex items-center gap-4 border-b py-4 last:border-b-0"
-          >
-            <Skeleton className="size-9 rounded-lg" />
+    return (
+        <div className="overflow-hidden rounded-xl border bg-background">
+            <div className="space-y-1 p-4">
+                {Array.from({
+                    length: 4,
+                }).map((_, index) => (
+                    <div
+                        key={index}
+                        className="flex items-center gap-4 border-b py-4 last:border-b-0"
+                    >
+                        <Skeleton className="size-9 rounded-lg" />
 
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-40" />
+                        <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-40" />
 
-              <Skeleton className="h-3 w-72 max-w-full" />
+                            <Skeleton className="h-3 w-72 max-w-full" />
+                        </div>
+
+                        <Skeleton className="size-8" />
+                    </div>
+                ))}
             </div>
-
-            <Skeleton className="size-8" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+        </div>
+    );
 }

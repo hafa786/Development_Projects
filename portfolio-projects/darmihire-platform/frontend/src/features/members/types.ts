@@ -29,3 +29,41 @@ export type UpdateMemberRoleRequest = {
 export type UpdateMemberStatusRequest = {
   status: MembershipStatus;
 };
+
+/*
+ * ---------------------------------------------------------
+ * INVITATIONS
+ * ---------------------------------------------------------
+ */
+
+export type InvitationStatus =
+  | "PENDING"
+  | "ACCEPTED"
+  | "CANCELLED"
+  | "EXPIRED";
+
+export type Invitation = {
+  id: string;
+  email: string;
+  role: MemberRole;
+  status: InvitationStatus;
+  expiresAt: string;
+  createdAt: string;
+};
+
+export type CreateInvitationRequest = {
+  email: string;
+  role: MemberRole;
+};
+
+export type CreateInvitationResponse = {
+  invitation: Invitation;
+  token: string;
+};
+
+export type InvitationDetails = {
+  email: string;
+  tenantName: string;
+  role: MemberRole;
+  expiresAt: string;
+};
