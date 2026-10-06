@@ -10,5 +10,7 @@ public enum Permission {
 
     MANAGE_TEAMS,
 
-    MANAGE_LOCATIONS
+    MANAGE_LOCATIONS,
+
+    MANAGE_JOBS
 }

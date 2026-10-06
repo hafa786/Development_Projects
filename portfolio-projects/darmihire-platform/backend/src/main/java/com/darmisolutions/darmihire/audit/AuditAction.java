@@ -30,5 +30,13 @@ public enum AuditAction {
 
     TEAM_MEMBER_ADDED,
 
-    TEAM_MEMBER_REMOVED
+    TEAM_MEMBER_REMOVED,
+
+    JOB_CREATED,
+
+    JOB_UPDATED,
+
+    JOB_STATUS_CHANGED,
+
+    JOB_DELETED
 }
