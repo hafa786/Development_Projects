@@ -18,6 +18,8 @@ import MembersPage from "@/pages/MembersPage";
 import TeamsPage from "@/pages/TeamsPage";
 import LoginPage from "@/pages/auth/LoginPage";
 import OnboardingPage from "@/pages/onboarding/OnboardingPage";
+import RegisterPage from "@/pages/auth/RegisterPage";
+import JobsPage from "@/pages/JobsPage";
 
 export function AppRouter() {
     return (
@@ -44,6 +46,14 @@ export function AppRouter() {
                     </PublicRoute>
                 }
             />
+            <Route
+                path="/register"
+                element={
+                    <PublicRoute>
+                        <RegisterPage />
+                    </PublicRoute>
+                }
+            />
 
             {/* =========================
           AUTHENTICATED
@@ -62,6 +72,10 @@ export function AppRouter() {
                     <Route
                         path="/onboarding"
                         element={<OnboardingPage />}
+                    />
+                    <Route
+                        path="/jobs"
+                        element={<JobsPage />}
                     />
                     <Route
                         path="/dashboard"

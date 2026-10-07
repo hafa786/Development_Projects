@@ -6,6 +6,7 @@ import {
   Users,
   UsersRound,
   type LucideIcon,
+  BriefcaseBusiness
 } from "lucide-react";
 
 export type NavigationItem = {
@@ -43,6 +44,12 @@ export const navigationSections:
           label: "Users",
           to: "/users",
           icon: Users,
+          end: true,
+        },
+        {
+          label: "Jobs",
+          to: "/jobs",
+          icon: BriefcaseBusiness,
           end: true,
         },
         {
