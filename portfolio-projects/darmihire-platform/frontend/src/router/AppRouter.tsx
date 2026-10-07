@@ -20,6 +20,7 @@ import LoginPage from "@/pages/auth/LoginPage";
 import OnboardingPage from "@/pages/onboarding/OnboardingPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import JobsPage from "@/pages/JobsPage";
+import JobDetailsPage from "@/pages/JobDetailsPage";
 
 export function AppRouter() {
     return (
@@ -73,10 +74,8 @@ export function AppRouter() {
                         path="/onboarding"
                         element={<OnboardingPage />}
                     />
-                    <Route
-                        path="/jobs"
-                        element={<JobsPage />}
-                    />
+                    <Route path="jobs" element={<JobsPage />} />
+                    <Route path="jobs/:jobId" element={<JobDetailsPage />} />
                     <Route
                         path="/dashboard"
                         element={<DashboardPage />}
