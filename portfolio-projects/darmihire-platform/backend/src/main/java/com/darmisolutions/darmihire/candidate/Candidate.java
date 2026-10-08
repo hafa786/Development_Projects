@@ -1,6 +1,5 @@
 package com.darmisolutions.darmihire.candidate;
 
-import com.darmisolutions.darmihire.common.entity.BaseEntity;
 import com.darmisolutions.darmihire.tenant.Tenant;
 import jakarta.persistence.*;
 import lombok.Getter;
