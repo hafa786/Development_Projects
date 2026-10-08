@@ -36,6 +36,7 @@ public class JobApplicationService {
     private final TenantContext tenantContext;
     private final AuthorizationService authorizationService;
     private final AuditService auditService;
+    private final ApplicationActivityService activityService;
 
     @Transactional(readOnly = true)
     public List<JobApplicationResponse> findAll() {
@@ -159,6 +160,12 @@ public class JobApplicationService {
         JobApplication saved =
             applicationRepository.save(application);
 
+        activityService.recordCreated(
+            saved,
+            null
+        );
+
+        
         auditService.log(
             AuditAction.APPLICATION_CREATED,
             "JobApplication",
@@ -183,6 +190,8 @@ public class JobApplicationService {
             findApplication(id, tenantId);
 
         requireActive(application);
+
+        ApplicationStage previousStage = application.getStage();
 
         ApplicationStage newStage =
             request.stage();

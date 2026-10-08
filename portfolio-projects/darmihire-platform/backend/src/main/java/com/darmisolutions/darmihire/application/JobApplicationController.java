@@ -1,5 +1,6 @@
 package com.darmisolutions.darmihire.application;
 
+import com.darmisolutions.darmihire.application.dto.ApplicationActivityResponse;
 import com.darmisolutions.darmihire.application.dto.CreateJobApplicationRequest;
 import com.darmisolutions.darmihire.application.dto.JobApplicationResponse;
 import com.darmisolutions.darmihire.application.dto.RejectApplicationRequest;
@@ -8,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +20,7 @@ import java.util.UUID;
 public class JobApplicationController {
 
     private final JobApplicationService applicationService;
+    private final ApplicationActivityService activityService;
 
     @GetMapping
     public List<JobApplicationResponse> findAll() {
@@ -90,5 +93,12 @@ public class JobApplicationController {
         @PathVariable UUID id
     ) {
         return applicationService.withdraw(id);
+    }
+
+    @GetMapping("/{id}/activities")
+    public List<ApplicationActivityResponse> findActivities(
+        @PathVariable UUID id
+    ) {
+        return activityService.findByApplication(id);
     }
 }
