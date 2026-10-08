@@ -38,5 +38,11 @@ public enum AuditAction {
 
     JOB_STATUS_CHANGED,
 
-    JOB_DELETED
+    JOB_DELETED,
+
+    CANDIDATE_CREATED,
+
+    CANDIDATE_UPDATED,
+
+    CANDIDATE_DELETED
 }
