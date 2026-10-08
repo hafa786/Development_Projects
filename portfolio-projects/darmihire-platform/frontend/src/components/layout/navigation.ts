@@ -52,6 +52,7 @@ export const navigationSections:
           icon: BriefcaseBusiness,
           end: true,
         },
+        
         {
           label: "Departments",
           to: "/departments",
@@ -70,6 +71,12 @@ export const navigationSections:
           icon: MapPin,
           end: true,
         },
+        {
+          label: "Candidates",
+          to: "/candidates",
+          icon: Users,
+          end: true,
+        }
       ],
     },
   ];

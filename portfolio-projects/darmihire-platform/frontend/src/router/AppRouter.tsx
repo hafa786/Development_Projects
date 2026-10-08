@@ -21,6 +21,8 @@ import OnboardingPage from "@/pages/onboarding/OnboardingPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import JobsPage from "@/pages/JobsPage";
 import JobDetailsPage from "@/pages/JobDetailsPage";
+import CandidatesPage from "@/pages/CandidatesPage";
+import CandidateDetailsPage from "@/pages/CandidateDetailsPage";
 
 export function AppRouter() {
     return (
@@ -74,8 +76,7 @@ export function AppRouter() {
                         path="/onboarding"
                         element={<OnboardingPage />}
                     />
-                    <Route path="jobs" element={<JobsPage />} />
-                    <Route path="jobs/:jobId" element={<JobDetailsPage />} />
+
                     <Route
                         path="/dashboard"
                         element={<DashboardPage />}
@@ -100,6 +101,19 @@ export function AppRouter() {
                         path="/teams"
                         element={<TeamsPage />}
                     />
+                    <Route path="jobs" element={<JobsPage />} />
+                    <Route path="jobs/:jobId" element={<JobDetailsPage />} />
+                    
+                    <Route
+                        path="/candidates"
+                        element={<CandidatesPage />}
+                    />
+
+                    <Route
+                        path="/candidates/:candidateId"
+                        element={<CandidateDetailsPage />}
+                    />
+
                 </Route>
 
             </Route>
