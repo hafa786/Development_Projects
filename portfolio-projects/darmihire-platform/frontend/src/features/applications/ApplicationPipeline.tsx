@@ -1,12 +1,31 @@
 import {
-  CheckCircle2,
-  ClipboardList,
-  MessageSquare,
-  Search,
-  Trophy,
-} from "lucide-react";
+  useMemo,
+  useState,
+} from "react";
 
-import { ApplicationCard } from "./ApplicationCard";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  pointerWithin,
+  rectIntersection,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+
+import type {
+  CollisionDetection,
+  DragEndEvent,
+  DragStartEvent,
+} from "@dnd-kit/core";
+
+import {
+  ApplicationDragOverlay,
+} from "./ApplicationDragOverlay";
+
+import {
+  ApplicationPipelineColumn,
+} from "./ApplicationPipelineColumn";
 
 import type {
   ApplicationStage,
@@ -16,7 +35,7 @@ import type {
 type ApplicationPipelineProps = {
   applications: JobApplication[];
 
-  onMove: (
+  onStageChange: (
     application: JobApplication,
     stage: ApplicationStage,
   ) => void;
@@ -28,115 +47,313 @@ type ApplicationPipelineProps = {
   onWithdraw: (
     application: JobApplication,
   ) => void;
+
+  isPending?: boolean;
 };
 
-const columns: {
+const PIPELINE_STAGES: Array<{
   stage: ApplicationStage;
-  label: string;
-  icon: typeof ClipboardList;
-}[] = [
+  title: string;
+}> = [
   {
     stage: "APPLIED",
-    label: "Applied",
-    icon: ClipboardList,
+    title: "Applied",
   },
   {
     stage: "SCREENING",
-    label: "Screening",
-    icon: Search,
+    title: "Screening",
   },
   {
     stage: "INTERVIEW",
-    label: "Interview",
-    icon: MessageSquare,
+    title: "Interview",
   },
   {
     stage: "OFFER",
-    label: "Offer",
-    icon: CheckCircle2,
+    title: "Offer",
   },
   {
     stage: "HIRED",
-    label: "Hired",
-    icon: Trophy,
+    title: "Hired",
   },
 ];
 
+/*
+ * For a Kanban board, pointerWithin gives
+ * intuitive column detection.
+ *
+ * rectIntersection is the fallback.
+ */
+const collisionDetectionStrategy:
+  CollisionDetection = (args) => {
+    const pointerCollisions =
+      pointerWithin(args);
+
+    if (
+      pointerCollisions.length >
+      0
+    ) {
+      return pointerCollisions;
+    }
+
+    return rectIntersection(args);
+  };
+
 export function ApplicationPipeline({
   applications,
-  onMove,
+  onStageChange,
   onReject,
   onWithdraw,
+  isPending = false,
 }: ApplicationPipelineProps) {
-  const visibleApplications =
-    applications.filter(
-      (application) =>
-        application.status === "ACTIVE" ||
-        application.status === "HIRED",
+  const [
+    activeApplication,
+    setActiveApplication,
+  ] =
+    useState<JobApplication | null>(
+      null,
     );
 
+  const sensors = useSensors(
+    useSensor(
+      PointerSensor,
+      {
+        activationConstraint: {
+          distance: 4,
+        },
+      },
+    ),
+  );
+
+  const pipelineApplications =
+    useMemo(
+      () =>
+        applications.filter(
+          (application) =>
+            application.status ===
+              "ACTIVE" ||
+            application.status ===
+              "HIRED",
+        ),
+      [applications],
+    );
+
+  function handleDragStart(
+    event: DragStartEvent,
+  ) {
+    const application =
+      event.active.data.current
+        ?.application as
+        | JobApplication
+        | undefined;
+
+    if (!application) {
+      return;
+    }
+
+    console.log(
+      "[DND] Drag started",
+      {
+        applicationId:
+          application.id,
+        stage:
+          application.stage,
+      },
+    );
+
+    setActiveApplication(
+      application,
+    );
+  }
+
+  function handleDragCancel() {
+    console.log(
+      "[DND] Drag cancelled",
+    );
+
+    setActiveApplication(null);
+  }
+
+  function handleDragEnd(
+    event: DragEndEvent,
+  ) {
+    const application =
+      event.active.data.current
+        ?.application as
+        | JobApplication
+        | undefined;
+
+    const targetType =
+      event.over?.data.current
+        ?.type as
+        | string
+        | undefined;
+
+    const targetStage =
+      event.over?.data.current
+        ?.stage as
+        | ApplicationStage
+        | undefined;
+
+    console.log(
+      "[DND] Drag ended",
+      {
+        applicationId:
+          application?.id,
+        currentStage:
+          application?.stage,
+        overId:
+          event.over?.id,
+        targetType,
+        targetStage,
+      },
+    );
+
+    setActiveApplication(null);
+
+    if (!application) {
+      return;
+    }
+
+    if (
+      application.status !==
+      "ACTIVE"
+    ) {
+      return;
+    }
+
+    if (!event.over) {
+      console.warn(
+        "[DND] Candidate was not dropped over a pipeline column.",
+      );
+
+      return;
+    }
+
+    if (
+      targetType !== "stage"
+    ) {
+      console.warn(
+        "[DND] Invalid drop target.",
+      );
+
+      return;
+    }
+
+    if (!targetStage) {
+      console.warn(
+        "[DND] Drop target has no stage.",
+      );
+
+      return;
+    }
+
+    const validStage =
+      PIPELINE_STAGES.some(
+        ({ stage }) =>
+          stage ===
+          targetStage,
+      );
+
+    if (!validStage) {
+      console.warn(
+        "[DND] Invalid stage:",
+        targetStage,
+      );
+
+      return;
+    }
+
+    if (
+      application.stage ===
+      targetStage
+    ) {
+      return;
+    }
+
+    console.log(
+      "[DND] Moving application",
+      application.id,
+      application.stage,
+      "->",
+      targetStage,
+    );
+
+    onStageChange(
+      application,
+      targetStage,
+    );
+  }
+
   return (
-    <div className="overflow-x-auto pb-4">
-      <div className="grid min-w-[1250px] grid-cols-5 gap-4">
-        {columns.map((column) => {
-          const columnApplications =
-            visibleApplications.filter(
-              (application) =>
-                application.stage ===
-                column.stage,
-            );
+    <DndContext
+      sensors={sensors}
+      collisionDetection={
+        collisionDetectionStrategy
+      }
+      onDragStart={
+        handleDragStart
+      }
+      onDragCancel={
+        handleDragCancel
+      }
+      onDragEnd={
+        handleDragEnd
+      }
+    >
+      <div className="w-full overflow-x-auto pb-4">
+        <div className="flex min-w-max gap-4">
+          {PIPELINE_STAGES.map(
+            ({
+              stage,
+              title,
+            }) => {
+              const stageApplications =
+                pipelineApplications.filter(
+                  (
+                    application,
+                  ) =>
+                    application.stage ===
+                    stage,
+                );
 
-          const Icon = column.icon;
-
-          return (
-            <div
-              key={column.stage}
-              className="rounded-xl bg-muted/40 p-3"
-            >
-              <div className="mb-3 flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                  <Icon className="h-4 w-4 text-muted-foreground" />
-
-                  <h3 className="text-sm font-semibold">
-                    {column.label}
-                  </h3>
-                </div>
-
-                <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-background px-2 text-xs font-medium">
-                  {
-                    columnApplications.length
+              return (
+                <ApplicationPipelineColumn
+                  key={stage}
+                  stage={stage}
+                  title={title}
+                  applications={
+                    stageApplications
                   }
-                </span>
-              </div>
-               {/* main application status card  */}
-              <div className="space-y-3">
-                {columnApplications.map(
-                  (application) => (
-                    <ApplicationCard
-                      key={application.id}
-                      application={
-                        application
-                      }
-                      onMove={onMove}
-                      onReject={onReject}
-                      onWithdraw={
-                        onWithdraw
-                      }
-                    />
-                  ),
-                )}
-
-                {columnApplications.length ===
-                  0 && (
-                  <div className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
-                    No candidates
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+                  onStageChange={
+                    onStageChange
+                  }
+                  onReject={
+                    onReject
+                  }
+                  onWithdraw={
+                    onWithdraw
+                  }
+                  isPending={
+                    isPending
+                  }
+                />
+              );
+            },
+          )}
+        </div>
       </div>
-    </div>
+
+      <DragOverlay
+        dropAnimation={null}
+      >
+        {activeApplication ? (
+          <ApplicationDragOverlay
+            application={
+              activeApplication
+            }
+          />
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }

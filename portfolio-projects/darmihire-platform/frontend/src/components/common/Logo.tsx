@@ -17,7 +17,7 @@ export function Logo({ compact = false }: LogoProps) {
             DarmiHire
           </div>
 
-          <div className="mt-1 text-[11px] text-muted-foreground">
+          <div className="mt-1 text-[9px] text-muted-foreground">
             Modern hiring, powered by AI.
           </div>
         </div>
