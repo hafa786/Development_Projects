@@ -1,6 +1,7 @@
 import { apiRequest } from "@/api/client";
 
 import type {
+  ApplicationActivity,
   CreateJobApplicationRequest,
   JobApplication,
   RejectApplicationRequest,
@@ -100,6 +101,19 @@ export function withdrawApplication(
     `/applications/${id}/withdraw`,
     {
       method: "PATCH",
+      authenticated: true,
+      tenantScoped: true,
+    },
+  );
+}
+
+export function getApplicationActivities(
+  applicationId: string,
+) {
+  return apiRequest<ApplicationActivity[]>(
+    `/applications/${applicationId}/activities`,
+    {
+      method: "GET",
       authenticated: true,
       tenantScoped: true,
     },

@@ -42,4 +42,15 @@ export const applicationQueryKeys = {
       tenantId,
       applicationId,
     ] as const,
+
+    activities: (
+  tenantId: string | null | undefined,
+  applicationId: string,
+) =>
+  [
+    ...applicationQueryKeys.all,
+    "activities",
+    tenantId,
+    applicationId,
+  ] as const,
 };

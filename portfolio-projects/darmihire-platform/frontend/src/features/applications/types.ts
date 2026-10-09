@@ -1,15 +1,15 @@
+export type ApplicationStatus =
+  | "ACTIVE"
+  | "HIRED"
+  | "REJECTED"
+  | "WITHDRAWN";
+
 export type ApplicationStage =
   | "APPLIED"
   | "SCREENING"
   | "INTERVIEW"
   | "OFFER"
   | "HIRED";
-
-export type ApplicationStatus =
-  | "ACTIVE"
-  | "HIRED"
-  | "REJECTED"
-  | "WITHDRAWN";
 
 export type JobApplication = {
   id: string;
@@ -53,4 +53,28 @@ export type UpdateApplicationStageRequest = {
 
 export type RejectApplicationRequest = {
   reason?: string | null;
+};
+
+export type ApplicationActivityType =
+  | "APPLICATION_CREATED"
+  | "STAGE_CHANGED"
+  | "REJECTED"
+  | "WITHDRAWN"
+  | "HIRED";
+
+export type ApplicationActivity = {
+  id: string;
+  applicationId: string;
+
+  activityType: ApplicationActivityType;
+
+  fromStage: ApplicationStage | null;
+  toStage: ApplicationStage | null;
+
+  description: string | null;
+
+  performedById: string | null;
+  performedByName: string | null;
+
+  createdAt: string;
 };
