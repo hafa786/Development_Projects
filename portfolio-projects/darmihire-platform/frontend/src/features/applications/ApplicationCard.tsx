@@ -103,6 +103,7 @@ export function ApplicationCard({
                     `/candidates/${application.candidateId}`,
                   )
                 }
+                style={{ cursor: "pointer" }}
               >
                 <UserRound className="mr-2 h-4 w-4" />
                 View candidate
@@ -123,6 +124,8 @@ export function ApplicationCard({
                         stage,
                       )
                     }
+                    onClick={() => onMove(application, stage)}
+                    style={{ cursor: "pointer" }}
                   >
                     <ChevronRight className="mr-2 h-4 w-4" />
                     Move to{" "}
@@ -137,6 +140,8 @@ export function ApplicationCard({
                 onSelect={() =>
                   onReject(application)
                 }
+                onClick={() => onReject(application)}
+                style={{ cursor: "pointer" }}
               >
                 <XCircle className="mr-2 h-4 w-4" />
                 Reject
@@ -146,7 +151,10 @@ export function ApplicationCard({
                 onSelect={() =>
                   onWithdraw(application)
                 }
+                onClick={() => onWithdraw(application)}
+                style={{ cursor: "pointer" }}
               >
+                <XCircle className="mr-2 h-4 w-4" />
                 Withdraw
               </DropdownMenuItem>
             </DropdownMenuContent>
