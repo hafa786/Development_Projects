@@ -14,7 +14,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -80,7 +79,7 @@ export function ApplicationCard({
 
         {application.status === "ACTIVE" && (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger>
               <Button
                 type="button"
                 variant="ghost"
@@ -95,10 +94,7 @@ export function ApplicationCard({
               align="end"
               className="w-52"
             >
-              <DropdownMenuLabel>
                 Application
-              </DropdownMenuLabel>
-
               <DropdownMenuSeparator />
 
               <DropdownMenuItem

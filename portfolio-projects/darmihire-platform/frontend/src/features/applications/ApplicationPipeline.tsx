@@ -108,7 +108,7 @@ export function ApplicationPipeline({
                   }
                 </span>
               </div>
-
+               {/* main application status card  */}
               <div className="space-y-3">
                 {columnApplications.map(
                   (application) => (

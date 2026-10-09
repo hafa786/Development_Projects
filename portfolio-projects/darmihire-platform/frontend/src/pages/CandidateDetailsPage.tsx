@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   ArrowLeft,
   BriefcaseBusiness,
@@ -9,6 +13,7 @@ import {
   Mail,
   MapPin,
   Phone,
+  UserPlus,
   UserRound,
 } from "lucide-react";
 import { FaLinkedin } from 'react-icons/fa';
@@ -17,6 +22,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,6 +49,7 @@ import {
 } from "@/features/candidates/queryKeys";
 
 import {
+  createApplication,
   getApplicationsByCandidate,
 } from "@/features/applications/api";
 import {
@@ -51,6 +58,9 @@ import {
 import {
   ApplicationActivityPanel,
 } from "@/features/applications/ApplicationActivityPanel";
+import {
+  AddJobToCandidateDialog,
+} from "@/features/applications/AddJobToCandidateDialog";
 
 import type {
   ApplicationStage,
@@ -65,12 +75,18 @@ import { getTenantId } from "@/utils/session";
 
 export default function CandidateDetailsPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { candidateId } = useParams<{
     candidateId: string;
   }>();
 
   const tenantId = getTenantId();
+
+  const [
+    addToJobOpen,
+    setAddToJobOpen,
+  ] = useState(false);
 
   const [
     selectedApplication,
@@ -118,6 +134,87 @@ export default function CandidateDetailsPage() {
 
   const applications =
     applicationsQuery.data ?? [];
+
+  /*
+   * Add candidate to job
+   */
+  const createApplicationMutation =
+    useMutation({
+      mutationFn: (
+        jobId: string,
+      ) =>
+        createApplication({
+          jobId,
+          candidateId:
+            candidateId!,
+        }),
+
+      onSuccess: async (
+        createdApplication,
+      ) => {
+        /*
+         * Refresh the candidate's
+         * application list.
+         */
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey:
+              applicationQueryKeys.candidate(
+                tenantId,
+                candidateId!,
+              ),
+          }),
+
+          /*
+           * Refresh the selected job
+           * pipeline as well.
+           */
+          queryClient.invalidateQueries({
+            queryKey:
+              applicationQueryKeys.job(
+                tenantId,
+                createdApplication.jobId,
+              ),
+          }),
+
+          /*
+           * The backend creates the
+           * APPLICATION_CREATED activity.
+           */
+          queryClient.invalidateQueries({
+            queryKey:
+              applicationQueryKeys.activities(
+                tenantId,
+                createdApplication.id,
+              ),
+          }),
+        ]);
+
+        setAddToJobOpen(false);
+
+        /*
+         * Automatically display the
+         * newly created application's
+         * history.
+         */
+        setSelectedApplication(
+          createdApplication,
+        );
+
+        toast.success(
+          "Candidate added to job.",
+        );
+      },
+
+      onError: (error) => {
+        toast.error(
+          getErrorMessage(
+            error,
+            "Unable to add candidate to job.",
+          ),
+        );
+      },
+    });
 
   /*
    * Loading
@@ -235,7 +332,19 @@ export default function CandidateDetailsPage() {
           </div>
         </div>
 
+        {/* Candidate actions */}
+
         <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            onClick={() =>
+              setAddToJobOpen(true)
+            }
+          >
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add to job
+          </Button>
+
           {candidate.linkedinUrl && (
             <Button
               variant="outline"
@@ -347,7 +456,7 @@ export default function CandidateDetailsPage() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {candidate.linkedinUrl ? (
+            {candidate.linkedinUrl && (
               <ProfileLink
                 icon={FaLinkedin}
                 label="LinkedIn"
@@ -355,9 +464,9 @@ export default function CandidateDetailsPage() {
                   candidate.linkedinUrl
                 }
               />
-            ) : null}
+            )}
 
-            {candidate.portfolioUrl ? (
+            {candidate.portfolioUrl && (
               <ProfileLink
                 icon={ExternalLink}
                 label="Portfolio"
@@ -365,7 +474,7 @@ export default function CandidateDetailsPage() {
                   candidate.portfolioUrl
                 }
               />
-            ) : null}
+            )}
 
             {!candidate.linkedinUrl &&
               !candidate.portfolioUrl && (
@@ -477,19 +586,39 @@ export default function CandidateDetailsPage() {
       {/* Applications */}
 
       <section className="space-y-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <BriefcaseBusiness className="h-5 w-5 text-muted-foreground" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <BriefcaseBusiness className="h-5 w-5 text-muted-foreground" />
 
-            <h2 className="text-xl font-semibold">
-              Applications
-            </h2>
+              <h2 className="text-xl font-semibold">
+                Applications
+              </h2>
+            </div>
+
+            <p className="mt-1 text-sm text-muted-foreground">
+              Jobs this candidate has
+              applied or been added to.
+            </p>
           </div>
 
-          <p className="mt-1 text-sm text-muted-foreground">
-            Jobs this candidate has
-            applied or been added to.
-          </p>
+          {/* Useful when candidate already
+              has applications and recruiter
+              wants to add another one. */}
+
+          {applications.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setAddToJobOpen(true)
+              }
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add to job
+            </Button>
+          )}
         </div>
 
         <Card>
@@ -504,7 +633,13 @@ export default function CandidateDetailsPage() {
               />
             ) : applications.length ===
               0 ? (
-              <EmptyApplications />
+              <EmptyApplications
+                onAddToJob={() =>
+                  setAddToJobOpen(
+                    true,
+                  )
+                }
+              />
             ) : (
               <div className="overflow-x-auto">
                 <Table>
@@ -551,6 +686,8 @@ export default function CandidateDetailsPage() {
                                 : undefined
                             }
                           >
+                            {/* Job */}
+
                             <TableCell>
                               <button
                                 type="button"
@@ -575,6 +712,8 @@ export default function CandidateDetailsPage() {
                               </button>
                             </TableCell>
 
+                            {/* Stage */}
+
                             <TableCell>
                               <ApplicationStageBadge
                                 stage={
@@ -582,6 +721,8 @@ export default function CandidateDetailsPage() {
                                 }
                               />
                             </TableCell>
+
+                            {/* Status */}
 
                             <TableCell>
                               <ApplicationStatusBadge
@@ -591,11 +732,15 @@ export default function CandidateDetailsPage() {
                               />
                             </TableCell>
 
+                            {/* Applied */}
+
                             <TableCell className="whitespace-nowrap text-muted-foreground">
                               {formatDate(
                                 application.appliedAt,
                               )}
                             </TableCell>
+
+                            {/* Activity */}
 
                             <TableCell className="text-right">
                               <Button
@@ -700,6 +845,26 @@ export default function CandidateDetailsPage() {
           />
         </section>
       )}
+
+      {/* Add candidate to job */}
+
+      <AddJobToCandidateDialog
+        open={addToJobOpen}
+        onOpenChange={
+          setAddToJobOpen
+        }
+        applications={
+          applications
+        }
+        isPending={
+          createApplicationMutation.isPending
+        }
+        onAdd={(jobId) =>
+          createApplicationMutation.mutate(
+            jobId,
+          )
+        }
+      />
     </div>
   );
 }
@@ -821,11 +986,7 @@ function ApplicationStageBadge({
 }) {
   switch (stage) {
     case "HIRED":
-      return (
-        <Badge>
-          Hired
-        </Badge>
-      );
+      return <Badge>Hired</Badge>;
 
     case "OFFER":
       return (
@@ -867,11 +1028,7 @@ function ApplicationStatusBadge({
 }) {
   switch (status) {
     case "HIRED":
-      return (
-        <Badge>
-          Hired
-        </Badge>
-      );
+      return <Badge>Hired</Badge>;
 
     case "REJECTED":
       return (
@@ -960,12 +1117,18 @@ function ApplicationsErrorState({
 /*
  * Empty applications
  */
-function EmptyApplications() {
+function EmptyApplications({
+  onAddToJob,
+}: {
+  onAddToJob: () => void;
+}) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
-      <BriefcaseBusiness className="h-8 w-8 text-muted-foreground" />
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+        <BriefcaseBusiness className="h-6 w-6 text-muted-foreground" />
+      </div>
 
-      <p className="mt-3 font-medium">
+      <p className="mt-4 font-medium">
         No applications yet
       </p>
 
@@ -973,6 +1136,16 @@ function EmptyApplications() {
         This candidate has not been
         added to a job pipeline yet.
       </p>
+
+      <Button
+        type="button"
+        size="sm"
+        className="mt-5"
+        onClick={onAddToJob}
+      >
+        <UserPlus className="mr-2 h-4 w-4" />
+        Add to job
+      </Button>
     </div>
   );
 }
@@ -1049,4 +1222,18 @@ function openExternalUrl(
     "_blank",
     "noopener,noreferrer",
   );
+}
+
+function getErrorMessage(
+  error: unknown,
+  fallback: string,
+) {
+  if (
+    error instanceof Error &&
+    error.message
+  ) {
+    return error.message;
+  }
+
+  return fallback;
 }
