@@ -1,9 +1,16 @@
+import { useState } from "react";
+
+import {
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   CalendarDays,
   Clock3,
   MapPin,
   Video,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,7 +20,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import { getTenantId } from "@/utils/session";
+
+import { removeInterviewer } from "./api";
+import { AssignInterviewerDialog } from "./AssignInterviewerDialog";
 import { formatInterviewDateTime } from "./dateTime";
+import { InterviewerList } from "./InterviewerList";
+import { interviewQueryKeys } from "./queryKeys";
+
 import type {
   Interview,
   InterviewStatus,
@@ -24,11 +38,16 @@ type InterviewCardProps = {
   interview: Interview;
 };
 
-const typeLabels: Record<InterviewType, string> = {
+const typeLabels: Record<
+  InterviewType,
+  string
+> = {
   PHONE_SCREEN: "Phone screen",
   VIDEO_INTERVIEW: "Video interview",
-  TECHNICAL_INTERVIEW: "Technical interview",
-  BEHAVIORAL_INTERVIEW: "Behavioral interview",
+  TECHNICAL_INTERVIEW:
+    "Technical interview",
+  BEHAVIORAL_INTERVIEW:
+    "Behavioral interview",
   HR_INTERVIEW: "HR interview",
   HIRING_MANAGER_INTERVIEW:
     "Hiring manager interview",
@@ -37,7 +56,10 @@ const typeLabels: Record<InterviewType, string> = {
   OTHER: "Other",
 };
 
-const statusLabels: Record<InterviewStatus, string> = {
+const statusLabels: Record<
+  InterviewStatus,
+  string
+> = {
   SCHEDULED: "Scheduled",
   IN_PROGRESS: "In progress",
   COMPLETED: "Completed",
@@ -47,87 +69,212 @@ const statusLabels: Record<InterviewStatus, string> = {
 export function InterviewCard({
   interview,
 }: InterviewCardProps) {
+  const tenantId = getTenantId();
+
+  const queryClient =
+    useQueryClient();
+
+  const [
+    assignDialogOpen,
+    setAssignDialogOpen,
+  ] = useState(false);
+
+  const removeMutation =
+    useMutation({
+      mutationFn: (
+        interviewerId: string,
+      ) =>
+        removeInterviewer(
+          interview.id,
+          interviewerId,
+        ),
+
+      onSuccess: async () => {
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey:
+              interviewQueryKeys.application(
+                tenantId,
+                interview.applicationId,
+              ),
+          }),
+
+          queryClient.invalidateQueries({
+            queryKey:
+              interviewQueryKeys.detail(
+                tenantId,
+                interview.id,
+              ),
+          }),
+
+          queryClient.invalidateQueries({
+            queryKey:
+              interviewQueryKeys.list(
+                tenantId,
+              ),
+          }),
+        ]);
+
+        toast.success(
+          "Interviewer removed",
+        );
+      },
+
+      onError: (error) => {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to remove interviewer",
+        );
+      },
+    });
+
+  const editable =
+    interview.status !==
+      "COMPLETED" &&
+    interview.status !==
+      "CANCELLED";
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-base">
-              {interview.title}
-            </CardTitle>
+    <>
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-base">
+                {interview.title}
+              </CardTitle>
 
-            <p className="text-sm text-muted-foreground">
-              {typeLabels[interview.interviewType]}
-            </p>
-          </div>
+              <p className="text-sm text-muted-foreground">
+                {
+                  typeLabels[
+                    interview
+                      .interviewType
+                  ]
+                }
+              </p>
+            </div>
 
-          <Badge
-            variant={
-              interview.status === "CANCELLED"
-                ? "destructive"
-                : interview.status === "COMPLETED"
-                  ? "secondary"
-                  : "default"
-            }
-          >
-            {statusLabels[interview.status]}
-          </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-3">
-        <div className="flex items-start gap-2 text-sm">
-          <CalendarDays className="mt-0.5 size-4 text-muted-foreground" />
-
-          <span>
-            {formatInterviewDateTime(
-              interview.startTime,
-              interview.timezone,
-            )}
-          </span>
-        </div>
-
-        <div className="flex items-start gap-2 text-sm">
-          <Clock3 className="mt-0.5 size-4 text-muted-foreground" />
-
-          <span>
-            Until{" "}
-            {formatInterviewDateTime(
-              interview.endTime,
-              interview.timezone,
-            )}
-          </span>
-        </div>
-
-        {interview.location ? (
-          <div className="flex items-start gap-2 text-sm">
-            <MapPin className="mt-0.5 size-4 text-muted-foreground" />
-
-            <span>{interview.location}</span>
-          </div>
-        ) : null}
-
-        {interview.meetingUrl ? (
-          <div className="flex items-start gap-2 text-sm">
-            <Video className="mt-0.5 size-4 text-muted-foreground" />
-
-            <a
-              href={interview.meetingUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="break-all text-primary underline-offset-4 hover:underline"
+            <Badge
+              variant={
+                interview.status ===
+                "CANCELLED"
+                  ? "destructive"
+                  : interview.status ===
+                      "COMPLETED"
+                    ? "secondary"
+                    : "default"
+              }
             >
-              Join meeting
-            </a>
+              {
+                statusLabels[
+                  interview.status
+                ]
+              }
+            </Badge>
           </div>
-        ) : null}
+        </CardHeader>
 
-        {interview.notes ? (
-          <p className="border-t pt-3 text-sm text-muted-foreground">
-            {interview.notes}
-          </p>
-        ) : null}
-      </CardContent>
-    </Card>
+        <CardContent className="space-y-5">
+          <div className="space-y-3">
+            <div className="flex items-start gap-2 text-sm">
+              <CalendarDays className="mt-0.5 size-4 text-muted-foreground" />
+
+              <span>
+                {formatInterviewDateTime(
+                  interview.startTime,
+                  interview.timezone,
+                )}
+              </span>
+            </div>
+
+            <div className="flex items-start gap-2 text-sm">
+              <Clock3 className="mt-0.5 size-4 text-muted-foreground" />
+
+              <span>
+                Until{" "}
+                {formatInterviewDateTime(
+                  interview.endTime,
+                  interview.timezone,
+                )}
+              </span>
+            </div>
+
+            {interview.location ? (
+              <div className="flex items-start gap-2 text-sm">
+                <MapPin className="mt-0.5 size-4 text-muted-foreground" />
+
+                <span>
+                  {
+                    interview.location
+                  }
+                </span>
+              </div>
+            ) : null}
+
+            {interview.meetingUrl ? (
+              <div className="flex items-start gap-2 text-sm">
+                <Video className="mt-0.5 size-4 text-muted-foreground" />
+
+                <a
+                  href={
+                    interview.meetingUrl
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="break-all text-primary underline-offset-4 hover:underline"
+                >
+                  Join meeting
+                </a>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="border-t pt-4">
+            <InterviewerList
+              interviewers={
+                interview.interviewers
+              }
+              disabled={
+                !editable ||
+                removeMutation.isPending
+              }
+              onAdd={() =>
+                setAssignDialogOpen(
+                  true,
+                )
+              }
+              onRemove={(
+                interviewerId,
+              ) =>
+                removeMutation.mutate(
+                  interviewerId,
+                )
+              }
+            />
+          </div>
+
+          {interview.notes ? (
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium">
+                Notes
+              </p>
+
+              <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                {interview.notes}
+              </p>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <AssignInterviewerDialog
+        interview={interview}
+        open={assignDialogOpen}
+        onOpenChange={
+          setAssignDialogOpen
+        }
+      />
+    </>
   );
 }
