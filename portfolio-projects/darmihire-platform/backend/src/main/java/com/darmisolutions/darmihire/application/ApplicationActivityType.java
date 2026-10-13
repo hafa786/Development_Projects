@@ -3,12 +3,15 @@ package com.darmisolutions.darmihire.application;
 public enum ApplicationActivityType {
 
     APPLICATION_CREATED,
-
     STAGE_CHANGED,
-
     REJECTED,
-
     WITHDRAWN,
+    HIRED,
 
-    HIRED
+    INTERVIEW_SCHEDULED,
+    INTERVIEW_RESCHEDULED,
+    INTERVIEW_CANCELLED,
+    INTERVIEW_COMPLETED,
+    INTERVIEWER_ADDED,
+    INTERVIEWER_REMOVED
 }
