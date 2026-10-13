@@ -49,4 +49,12 @@ public class TenantUser extends BaseEntity {
 
     @Column(name = "joined_at")
     private Instant joinedAt;
+
+    public String getName() {
+        return user.getFirstName() + " " + user.getLastName();
+    }
+
+    public String getEmail() {
+        return user.getEmail();
+    }
 }
