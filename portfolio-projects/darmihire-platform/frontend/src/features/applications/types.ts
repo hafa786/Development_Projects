@@ -1,15 +1,15 @@
-export type ApplicationStatus =
-  | "ACTIVE"
-  | "HIRED"
-  | "REJECTED"
-  | "WITHDRAWN";
-
 export type ApplicationStage =
   | "APPLIED"
   | "SCREENING"
   | "INTERVIEW"
   | "OFFER"
   | "HIRED";
+
+export type ApplicationStatus =
+  | "ACTIVE"
+  | "HIRED"
+  | "REJECTED"
+  | "WITHDRAWN";
 
 export type JobApplication = {
   id: string;
@@ -23,7 +23,6 @@ export type JobApplication = {
   candidateLastName: string;
   candidateFullName: string;
   candidateEmail: string;
-
   candidatePhone: string | null;
   candidateLocation: string | null;
 
@@ -42,6 +41,42 @@ export type JobApplication = {
   updatedAt: string;
 };
 
+export type ApplicationActivityType =
+  | "APPLICATION_CREATED"
+  | "STAGE_CHANGED"
+  | "REJECTED"
+  | "WITHDRAWN"
+  | "HIRED"
+  | "INTERVIEW_SCHEDULED"
+  | "INTERVIEW_RESCHEDULED"
+  | "INTERVIEW_CANCELLED"
+  | "INTERVIEW_COMPLETED"
+  | "INTERVIEWER_ADDED"
+  | "INTERVIEWER_REMOVED";
+
+export type ApplicationActivity = {
+  id: string;
+
+  applicationId: string;
+
+  activityType:
+    ApplicationActivityType;
+
+  fromStage:
+    ApplicationStage | null;
+
+  toStage:
+    ApplicationStage | null;
+
+  description: string | null;
+
+  performedById: string | null;
+
+  performedByName: string | null;
+
+  createdAt: string;
+};
+
 export type CreateJobApplicationRequest = {
   jobId: string;
   candidateId: string;
@@ -53,28 +88,4 @@ export type UpdateApplicationStageRequest = {
 
 export type RejectApplicationRequest = {
   reason?: string | null;
-};
-
-export type ApplicationActivityType =
-  | "APPLICATION_CREATED"
-  | "STAGE_CHANGED"
-  | "REJECTED"
-  | "WITHDRAWN"
-  | "HIRED";
-
-export type ApplicationActivity = {
-  id: string;
-  applicationId: string;
-
-  activityType: ApplicationActivityType;
-
-  fromStage: ApplicationStage | null;
-  toStage: ApplicationStage | null;
-
-  description: string | null;
-
-  performedById: string | null;
-  performedByName: string | null;
-
-  createdAt: string;
 };

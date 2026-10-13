@@ -36,17 +36,43 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import {
+  applicationQueryKeys,
+} from "@/features/applications/queryKeys";
+
 import { getTenantId } from "@/utils/session";
 
-import { removeInterviewer } from "./api";
+import {
+  removeInterviewer,
+} from "./api";
 
-import { AssignInterviewerDialog } from "./AssignInterviewerDialog";
-import { CancelInterviewDialog } from "./CancelInterviewDialog";
-import { CompleteInterviewDialog } from "./CompleteInterviewDialog";
-import { formatInterviewDateTime } from "./dateTime";
-import { InterviewerList } from "./InterviewerList";
-import { interviewQueryKeys } from "./queryKeys";
-import { RescheduleInterviewDialog } from "./RescheduleInterviewDialog";
+import {
+  AssignInterviewerDialog,
+} from "./AssignInterviewerDialog";
+
+import {
+  CancelInterviewDialog,
+} from "./CancelInterviewDialog";
+
+import {
+  CompleteInterviewDialog,
+} from "./CompleteInterviewDialog";
+
+import {
+  formatInterviewDateTime,
+} from "./dateTime";
+
+import {
+  InterviewerList,
+} from "./InterviewerList";
+
+import {
+  interviewQueryKeys,
+} from "./queryKeys";
+
+import {
+  RescheduleInterviewDialog,
+} from "./RescheduleInterviewDialog";
 
 import type {
   Interview,
@@ -62,30 +88,49 @@ const typeLabels: Record<
   InterviewType,
   string
 > = {
-  PHONE_SCREEN: "Phone screen",
-  VIDEO_INTERVIEW: "Video interview",
+  PHONE_SCREEN:
+    "Phone screen",
+
+  VIDEO_INTERVIEW:
+    "Video interview",
+
   TECHNICAL_INTERVIEW:
     "Technical interview",
+
   BEHAVIORAL_INTERVIEW:
     "Behavioral interview",
-  HR_INTERVIEW: "HR interview",
+
+  HR_INTERVIEW:
+    "HR interview",
+
   HIRING_MANAGER_INTERVIEW:
     "Hiring manager interview",
+
   PANEL_INTERVIEW:
     "Panel interview",
+
   FINAL_INTERVIEW:
     "Final interview",
-  OTHER: "Other",
+
+  OTHER:
+    "Other",
 };
 
 const statusLabels: Record<
   InterviewStatus,
   string
 > = {
-  SCHEDULED: "Scheduled",
-  IN_PROGRESS: "In progress",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
+  SCHEDULED:
+    "Scheduled",
+
+  IN_PROGRESS:
+    "In progress",
+
+  COMPLETED:
+    "Completed",
+
+  CANCELLED:
+    "Cancelled",
 };
 
 export function InterviewCard({
@@ -150,6 +195,14 @@ export function InterviewCard({
                 tenantId,
               ),
           }),
+
+          queryClient.invalidateQueries({
+            queryKey:
+              applicationQueryKeys.activities(
+                tenantId,
+                interview.applicationId,
+              ),
+          }),
         ]);
 
         toast.success(
@@ -206,7 +259,8 @@ export function InterviewCard({
               <p className="text-sm text-muted-foreground">
                 {
                   typeLabels[
-                    interview.interviewType
+                    interview
+                      .interviewType
                   ]
                 }
               </p>
@@ -266,7 +320,6 @@ export function InterviewCard({
                         }
                       >
                         <CalendarClock className="mr-2 size-4" />
-
                         Reschedule
                       </DropdownMenuItem>
                     ) : null}
@@ -285,7 +338,6 @@ export function InterviewCard({
                         }
                       >
                         <CheckCircle2 className="mr-2 size-4" />
-
                         Mark completed
                       </DropdownMenuItem>
                     ) : null}
@@ -308,7 +360,6 @@ export function InterviewCard({
                           }
                         >
                           <Ban className="mr-2 size-4" />
-
                           Cancel interview
                         </DropdownMenuItem>
                       </>
@@ -427,7 +478,6 @@ export function InterviewCard({
         </CardContent>
       </Card>
 
-      {/* Interviewer assignment */}
       <AssignInterviewerDialog
         interview={interview}
         open={assignDialogOpen}
@@ -436,7 +486,6 @@ export function InterviewCard({
         }
       />
 
-      {/* Reschedule */}
       <RescheduleInterviewDialog
         interview={interview}
         open={
@@ -447,19 +496,21 @@ export function InterviewCard({
         }
       />
 
-      {/* Cancel */}
       <CancelInterviewDialog
         interview={interview}
-        open={cancelDialogOpen}
+        open={
+          cancelDialogOpen
+        }
         onOpenChange={
           setCancelDialogOpen
         }
       />
 
-      {/* Complete */}
       <CompleteInterviewDialog
         interview={interview}
-        open={completeDialogOpen}
+        open={
+          completeDialogOpen
+        }
         onOpenChange={
           setCompleteDialogOpen
         }

@@ -2,10 +2,13 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { CalendarPlus } from "lucide-react";
+
+import {
+  CalendarPlus,
+} from "lucide-react";
+
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,20 +18,38 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { Button } from "@/components/ui/button";
+
+import {
+  applicationQueryKeys,
+} from "@/features/applications/queryKeys";
+
 import { getTenantId } from "@/utils/session";
 
 import { createInterview } from "./api";
-import { localDateTimeToIso } from "./dateTime";
+import {
+  localDateTimeToIso,
+} from "./dateTime";
 import { InterviewForm } from "./InterviewForm";
 import { interviewQueryKeys } from "./queryKeys";
-import type { InterviewFormValues } from "./schemas";
+
+import type {
+  InterviewFormValues,
+} from "./schemas";
 
 type ScheduleInterviewDialogProps = {
   applicationId: string;
+
   candidateName?: string;
+
   jobTitle?: string;
+
   open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+
+  onOpenChange?: (
+    open: boolean,
+  ) => void;
+
   showTrigger?: boolean;
 };
 
@@ -40,37 +61,50 @@ export function ScheduleInterviewDialog({
   onOpenChange,
   showTrigger = true,
 }: ScheduleInterviewDialogProps) {
-  const queryClient = useQueryClient();
-
   const tenantId = getTenantId();
 
+  const queryClient =
+    useQueryClient();
+
   const mutation = useMutation({
-    mutationFn: (values: InterviewFormValues) =>
+    mutationFn: (
+      values: InterviewFormValues,
+    ) =>
       createInterview({
         applicationId,
 
-        title: values.title,
+        title:
+          values.title.trim(),
 
-        interviewType: values.interviewType,
+        interviewType:
+          values.interviewType,
 
-        startTime: localDateTimeToIso(
-          values.date,
-          values.startTime,
-        ),
+        startTime:
+          localDateTimeToIso(
+            values.date,
+            values.startTime,
+          ),
 
-        endTime: localDateTimeToIso(
-          values.date,
-          values.endTime,
-        ),
+        endTime:
+          localDateTimeToIso(
+            values.date,
+            values.endTime,
+          ),
 
-        timezone: values.timezone,
+        timezone:
+          values.timezone.trim(),
 
-        location: values.location?.trim() || null,
+        location:
+          values.location?.trim() ||
+          null,
 
         meetingUrl:
-          values.meetingUrl?.trim() || null,
+          values.meetingUrl?.trim() ||
+          null,
 
-        notes: values.notes?.trim() || null,
+        notes:
+          values.notes?.trim() ||
+          null,
 
         interviewerIds: [],
       }),
@@ -78,20 +112,32 @@ export function ScheduleInterviewDialog({
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: interviewQueryKeys.application(
-            tenantId,
-            applicationId,
-          ),
+          queryKey:
+            interviewQueryKeys.application(
+              tenantId,
+              applicationId,
+            ),
         }),
 
         queryClient.invalidateQueries({
-          queryKey: interviewQueryKeys.list(
-            tenantId,
-          ),
+          queryKey:
+            interviewQueryKeys.list(
+              tenantId,
+            ),
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey:
+            applicationQueryKeys.activities(
+              tenantId,
+              applicationId,
+            ),
         }),
       ]);
 
-      toast.success("Interview scheduled");
+      toast.success(
+        "Interview scheduled",
+      );
 
       onOpenChange?.(false);
     },
@@ -108,11 +154,15 @@ export function ScheduleInterviewDialog({
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(value) => {
+        if (!mutation.isPending) {
+          onOpenChange?.(value);
+        }
+      }}
     >
       {showTrigger ? (
         <DialogTrigger asChild>
-          <Button>
+          <Button type="button">
             <CalendarPlus className="mr-2 size-4" />
             Schedule interview
           </Button>
@@ -126,19 +176,26 @@ export function ScheduleInterviewDialog({
           </DialogTitle>
 
           <DialogDescription>
-            {candidateName && jobTitle
-              ? `Schedule an interview with ${candidateName} for ${jobTitle}.`
-              : "Choose the interview type, date, time and meeting details."}
+            {candidateName
+              ? `Schedule an interview with ${candidateName}`
+              : "Schedule a new interview"}
+
+            {jobTitle
+              ? ` for ${jobTitle}.`
+              : "."}
           </DialogDescription>
         </DialogHeader>
 
         <InterviewForm
-          isPending={mutation.isPending}
-          onCancel={() =>
-            onOpenChange?.(false)
+          isPending={
+            mutation.isPending
           }
+          submitLabel="Schedule interview"
           onSubmit={(values) =>
             mutation.mutate(values)
+          }
+          onCancel={() =>
+            onOpenChange?.(false)
           }
         />
       </DialogContent>

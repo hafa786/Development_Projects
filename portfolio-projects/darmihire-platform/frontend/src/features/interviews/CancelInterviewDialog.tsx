@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   useMutation,
@@ -6,9 +9,11 @@ import {
 } from "@tanstack/react-query";
 
 import { Ban } from "lucide-react";
+
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+
 import {
   Dialog,
   DialogContent,
@@ -17,18 +22,35 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+
+import {
+  Textarea,
+} from "@/components/ui/textarea";
+
+import {
+  applicationQueryKeys,
+} from "@/features/applications/queryKeys";
 
 import { getTenantId } from "@/utils/session";
 
-import { cancelInterview } from "./api";
-import { interviewQueryKeys } from "./queryKeys";
-import type { Interview } from "./types";
+import {
+  cancelInterview,
+} from "./api";
+
+import {
+  interviewQueryKeys,
+} from "./queryKeys";
+
+import type {
+  Interview,
+} from "./types";
 
 type CancelInterviewDialogProps = {
   interview: Interview;
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (
+    open: boolean,
+  ) => void;
 };
 
 export function CancelInterviewDialog({
@@ -46,6 +68,7 @@ export function CancelInterviewDialog({
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setReason("");
     }
   }, [open]);
@@ -56,7 +79,8 @@ export function CancelInterviewDialog({
         interview.id,
         {
           reason:
-            reason.trim() || null,
+            reason.trim() ||
+            null,
         },
       ),
 
@@ -82,6 +106,14 @@ export function CancelInterviewDialog({
           queryKey:
             interviewQueryKeys.list(
               tenantId,
+            ),
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey:
+            applicationQueryKeys.activities(
+              tenantId,
+              interview.applicationId,
             ),
         }),
       ]);
@@ -115,56 +147,35 @@ export function CancelInterviewDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Ban className="size-5" />
-
             Cancel interview
           </DialogTitle>
 
           <DialogDescription>
             Cancel{" "}
-            <span className="font-medium">
-              {interview.title}
-            </span>
-            . This interview will remain in
-            the candidate history.
+            {interview.title}.
+            The interview will remain in
+            the application history.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2">
-          <label
-            htmlFor={`cancel-reason-${interview.id}`}
-            className="text-sm font-medium"
-          >
-            Cancellation reason
-          </label>
-
-          <Textarea
-            id={`cancel-reason-${interview.id}`}
-            value={reason}
-            disabled={
-              mutation.isPending
-            }
-            onChange={(event) =>
-              setReason(
-                event.target.value,
-              )
-            }
-            placeholder="Optional reason for cancelling this interview..."
-            className="min-h-28 resize-y"
-          />
-
-          <p className="text-xs text-muted-foreground">
-            The reason will be stored with
-            the interview.
-          </p>
-        </div>
+        <Textarea
+          value={reason}
+          disabled={
+            mutation.isPending
+          }
+          onChange={(event) =>
+            setReason(
+              event.target.value,
+            )
+          }
+          placeholder="Optional cancellation reason..."
+          className="min-h-28"
+        />
 
         <DialogFooter>
           <Button
             type="button"
             variant="outline"
-            disabled={
-              mutation.isPending
-            }
             onClick={() =>
               onOpenChange(false)
             }

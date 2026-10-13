@@ -1,14 +1,21 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { CalendarClock } from "lucide-react";
+import {
+  CalendarClock,
+} from "lucide-react";
+
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+
 import {
   Dialog,
   DialogContent,
@@ -17,29 +24,54 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
 import { Input } from "@/components/ui/input";
+
+import {
+  applicationQueryKeys,
+} from "@/features/applications/queryKeys";
 
 import { getTenantId } from "@/utils/session";
 
-import { rescheduleInterview } from "./api";
-import { localDateTimeToIso } from "./dateTime";
-import { interviewQueryKeys } from "./queryKeys";
-import type { Interview } from "./types";
+import {
+  rescheduleInterview,
+} from "./api";
+
+import {
+  localDateTimeToIso,
+} from "./dateTime";
+
+import {
+  interviewQueryKeys,
+} from "./queryKeys";
+
+import type {
+  Interview,
+} from "./types";
 
 type RescheduleInterviewDialogProps = {
   interview: Interview;
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (
+    open: boolean,
+  ) => void;
 };
 
-function toDateInputValue(value: string) {
+function toDateInputValue(
+  value: string,
+) {
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
+  if (
+    Number.isNaN(
+      date.getTime(),
+    )
+  ) {
     return "";
   }
 
-  const year = date.getFullYear();
+  const year =
+    date.getFullYear();
 
   const month = String(
     date.getMonth() + 1,
@@ -52,10 +84,16 @@ function toDateInputValue(value: string) {
   return `${year}-${month}-${day}`;
 }
 
-function toTimeInputValue(value: string) {
+function toTimeInputValue(
+  value: string,
+) {
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
+  if (
+    Number.isNaN(
+      date.getTime(),
+    )
+  ) {
     return "";
   }
 
@@ -83,17 +121,25 @@ export function RescheduleInterviewDialog({
   const [date, setDate] =
     useState("");
 
-  const [startTime, setStartTime] =
-    useState("");
+  const [
+    startTime,
+    setStartTime,
+  ] = useState("");
 
   const [endTime, setEndTime] =
     useState("");
 
   const [timezone, setTimezone] =
-    useState(interview.timezone);
+    useState(
+      interview.timezone,
+    );
 
-  const [validationError, setValidationError] =
-    useState<string | null>(null);
+  const [
+    validationError,
+    setValidationError,
+  ] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     if (!open) {
@@ -131,28 +177,25 @@ export function RescheduleInterviewDialog({
   }, [open, interview]);
 
   const mutation = useMutation({
-    mutationFn: () => {
-      const start =
-        localDateTimeToIso(
-          date,
-          startTime,
-        );
-
-      const end =
-        localDateTimeToIso(
-          date,
-          endTime,
-        );
-
-      return rescheduleInterview(
+    mutationFn: () =>
+      rescheduleInterview(
         interview.id,
         {
-          startTime: start,
-          endTime: end,
+          startTime:
+            localDateTimeToIso(
+              date,
+              startTime,
+            ),
+
+          endTime:
+            localDateTimeToIso(
+              date,
+              endTime,
+            ),
+
           timezone,
         },
-      );
-    },
+      ),
 
     onSuccess: async () => {
       await Promise.all([
@@ -176,6 +219,14 @@ export function RescheduleInterviewDialog({
           queryKey:
             interviewQueryKeys.list(
               tenantId,
+            ),
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey:
+            applicationQueryKeys.activities(
+              tenantId,
+              interview.applicationId,
             ),
         }),
       ]);
@@ -216,26 +267,13 @@ export function RescheduleInterviewDialog({
       return;
     }
 
-    const start =
-      new Date(
-        `${date}T${startTime}:00`,
-      );
+    const start = new Date(
+      `${date}T${startTime}:00`,
+    );
 
-    const end =
-      new Date(
-        `${date}T${endTime}:00`,
-      );
-
-    if (
-      Number.isNaN(start.getTime()) ||
-      Number.isNaN(end.getTime())
-    ) {
-      setValidationError(
-        "Enter a valid interview date and time.",
-      );
-
-      return;
-    }
+    const end = new Date(
+      `${date}T${endTime}:00`,
+    );
 
     if (
       end.getTime() <=
@@ -268,118 +306,68 @@ export function RescheduleInterviewDialog({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarClock className="size-5" />
-
               Reschedule interview
             </DialogTitle>
 
             <DialogDescription>
               Change the date or time for{" "}
-              <span className="font-medium">
-                {interview.title}
-              </span>
-              .
+              {interview.title}.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <label
-                htmlFor={`interview-date-${interview.id}`}
-                className="text-sm font-medium"
-              >
-                Date
-              </label>
-
-              <Input
-                id={`interview-date-${interview.id}`}
-                type="date"
-                value={date}
-                disabled={
-                  mutation.isPending
-                }
-                onChange={(event) =>
-                  setDate(
-                    event.target.value,
-                  )
-                }
-              />
-            </div>
+            <Input
+              type="date"
+              value={date}
+              disabled={
+                mutation.isPending
+              }
+              onChange={(event) =>
+                setDate(
+                  event.target.value,
+                )
+              }
+            />
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <label
-                  htmlFor={`interview-start-${interview.id}`}
-                  className="text-sm font-medium"
-                >
-                  Start time
-                </label>
-
-                <Input
-                  id={`interview-start-${interview.id}`}
-                  type="time"
-                  value={startTime}
-                  disabled={
-                    mutation.isPending
-                  }
-                  onChange={(event) =>
-                    setStartTime(
-                      event.target.value,
-                    )
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor={`interview-end-${interview.id}`}
-                  className="text-sm font-medium"
-                >
-                  End time
-                </label>
-
-                <Input
-                  id={`interview-end-${interview.id}`}
-                  type="time"
-                  value={endTime}
-                  disabled={
-                    mutation.isPending
-                  }
-                  onChange={(event) =>
-                    setEndTime(
-                      event.target.value,
-                    )
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label
-                htmlFor={`interview-timezone-${interview.id}`}
-                className="text-sm font-medium"
-              >
-                Timezone
-              </label>
-
               <Input
-                id={`interview-timezone-${interview.id}`}
-                value={timezone}
-                placeholder="Europe/Helsinki"
+                type="time"
+                value={startTime}
                 disabled={
                   mutation.isPending
                 }
                 onChange={(event) =>
-                  setTimezone(
+                  setStartTime(
                     event.target.value,
                   )
                 }
               />
 
-              <p className="text-xs text-muted-foreground">
-                Use an IANA timezone such as
-                Europe/Helsinki.
-              </p>
+              <Input
+                type="time"
+                value={endTime}
+                disabled={
+                  mutation.isPending
+                }
+                onChange={(event) =>
+                  setEndTime(
+                    event.target.value,
+                  )
+                }
+              />
             </div>
+
+            <Input
+              value={timezone}
+              disabled={
+                mutation.isPending
+              }
+              onChange={(event) =>
+                setTimezone(
+                  event.target.value,
+                )
+              }
+            />
 
             {validationError ? (
               <p className="text-sm text-destructive">
@@ -392,9 +380,6 @@ export function RescheduleInterviewDialog({
             <Button
               type="button"
               variant="outline"
-              disabled={
-                mutation.isPending
-              }
               onClick={() =>
                 onOpenChange(false)
               }

@@ -20,16 +20,30 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+import {
+  applicationQueryKeys,
+} from "@/features/applications/queryKeys";
+
 import { getTenantId } from "@/utils/session";
 
-import { completeInterview } from "./api";
-import { interviewQueryKeys } from "./queryKeys";
-import type { Interview } from "./types";
+import {
+  completeInterview,
+} from "./api";
+
+import {
+  interviewQueryKeys,
+} from "./queryKeys";
+
+import type {
+  Interview,
+} from "./types";
 
 type CompleteInterviewDialogProps = {
   interview: Interview;
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (
+    open: boolean,
+  ) => void;
 };
 
 export function CompleteInterviewDialog({
@@ -72,6 +86,14 @@ export function CompleteInterviewDialog({
               tenantId,
             ),
         }),
+
+        queryClient.invalidateQueries({
+          queryKey:
+            applicationQueryKeys.activities(
+              tenantId,
+              interview.applicationId,
+            ),
+        }),
       ]);
 
       toast.success(
@@ -103,25 +125,20 @@ export function CompleteInterviewDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle2 className="size-5" />
-
             Complete interview
           </DialogTitle>
 
           <DialogDescription>
             Mark{" "}
-            <span className="font-medium">
-              {interview.title}
-            </span>{" "}
+            {interview.title}{" "}
             as completed?
           </DialogDescription>
         </DialogHeader>
 
         <div className="rounded-lg border bg-muted/30 p-4">
           <p className="text-sm">
-            Once completed, this interview
-            becomes read-only and interviewer
-            assignments can no longer be
-            changed.
+            Once completed, the interview
+            becomes read-only.
           </p>
         </div>
 
@@ -129,9 +146,6 @@ export function CompleteInterviewDialog({
           <Button
             type="button"
             variant="outline"
-            disabled={
-              mutation.isPending
-            }
             onClick={() =>
               onOpenChange(false)
             }

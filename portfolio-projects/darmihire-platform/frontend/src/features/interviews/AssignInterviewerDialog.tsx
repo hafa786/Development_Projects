@@ -1,4 +1,7 @@
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState,
+} from "react";
 
 import {
   useMutation,
@@ -28,37 +31,33 @@ import {
 
 import { Input } from "@/components/ui/input";
 
+import {
+  applicationQueryKeys,
+} from "@/features/applications/queryKeys";
+
 import { getTenantId } from "@/utils/session";
 
 import { addInterviewer } from "./api";
 
-import { interviewQueryKeys } from "./queryKeys";
+import {
+  interviewQueryKeys,
+} from "./queryKeys";
 
-import type { Interview } from "./types";
+import type {
+  Interview,
+} from "./types";
 
-/**
- * Minimal member model required by this dialog.
- *
- * IMPORTANT:
- * `id` must represent the TenantUser ID because the interview
- * backend expects:
- *
- * {
- *   "interviewerId": "<TenantUser UUID>"
- * }
- *
- * The optional fields make this component tolerant of slightly
- * different member response structures.
- */
 type WorkspaceMember = {
   id: string;
 
   tenantUserId?: string | null;
 
   firstName?: string | null;
+
   lastName?: string | null;
 
   name?: string | null;
+
   fullName?: string | null;
 
   email?: string | null;
@@ -71,21 +70,15 @@ type AssignInterviewerDialogProps = {
 
   open: boolean;
 
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (
+    open: boolean,
+  ) => void;
 };
 
-/**
- * Load workspace members directly through the shared API client.
- *
- * If your actual members endpoint is different, for example:
- *
- * /tenant-users
- * /workspace/members
- *
- * change ONLY the URL below.
- */
 function getWorkspaceMembers() {
-  return apiRequest<WorkspaceMember[]>(
+  return apiRequest<
+    WorkspaceMember[]
+  >(
     "/members",
     {
       method: "GET",
@@ -95,33 +88,25 @@ function getWorkspaceMembers() {
   );
 }
 
-/**
- * Returns the TenantUser ID that must be sent to
- * the Interview API.
- */
 function getMemberId(
   member: WorkspaceMember,
 ): string {
-  return member.tenantUserId || member.id;
+  return (
+    member.tenantUserId ||
+    member.id
+  );
 }
 
-/**
- * Handles several possible member DTO structures.
- */
 function getMemberName(
   member: WorkspaceMember,
 ): string {
   if (
-    member.fullName &&
-    member.fullName.trim()
+    member.fullName?.trim()
   ) {
     return member.fullName.trim();
   }
 
-  if (
-    member.name &&
-    member.name.trim()
-  ) {
+  if (member.name?.trim()) {
     return member.name.trim();
   }
 
@@ -157,26 +142,20 @@ export function AssignInterviewerDialog({
   const [search, setSearch] =
     useState("");
 
-  /*
-   * Load workspace members only while
-   * the dialog is open.
-   */
   const membersQuery = useQuery({
     queryKey: [
       "workspace-members",
       tenantId,
     ],
 
-    queryFn: getWorkspaceMembers,
+    queryFn:
+      getWorkspaceMembers,
 
     enabled: Boolean(
       tenantId && open,
     ),
   });
 
-  /*
-   * Assign interviewer mutation.
-   */
   const addMutation = useMutation({
     mutationFn: (
       interviewerId: string,
@@ -189,10 +168,6 @@ export function AssignInterviewerDialog({
       ),
 
     onSuccess: async () => {
-      /*
-       * Refresh all places where the
-       * updated interview may appear.
-       */
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey:
@@ -216,6 +191,14 @@ export function AssignInterviewerDialog({
               tenantId,
             ),
         }),
+
+        queryClient.invalidateQueries({
+          queryKey:
+            applicationQueryKeys.activities(
+              tenantId,
+              interview.applicationId,
+            ),
+        }),
       ]);
 
       toast.success(
@@ -236,24 +219,18 @@ export function AssignInterviewerDialog({
     },
   });
 
-  /*
-   * TenantUser IDs already assigned
-   * to this interview.
-   */
   const assignedInterviewerIds =
-    useMemo(() => {
-      return new Set(
-        interview.interviewers.map(
-          (interviewer) =>
-            interviewer.tenantUserId,
+    useMemo(
+      () =>
+        new Set(
+          interview.interviewers.map(
+            (interviewer) =>
+              interviewer.tenantUserId,
+          ),
         ),
-      );
-    }, [interview.interviewers]);
+      [interview.interviewers],
+    );
 
-  /*
-   * Remove already assigned members
-   * and apply the search filter.
-   */
   const availableMembers =
     useMemo(() => {
       const members =
@@ -268,10 +245,6 @@ export function AssignInterviewerDialog({
           const memberId =
             getMemberId(member);
 
-          /*
-           * Do not show members who are
-           * already assigned.
-           */
           if (
             assignedInterviewerIds.has(
               memberId,
@@ -308,11 +281,9 @@ export function AssignInterviewerDialog({
   const handleOpenChange = (
     value: boolean,
   ) => {
-    /*
-     * Prevent closing while an assignment
-     * request is running.
-     */
-    if (addMutation.isPending) {
+    if (
+      addMutation.isPending
+    ) {
       return;
     }
 
@@ -321,25 +292,6 @@ export function AssignInterviewerDialog({
     }
 
     onOpenChange(value);
-  };
-
-  const handleAdd = (
-    member: WorkspaceMember,
-  ) => {
-    const interviewerId =
-      getMemberId(member);
-
-    if (!interviewerId) {
-      toast.error(
-        "Unable to determine the workspace member ID",
-      );
-
-      return;
-    }
-
-    addMutation.mutate(
-      interviewerId,
-    );
   };
 
   return (
@@ -365,7 +317,6 @@ export function AssignInterviewerDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 
@@ -384,26 +335,17 @@ export function AssignInterviewerDialog({
             />
           </div>
 
-          {/* Loading */}
           {membersQuery.isLoading ? (
-            <div className="py-10 text-center">
-              <p className="text-sm text-muted-foreground">
-                Loading workspace members...
-              </p>
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              Loading workspace members...
             </div>
           ) : null}
 
-          {/* Error */}
           {membersQuery.isError ? (
             <div className="rounded-lg border border-destructive/50 p-4">
               <p className="text-sm font-medium">
                 Unable to load workspace
-                members
-              </p>
-
-              <p className="mt-1 text-xs text-muted-foreground">
-                Check the workspace member
-                endpoint and try again.
+                members.
               </p>
 
               <Button
@@ -420,7 +362,6 @@ export function AssignInterviewerDialog({
             </div>
           ) : null}
 
-          {/* Empty */}
           {!membersQuery.isLoading &&
           !membersQuery.isError &&
           availableMembers.length ===
@@ -433,16 +374,9 @@ export function AssignInterviewerDialog({
                   ? "No matching members"
                   : "No available members"}
               </p>
-
-              <p className="mt-1 text-xs text-muted-foreground">
-                {search
-                  ? "Try searching with a different name or email."
-                  : "All workspace members may already be assigned to this interview."}
-              </p>
             </div>
           ) : null}
 
-          {/* Members */}
           {!membersQuery.isLoading &&
           !membersQuery.isError &&
           availableMembers.length >
@@ -465,30 +399,20 @@ export function AssignInterviewerDialog({
                       key={memberId}
                       className="flex items-center justify-between gap-3 rounded-lg border p-3"
                     >
-                      <div className="flex min-w-0 items-center gap-3">
-                        {/* Avatar */}
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium">
-                          {memberName
-                            .charAt(0)
-                            .toUpperCase()}
-                        </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {
+                            memberName
+                          }
+                        </p>
 
-                        {/* Member info */}
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">
+                        {member.email ? (
+                          <p className="truncate text-xs text-muted-foreground">
                             {
-                              memberName
+                              member.email
                             }
                           </p>
-
-                          {member.email ? (
-                            <p className="truncate text-xs text-muted-foreground">
-                              {
-                                member.email
-                              }
-                            </p>
-                          ) : null}
-                        </div>
+                        ) : null}
                       </div>
 
                       <Button
@@ -498,8 +422,8 @@ export function AssignInterviewerDialog({
                           addMutation.isPending
                         }
                         onClick={() =>
-                          handleAdd(
-                            member,
+                          addMutation.mutate(
+                            memberId,
                           )
                         }
                       >
