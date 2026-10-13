@@ -110,7 +110,9 @@ export function cancelInterview(
   );
 }
 
-export function completeInterview(interviewId: string) {
+export function completeInterview(
+  interviewId: string,
+) {
   return apiRequest<Interview>(
     `/interviews/${interviewId}/complete`,
     {

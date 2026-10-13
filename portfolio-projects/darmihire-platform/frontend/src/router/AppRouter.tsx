@@ -23,6 +23,7 @@ import JobsPage from "@/pages/JobsPage";
 import JobDetailsPage from "@/pages/JobDetailsPage";
 import CandidatesPage from "@/pages/CandidatesPage";
 import CandidateDetailsPage from "@/pages/CandidateDetailsPage";
+import UsersPage from "@/pages/UsersPage";
 
 export function AppRouter() {
     return (
@@ -100,6 +101,10 @@ export function AppRouter() {
                     <Route
                         path="/teams"
                         element={<TeamsPage />}
+                    />
+                    <Route
+                        path="/users"
+                        element={<UsersPage />}
                     />
                     <Route path="jobs" element={<JobsPage />} />
                     <Route path="jobs/:jobId" element={<JobDetailsPage />} />

@@ -4,15 +4,23 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+
 import {
+  Ban,
+  CalendarClock,
   CalendarDays,
+  CheckCircle2,
   Clock3,
   MapPin,
+  MoreHorizontal,
   Video,
 } from "lucide-react";
+
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+
 import {
   Card,
   CardContent,
@@ -20,13 +28,25 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 import { getTenantId } from "@/utils/session";
 
 import { removeInterviewer } from "./api";
+
 import { AssignInterviewerDialog } from "./AssignInterviewerDialog";
+import { CancelInterviewDialog } from "./CancelInterviewDialog";
+import { CompleteInterviewDialog } from "./CompleteInterviewDialog";
 import { formatInterviewDateTime } from "./dateTime";
 import { InterviewerList } from "./InterviewerList";
 import { interviewQueryKeys } from "./queryKeys";
+import { RescheduleInterviewDialog } from "./RescheduleInterviewDialog";
 
 import type {
   Interview,
@@ -51,8 +71,10 @@ const typeLabels: Record<
   HR_INTERVIEW: "HR interview",
   HIRING_MANAGER_INTERVIEW:
     "Hiring manager interview",
-  PANEL_INTERVIEW: "Panel interview",
-  FINAL_INTERVIEW: "Final interview",
+  PANEL_INTERVIEW:
+    "Panel interview",
+  FINAL_INTERVIEW:
+    "Final interview",
   OTHER: "Other",
 };
 
@@ -77,6 +99,21 @@ export function InterviewCard({
   const [
     assignDialogOpen,
     setAssignDialogOpen,
+  ] = useState(false);
+
+  const [
+    rescheduleDialogOpen,
+    setRescheduleDialogOpen,
+  ] = useState(false);
+
+  const [
+    cancelDialogOpen,
+    setCancelDialogOpen,
+  ] = useState(false);
+
+  const [
+    completeDialogOpen,
+    setCompleteDialogOpen,
   ] = useState(false);
 
   const removeMutation =
@@ -135,6 +172,27 @@ export function InterviewCard({
     interview.status !==
       "CANCELLED";
 
+  const canReschedule =
+    interview.status ===
+    "SCHEDULED";
+
+  const canCancel =
+    interview.status ===
+      "SCHEDULED" ||
+    interview.status ===
+      "IN_PROGRESS";
+
+  const canComplete =
+    interview.status ===
+      "SCHEDULED" ||
+    interview.status ===
+      "IN_PROGRESS";
+
+  const hasActions =
+    canReschedule ||
+    canCancel ||
+    canComplete;
+
   return (
     <>
       <Card>
@@ -148,30 +206,117 @@ export function InterviewCard({
               <p className="text-sm text-muted-foreground">
                 {
                   typeLabels[
-                    interview
-                      .interviewType
+                    interview.interviewType
                   ]
                 }
               </p>
             </div>
 
-            <Badge
-              variant={
-                interview.status ===
-                "CANCELLED"
-                  ? "destructive"
-                  : interview.status ===
-                      "COMPLETED"
-                    ? "secondary"
-                    : "default"
-              }
-            >
-              {
-                statusLabels[
-                  interview.status
-                ]
-              }
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={
+                  interview.status ===
+                  "CANCELLED"
+                    ? "destructive"
+                    : interview.status ===
+                        "COMPLETED"
+                      ? "secondary"
+                      : "default"
+                }
+              >
+                {
+                  statusLabels[
+                    interview.status
+                  ]
+                }
+              </Badge>
+
+              {hasActions ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    asChild
+                  >
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                    >
+                      <MoreHorizontal className="size-4" />
+
+                      <span className="sr-only">
+                        Interview actions
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent
+                    align="end"
+                  >
+                    {canReschedule ? (
+                      <DropdownMenuItem
+                        onSelect={() =>
+                          setRescheduleDialogOpen(
+                            true,
+                          )
+                        }
+                        onClick={() =>
+                          setRescheduleDialogOpen(
+                            true,
+                          )
+                        }
+                      >
+                        <CalendarClock className="mr-2 size-4" />
+
+                        Reschedule
+                      </DropdownMenuItem>
+                    ) : null}
+
+                    {canComplete ? (
+                      <DropdownMenuItem
+                        onSelect={() =>
+                          setCompleteDialogOpen(
+                            true,
+                          )
+                        }
+                        onClick={() =>
+                          setCompleteDialogOpen(
+                            true,
+                          )
+                        }
+                      >
+                        <CheckCircle2 className="mr-2 size-4" />
+
+                        Mark completed
+                      </DropdownMenuItem>
+                    ) : null}
+
+                    {canCancel ? (
+                      <>
+                        <DropdownMenuSeparator />
+
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onSelect={() =>
+                            setCancelDialogOpen(
+                              true,
+                            )
+                          }
+                          onClick={() =>
+                            setCancelDialogOpen(
+                              true,
+                            )
+                          }
+                        >
+                          <Ban className="mr-2 size-4" />
+
+                          Cancel interview
+                        </DropdownMenuItem>
+                      </>
+                    ) : null}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </div>
           </div>
         </CardHeader>
 
@@ -205,9 +350,7 @@ export function InterviewCard({
                 <MapPin className="mt-0.5 size-4 text-muted-foreground" />
 
                 <span>
-                  {
-                    interview.location
-                  }
+                  {interview.location}
                 </span>
               </div>
             ) : null}
@@ -229,6 +372,22 @@ export function InterviewCard({
               </div>
             ) : null}
           </div>
+
+          {interview.status ===
+            "CANCELLED" &&
+          interview.cancellationReason ? (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+              <p className="text-sm font-medium">
+                Cancellation reason
+              </p>
+
+              <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                {
+                  interview.cancellationReason
+                }
+              </p>
+            </div>
+          ) : null}
 
           <div className="border-t pt-4">
             <InterviewerList
@@ -268,11 +427,41 @@ export function InterviewCard({
         </CardContent>
       </Card>
 
+      {/* Interviewer assignment */}
       <AssignInterviewerDialog
         interview={interview}
         open={assignDialogOpen}
         onOpenChange={
           setAssignDialogOpen
+        }
+      />
+
+      {/* Reschedule */}
+      <RescheduleInterviewDialog
+        interview={interview}
+        open={
+          rescheduleDialogOpen
+        }
+        onOpenChange={
+          setRescheduleDialogOpen
+        }
+      />
+
+      {/* Cancel */}
+      <CancelInterviewDialog
+        interview={interview}
+        open={cancelDialogOpen}
+        onOpenChange={
+          setCancelDialogOpen
+        }
+      />
+
+      {/* Complete */}
+      <CompleteInterviewDialog
+        interview={interview}
+        open={completeDialogOpen}
+        onOpenChange={
+          setCompleteDialogOpen
         }
       />
     </>
