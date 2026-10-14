@@ -34,4 +34,5 @@ public interface InterviewFeedbackRepository
     boolean existsByTenantIdAndTemplateId(
             UUID tenantId,
             UUID templateId);
+
 }

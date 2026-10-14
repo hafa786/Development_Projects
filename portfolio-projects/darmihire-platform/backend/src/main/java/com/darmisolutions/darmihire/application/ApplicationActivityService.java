@@ -21,15 +21,13 @@ public class ApplicationActivityService {
 
     @Transactional(readOnly = true)
     public List<ApplicationActivityResponse> findByApplication(
-            UUID applicationId
-    ) {
+            UUID applicationId) {
         UUID tenantId = requireTenantId();
 
         return applicationActivityRepository
                 .findAllByTenantIdAndApplicationIdOrderByCreatedAtAsc(
                         tenantId,
-                        applicationId
-                )
+                        applicationId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -44,16 +42,14 @@ public class ApplicationActivityService {
     @Transactional
     public void recordCreated(
             JobApplication application,
-            TenantUser performedBy
-    ) {
+            TenantUser performedBy) {
         createActivity(
                 application,
                 ApplicationActivityType.APPLICATION_CREATED,
                 null,
                 application.getStage(),
                 "Application created",
-                performedBy
-        );
+                performedBy);
     }
 
     @Transactional
@@ -61,8 +57,7 @@ public class ApplicationActivityService {
             JobApplication application,
             ApplicationStage fromStage,
             ApplicationStage toStage,
-            TenantUser performedBy
-    ) {
+            TenantUser performedBy) {
         createActivity(
                 application,
                 ApplicationActivityType.STAGE_CHANGED,
@@ -72,16 +67,14 @@ public class ApplicationActivityService {
                         + formatStage(fromStage)
                         + " to "
                         + formatStage(toStage),
-                performedBy
-        );
+                performedBy);
     }
 
     @Transactional
     public void recordRejected(
             JobApplication application,
             String reason,
-            TenantUser performedBy
-    ) {
+            TenantUser performedBy) {
         String description = "Application rejected";
 
         if (reason != null && !reason.isBlank()) {
@@ -94,39 +87,34 @@ public class ApplicationActivityService {
                 application.getStage(),
                 null,
                 description,
-                performedBy
-        );
+                performedBy);
     }
 
     @Transactional
     public void recordWithdrawn(
             JobApplication application,
-            TenantUser performedBy
-    ) {
+            TenantUser performedBy) {
         createActivity(
                 application,
                 ApplicationActivityType.WITHDRAWN,
                 application.getStage(),
                 null,
                 "Application withdrawn",
-                performedBy
-        );
+                performedBy);
     }
 
     @Transactional
     public void recordHired(
             JobApplication application,
             ApplicationStage fromStage,
-            TenantUser performedBy
-    ) {
+            TenantUser performedBy) {
         createActivity(
                 application,
                 ApplicationActivityType.HIRED,
                 fromStage,
                 ApplicationStage.HIRED,
                 "Candidate hired",
-                performedBy
-        );
+                performedBy);
     }
 
     /*
@@ -139,8 +127,7 @@ public class ApplicationActivityService {
     public void recordInterviewScheduled(
             JobApplication application,
             String interviewTitle,
-            TenantUser performedBy
-    ) {
+            TenantUser performedBy) {
         createActivity(
                 application,
                 ApplicationActivityType.INTERVIEW_SCHEDULED,
@@ -148,16 +135,14 @@ public class ApplicationActivityService {
                 null,
                 "Interview scheduled: "
                         + safeInterviewTitle(interviewTitle),
-                performedBy
-        );
+                performedBy);
     }
 
     @Transactional
     public void recordInterviewRescheduled(
             JobApplication application,
             String interviewTitle,
-            TenantUser performedBy
-    ) {
+            TenantUser performedBy) {
         createActivity(
                 application,
                 ApplicationActivityType.INTERVIEW_RESCHEDULED,
@@ -165,16 +150,14 @@ public class ApplicationActivityService {
                 null,
                 "Interview rescheduled: "
                         + safeInterviewTitle(interviewTitle),
-                performedBy
-        );
+                performedBy);
     }
 
     @Transactional
     public void recordInterviewCancelled(
             JobApplication application,
             String interviewTitle,
-            TenantUser performedBy
-    ) {
+            TenantUser performedBy) {
         createActivity(
                 application,
                 ApplicationActivityType.INTERVIEW_CANCELLED,
@@ -182,16 +165,14 @@ public class ApplicationActivityService {
                 null,
                 "Interview cancelled: "
                         + safeInterviewTitle(interviewTitle),
-                performedBy
-        );
+                performedBy);
     }
 
     @Transactional
     public void recordInterviewCompleted(
             JobApplication application,
             String interviewTitle,
-            TenantUser performedBy
-    ) {
+            TenantUser performedBy) {
         createActivity(
                 application,
                 ApplicationActivityType.INTERVIEW_COMPLETED,
@@ -199,8 +180,7 @@ public class ApplicationActivityService {
                 null,
                 "Interview completed: "
                         + safeInterviewTitle(interviewTitle),
-                performedBy
-        );
+                performedBy);
     }
 
     @Transactional
@@ -208,8 +188,7 @@ public class ApplicationActivityService {
             JobApplication application,
             String interviewTitle,
             String interviewerName,
-            TenantUser performedBy
-    ) {
+            TenantUser performedBy) {
         createActivity(
                 application,
                 ApplicationActivityType.INTERVIEWER_ADDED,
@@ -218,8 +197,7 @@ public class ApplicationActivityService {
                 safeInterviewerName(interviewerName)
                         + " assigned to interview: "
                         + safeInterviewTitle(interviewTitle),
-                performedBy
-        );
+                performedBy);
     }
 
     @Transactional
@@ -227,8 +205,7 @@ public class ApplicationActivityService {
             JobApplication application,
             String interviewTitle,
             String interviewerName,
-            TenantUser performedBy
-    ) {
+            TenantUser performedBy) {
         createActivity(
                 application,
                 ApplicationActivityType.INTERVIEWER_REMOVED,
@@ -237,8 +214,7 @@ public class ApplicationActivityService {
                 safeInterviewerName(interviewerName)
                         + " removed from interview: "
                         + safeInterviewTitle(interviewTitle),
-                performedBy
-        );
+                performedBy);
     }
 
     /*
@@ -253,10 +229,8 @@ public class ApplicationActivityService {
             ApplicationStage fromStage,
             ApplicationStage toStage,
             String description,
-            TenantUser performedBy
-    ) {
-        ApplicationActivity activity =
-                new ApplicationActivity();
+            TenantUser performedBy) {
+        ApplicationActivity activity = new ApplicationActivity();
 
         activity.setTenant(application.getTenant());
         activity.setApplication(application);
@@ -274,10 +248,8 @@ public class ApplicationActivityService {
     }
 
     private ApplicationActivityResponse toResponse(
-            ApplicationActivity activity
-    ) {
-        TenantUser performedBy =
-                activity.getPerformedBy();
+            ApplicationActivity activity) {
+        TenantUser performedBy = activity.getPerformedBy();
 
         return new ApplicationActivityResponse(
                 activity.getId(),
@@ -295,13 +267,11 @@ public class ApplicationActivityService {
                         ? getTenantUserDisplayName(performedBy)
                         : null,
 
-                activity.getCreatedAt()
-        );
+                activity.getCreatedAt());
     }
 
     private String getTenantUserDisplayName(
-            TenantUser tenantUser
-    ) {
+            TenantUser tenantUser) {
         /*
          * Adapt this method ONLY if your TenantUser entity
          * exposes the person's name differently.
@@ -326,8 +296,7 @@ public class ApplicationActivityService {
     }
 
     private String safeInterviewTitle(
-            String title
-    ) {
+            String title) {
         if (title == null || title.isBlank()) {
             return "Interview";
         }
@@ -336,8 +305,7 @@ public class ApplicationActivityService {
     }
 
     private String safeInterviewerName(
-            String name
-    ) {
+            String name) {
         if (name == null || name.isBlank()) {
             return "Interviewer";
         }
@@ -346,8 +314,7 @@ public class ApplicationActivityService {
     }
 
     private String formatStage(
-            ApplicationStage stage
-    ) {
+            ApplicationStage stage) {
         if (stage == null) {
             return "";
         }
@@ -362,15 +329,33 @@ public class ApplicationActivityService {
     }
 
     private UUID requireTenantId() {
-        UUID tenantId =
-                tenantContext.getTenantId();
+        UUID tenantId = tenantContext.getTenantId();
 
         if (tenantId == null) {
             throw new IllegalStateException(
-                    "Tenant context is required"
-            );
+                    "Tenant context is required");
         }
 
         return tenantId;
+    }
+
+    @Transactional
+    public void recordInterviewFeedbackSubmitted(
+            JobApplication application,
+            String interviewTitle,
+            String interviewerName,
+            TenantUser performedBy) {
+
+        String description = interviewerName
+                + " submitted feedback for interview: "
+                + interviewTitle;
+
+        createActivity(
+                application,
+                ApplicationActivityType.INTERVIEW_FEEDBACK_SUBMITTED,
+                null,
+                null,
+                description,
+                performedBy);
     }
 }
