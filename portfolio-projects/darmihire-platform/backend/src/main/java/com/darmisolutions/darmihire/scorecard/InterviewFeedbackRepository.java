@@ -7,33 +7,31 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface InterviewFeedbackRepository
-        extends JpaRepository<
-                InterviewFeedback,
-                UUID
-        > {
+        extends JpaRepository<InterviewFeedback, UUID> {
 
-    List<InterviewFeedback>
-    findAllByTenantIdAndInterviewIdOrderByCreatedAtAsc(
+    List<InterviewFeedback> findAllByTenantIdAndInterviewIdOrderByCreatedAtAsc(
             UUID tenantId,
-            UUID interviewId
-    );
+            UUID interviewId);
 
-    Optional<InterviewFeedback>
-    findByIdAndTenantId(
+    Optional<InterviewFeedback> findByIdAndTenantId(
             UUID id,
-            UUID tenantId
-    );
+            UUID tenantId);
 
-    Optional<InterviewFeedback>
-    findByTenantIdAndInterviewIdAndInterviewerId(
+    Optional<InterviewFeedback> findByTenantIdAndInterviewIdAndInterviewerId(
             UUID tenantId,
             UUID interviewId,
-            UUID interviewerId
-    );
+            UUID interviewerId);
 
     boolean existsByTenantIdAndInterviewIdAndInterviewerId(
             UUID tenantId,
             UUID interviewId,
-            UUID interviewerId
-    );
+            UUID interviewerId);
+
+    boolean existsByTenantIdAndTemplateIdAndSubmittedAtIsNotNull(
+            UUID tenantId,
+            UUID templateId);
+
+    boolean existsByTenantIdAndTemplateId(
+            UUID tenantId,
+            UUID templateId);
 }
