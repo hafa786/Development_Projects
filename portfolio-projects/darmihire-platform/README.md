@@ -8,8 +8,8 @@ production-oriented recruitment system covering company structure,
 hiring teams, jobs, candidates, applications, recruiter workflows, and
 later AI-powered hiring capabilities.
 
-This README documents the project through **Step 17.4 --- Drag-and-Drop
-Kanban Application Pipeline**.
+This README documents the project through **Step 18.6 --- Interview
+Timeline Integration**.
 
 ------------------------------------------------------------------------
 
@@ -36,9 +36,20 @@ Kanban Application Pipeline**.
 -   Application activity and stage history
 -   Recruiter-facing activity timeline
 -   Drag-and-drop Kanban hiring pipeline
+-   Interview domain model and scheduling
+-   Interview types and lifecycle statuses
+-   Application-linked interview history
+-   Interviewer assignment and removal
+-   Interview rescheduling
+-   Interview cancellation with reason
+-   Interview completion
+-   Interview audit logging
+-   Interview events in the recruiter-facing application activity
+    timeline
 
-**Current milestone:** Step 17.4 --- Complete\
-**Next milestone:** Step 18 --- Interviews & Scheduling
+**Current milestone:** Step 18.6 --- Complete\
+**Step 18 status:** Interviews & Scheduling --- Complete\
+**Next milestone:** Structured interview scorecards and feedback
 
 ------------------------------------------------------------------------
 
@@ -150,6 +161,7 @@ backend
 ├── job
 ├── candidate
 ├── application
+├── interview
 └── audit
 ```
 
@@ -633,6 +645,164 @@ Dropdown-based stage movement remains available as an alternative.
 
 ------------------------------------------------------------------------
 
+# Interviews & Scheduling
+
+Step 18 adds the complete interview scheduling lifecycle to DarmiHire.
+Interviews belong to a `JobApplication`, which keeps interview history
+attached to the exact candidate/job relationship.
+
+``` text
+JobApplication
+      │
+      ├── Interview
+      │      ├── Type
+      │      ├── Status
+      │      ├── Start / end time
+      │      ├── Timezone
+      │      ├── Location / meeting URL
+      │      ├── Notes
+      │      └── Interviewers
+      │
+      └── ApplicationActivity
+             └── Interview lifecycle events
+```
+
+## Interview Types
+
+``` text
+PHONE_SCREEN
+VIDEO_INTERVIEW
+TECHNICAL_INTERVIEW
+BEHAVIORAL_INTERVIEW
+HR_INTERVIEW
+HIRING_MANAGER_INTERVIEW
+PANEL_INTERVIEW
+FINAL_INTERVIEW
+OTHER
+```
+
+## Interview Status
+
+``` text
+SCHEDULED
+IN_PROGRESS
+COMPLETED
+CANCELLED
+```
+
+Completed and cancelled interviews are terminal/read-only states for
+normal scheduling and interviewer-assignment operations.
+
+## Interview Fields
+
+The interview model includes:
+
+``` text
+tenant
+application
+title
+interviewType
+status
+startTime
+endTime
+timezone
+location
+meetingUrl
+notes
+cancellationReason
+cancelledAt
+completedAt
+createdAt
+updatedAt
+```
+
+The database enforces that the interview end time is later than its
+start time.
+
+## Interviewer Assignment
+
+DarmiHire uses a dedicated `InterviewInterviewer` join entity rather
+than a direct many-to-many relationship.
+
+``` text
+InterviewInterviewer
+├── tenant
+├── interview
+├── interviewer (TenantUser)
+├── createdAt
+└── updatedAt
+```
+
+The `(interview_id, tenant_user_id)` pair is unique, preventing the same
+workspace member from being assigned to the same interview twice.
+
+## Interview Lifecycle
+
+The implemented recruiter workflow is:
+
+``` text
+Schedule interview
+       │
+       ├── Assign interviewer(s)
+       │
+       ├── Reschedule
+       │
+       ├── Remove interviewer
+       │
+       ├── Cancel ──────► CANCELLED
+       │
+       └── Complete ────► COMPLETED
+```
+
+The frontend mirrors backend lifecycle protections, while the backend
+remains the source of truth for authorization and state validation.
+
+## Interview Activity Timeline
+
+Interview lifecycle events are written to the existing
+`ApplicationActivity` history rather than to a separate interview-only
+timeline. This gives recruiters one chronological view of the entire
+candidate application.
+
+Additional activity types:
+
+``` text
+INTERVIEW_SCHEDULED
+INTERVIEW_RESCHEDULED
+INTERVIEW_CANCELLED
+INTERVIEW_COMPLETED
+INTERVIEWER_ADDED
+INTERVIEWER_REMOVED
+```
+
+Example timeline:
+
+``` text
+Interview completed
+Interviewer assigned
+Interview rescheduled
+Interview scheduled
+Stage changed: Screening → Interview
+Application created
+```
+
+`AuditService` and `ApplicationActivityService` intentionally have
+different responsibilities:
+
+``` text
+AuditService
+└── compliance / system audit trail
+
+ApplicationActivityService
+└── recruiter-visible ATS timeline
+```
+
+Interview mutations and their application-activity records are written
+inside the same transaction so a failed mutation does not leave behind a
+misleading timeline event.
+
+------------------------------------------------------------------------
+
 # Permissions
 
 Authorization is enforced by the backend.
@@ -687,6 +857,18 @@ APPLICATION_WITHDRAWN
 APPLICATION_HIRED
 ```
 
+## Interviews
+
+``` text
+INTERVIEW_CREATED
+INTERVIEW_UPDATED
+INTERVIEW_RESCHEDULED
+INTERVIEW_CANCELLED
+INTERVIEW_COMPLETED
+INTERVIEW_INTERVIEWER_ADDED
+INTERVIEW_INTERVIEWER_REMOVED
+```
+
 Typical usage:
 
 ``` java
@@ -737,6 +919,33 @@ PATCH /api/v1/applications/{applicationId}/withdraw
 ``` http
 GET /api/v1/applications/{applicationId}/activities
 ```
+
+The same activity endpoint returns both application lifecycle events and
+interview lifecycle events.
+
+## Interviews
+
+``` http
+GET    /api/v1/interviews
+GET    /api/v1/interviews/{interviewId}
+GET    /api/v1/interviews/application/{applicationId}
+GET    /api/v1/interviews/upcoming
+
+POST   /api/v1/interviews
+
+PUT    /api/v1/interviews/{interviewId}
+
+PATCH  /api/v1/interviews/{interviewId}/reschedule
+PATCH  /api/v1/interviews/{interviewId}/cancel
+PATCH  /api/v1/interviews/{interviewId}/complete
+
+POST   /api/v1/interviews/{interviewId}/interviewers
+DELETE /api/v1/interviews/{interviewId}/interviewers/{tenantUserId}
+```
+
+Interview APIs are authenticated and tenant-scoped. Scheduling validates
+the start/end time and IANA timezone. Terminal interview states are
+protected by the backend service layer.
 
 Example application creation:
 
@@ -963,6 +1172,28 @@ Tenant
 
 Database schema changes are managed with Flyway migrations.
 
+Interview-related relationships:
+
+``` text
+Tenant
+ └── JobApplication
+      ├── ApplicationActivity
+      └── Interview
+           └── InterviewInterviewer
+                └── TenantUser
+```
+
+Core interview tables:
+
+``` text
+interviews
+interview_interviewers
+```
+
+`interviews` is tenant-scoped and references `job_applications`.
+`interview_interviewers` is tenant-scoped and uniquely links an
+interview to a workspace member.
+
 ------------------------------------------------------------------------
 
 # Local Development
@@ -1111,37 +1342,44 @@ existsByTenantIdAndEmailIgnoreCase(...)
 ✓ Drag-and-drop stage movement
 ```
 
-## Step 18 --- Next
+## Step 18 --- Interviews & Scheduling
 
 ``` text
-○ Interviews & Scheduling
+✓ 18.1  Interview domain model + Flyway migration
+✓ 18.2  Interview backend API
+✓ 18.3  Interview scheduling frontend
+✓ 18.4  Interviewer assignment UI
+✓ 18.5  Reschedule / cancel / complete UI
+✓ 18.6  Interview timeline integration
 ```
 
-Planned Step 18 capabilities:
+Completed Step 18 capabilities:
 
 ``` text
-Interview entity
-Interview types
-Interview rounds
-Interview status
-Start/end time
-Timezone
-Meeting information
-Interviewer assignment
-Application relationship
-Interview creation
-Interview editing
-Interview rescheduling
-Interview cancellation
-Upcoming interview views
-Candidate interview history
+✓ Interview entity and persistence
+✓ Interview types and statuses
+✓ Application relationship
+✓ Start/end time and timezone
+✓ Location and meeting URL
+✓ Interview notes
+✓ Multiple interviewer assignments
+✓ Schedule interview
+✓ Reschedule interview
+✓ Cancel interview with reason
+✓ Complete interview
+✓ Terminal-state protections
+✓ Tenant-scoped authorization
+✓ Interview audit actions
+✓ Interview activity timeline events
+✓ TanStack Query cache refresh after interview mutations
 ```
 
 ## Later Phases
 
 ``` text
-○ Interview scorecards
-○ Interview feedback
+○ Structured interview scorecards
+○ Interview feedback forms
+○ Interview ratings / recommendations
 ○ Hiring evaluations
 ○ Resume upload/storage
 ○ Resume parsing
@@ -1164,22 +1402,23 @@ Candidate interview history
 
 # Next Step
 
-The next implementation milestone is **Step 18 --- Interviews &
-Scheduling**.
+With **Step 18 --- Interviews & Scheduling** complete, the recommended
+next milestone is structured interview evaluation.
 
-Recommended order:
+A logical implementation order is:
 
 ``` text
-Step 18.1  Interview domain model + Flyway migration
-Step 18.2  Interview backend APIs
-Step 18.3  Interview scheduling frontend
-Step 18.4  Interviewer assignment
-Step 18.5  Rescheduling, status and cancellation
-Step 18.6  Candidate/application interview timeline
+Step 19.1  Interview scorecard domain model + Flyway migration
+Step 19.2  Scorecard templates / evaluation criteria
+Step 19.3  Interview feedback backend API
+Step 19.4  Interview feedback frontend
+Step 19.5  Ratings and hiring recommendations
+Step 19.6  Evaluation summary on the application/candidate profile
 ```
 
-After scheduling is stable, DarmiHire can move into structured interview
-scorecards and hiring evaluations.
+This builds directly on the completed interview lifecycle and provides
+the structured evaluation data needed before later AI-assisted hiring
+recommendations and analytics.
 
 ------------------------------------------------------------------------
 
