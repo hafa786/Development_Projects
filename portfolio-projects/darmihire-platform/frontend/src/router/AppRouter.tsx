@@ -1,7 +1,4 @@
-import {
-    Route,
-    Routes,
-} from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 
 import { AppLayout } from "@/components/layout/AppLayout";
 
@@ -24,116 +21,83 @@ import JobDetailsPage from "@/pages/JobDetailsPage";
 import CandidatesPage from "@/pages/CandidatesPage";
 import CandidateDetailsPage from "@/pages/CandidateDetailsPage";
 import UsersPage from "@/pages/UsersPage";
+import { ScorecardsPage } from "@/pages/ScorecardsPage";
 
 export function AppRouter() {
-    return (
-        <Routes>
-
-            {/* =========================
+  return (
+    <Routes>
+      {/* =========================
           ROOT
           ========================= */}
 
-            <Route
-                path="/"
-                element={<RootRoute />}
-            />
+      <Route path="/" element={<RootRoute />} />
 
-            {/* =========================
+      {/* =========================
           PUBLIC AUTH
           ========================= */}
 
-            <Route
-                path="/login"
-                element={
-                    <PublicRoute>
-                        <LoginPage />
-                    </PublicRoute>
-                }
-            />
-            <Route
-                path="/register"
-                element={
-                    <PublicRoute>
-                        <RegisterPage />
-                    </PublicRoute>
-                }
-            />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <RegisterPage />
+          </PublicRoute>
+        }
+      />
 
-            {/* =========================
+      {/* =========================
           AUTHENTICATED
           ========================= */}
 
-            <Route element={<ProtectedRoute />}>
+      <Route element={<ProtectedRoute />}>
+        <Route
+          element={
+            <WorkspaceRoute>
+              <AppLayout />
+            </WorkspaceRoute>
+          }
+        >
+          <Route path="/onboarding" element={<OnboardingPage />} />
 
-                <Route
-                    element={
-                        <WorkspaceRoute>
-                            <AppLayout />
-                        </WorkspaceRoute>
-                    }
-                >
+          <Route path="/dashboard" element={<DashboardPage />} />
 
-                    <Route
-                        path="/onboarding"
-                        element={<OnboardingPage />}
-                    />
+          <Route path="scorecards" element={<ScorecardsPage />} />
 
-                    <Route
-                        path="/dashboard"
-                        element={<DashboardPage />}
-                    />
+          <Route path="/departments" element={<DepartmentsPage />} />
 
-                    <Route
-                        path="/departments"
-                        element={<DepartmentsPage />}
-                    />
+          <Route path="/members" element={<MembersPage />} />
 
-                    <Route
-                        path="/members"
-                        element={<MembersPage />}
-                    />
+          <Route path="/locations" element={<LocationsPage />} />
 
-                    <Route
-                        path="/locations"
-                        element={<LocationsPage />}
-                    />
+          <Route path="/teams" element={<TeamsPage />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="jobs" element={<JobsPage />} />
+          <Route path="jobs/:jobId" element={<JobDetailsPage />} />
 
-                    <Route
-                        path="/teams"
-                        element={<TeamsPage />}
-                    />
-                    <Route
-                        path="/users"
-                        element={<UsersPage />}
-                    />
-                    <Route path="jobs" element={<JobsPage />} />
-                    <Route path="jobs/:jobId" element={<JobDetailsPage />} />
-                    
-                    <Route
-                        path="/candidates"
-                        element={<CandidatesPage />}
-                    />
+          <Route path="/candidates" element={<CandidatesPage />} />
 
-                    <Route
-                        path="/candidates/:candidateId"
-                        element={<CandidateDetailsPage />}
-                    />
+          <Route
+            path="/candidates/:candidateId"
+            element={<CandidateDetailsPage />}
+          />
+        </Route>
+      </Route>
 
-                </Route>
-
-            </Route>
-
-            {/* =========================
+      {/* =========================
           NOT FOUND
           ========================= */}
 
-            <Route
-                path="*"
-                element={<NotFoundRedirect />}
-            />
-
-        </Routes>
-    );
+      <Route path="*" element={<NotFoundRedirect />} />
+    </Routes>
+  );
 }
 
 export default AppRouter;

@@ -6,7 +6,8 @@ import {
   Users,
   UsersRound,
   type LucideIcon,
-  BriefcaseBusiness
+  BriefcaseBusiness,
+  ClipboardCheck,
 } from "lucide-react";
 
 export type NavigationItem = {
@@ -21,70 +22,73 @@ export type NavigationSection = {
   items: NavigationItem[];
 };
 
-export const navigationSections:
-  NavigationSection[] = [
-    {
-      label: "Workspace",
+export const navigationSections: NavigationSection[] = [
+  {
+    label: "Workspace",
 
-      items: [
-        {
-          label: "Dashboard",
-          to: "/dashboard",
-          icon: LayoutDashboard,
-          end: true,
-        },
-      ],
-    },
+    items: [
+      {
+        label: "Dashboard",
+        to: "/dashboard",
+        icon: LayoutDashboard,
+        end: true,
+      },
+    ],
+  },
 
-    {
-      label: "Organization",
+  {
+    label: "Organization",
 
-      items: [
-        {
-          label: "Users",
-          to: "/users",
-          icon: Users,
-          end: true,
-        },
-        {
-          label: "Jobs",
-          to: "/jobs",
-          icon: BriefcaseBusiness,
-          end: true,
-        },
-        
-        {
-          label: "Departments",
-          to: "/departments",
-          icon: Building2,
-          end: true,
-        },
-        {
-          label: "Teams",
-          to: "/teams",
-          icon: UsersRound,
-          end: true,
-        },
-        {
-          label: "Locations",
-          to: "/locations",
-          icon: MapPin,
-          end: true,
-        },
-        {
-          label: "Candidates",
-          to: "/candidates",
-          icon: Users,
-          end: true,
-        }
-      ],
-    },
-  ];
+    items: [
+      {
+        label: "Users",
+        to: "/users",
+        icon: Users,
+        end: true,
+      },
+      {
+        label: "Jobs",
+        to: "/jobs",
+        icon: BriefcaseBusiness,
+        end: true,
+      },
 
-export const supportNavigationItem:
-  NavigationItem = {
-    label: "Help & Support",
-    to: "/support",
-    icon: CircleHelp,
-    end: true,
-  };
+      {
+        label: "Departments",
+        to: "/departments",
+        icon: Building2,
+        end: true,
+      },
+      {
+        label: "Teams",
+        to: "/teams",
+        icon: UsersRound,
+        end: true,
+      },
+      {
+        label: "Locations",
+        to: "/locations",
+        icon: MapPin,
+        end: true,
+      },
+      {
+        label: "Scorecards",
+        to: "/scorecards",
+        icon: ClipboardCheck,
+      },
+      {
+        label: "Candidates",
+        to: "/candidates",
+        icon: Users,
+        end: true,
+      },
+    ],
+  },
+];
+
+export const supportNavigationItem: NavigationItem = {
+  label: "Help & Support",
+  to: "/support",
+  icon: CircleHelp,
+  end: true,
+};
