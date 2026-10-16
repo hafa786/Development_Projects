@@ -41,6 +41,9 @@ import {
 } from "@/features/applications/queryKeys";
 
 import { getTenantId } from "@/utils/session";
+import {
+    ApplicationEvaluationSummary,
+} from "@/features/evaluations/ApplicationEvaluationSummary";
 
 import {
     removeInterviewer,
@@ -481,6 +484,15 @@ export function InterviewCard({
                             <InterviewFeedbackPanel
                                 tenantId={tenantId}
                                 interviewId={interview.id}
+                            />
+                        </div>
+                    ) : null}
+
+                    {tenantId ? (
+                        <div className="border-t pt-6">
+                            <ApplicationEvaluationSummary
+                                tenantId={tenantId}
+                                applicationId={interview.applicationId}
                             />
                         </div>
                     ) : null}

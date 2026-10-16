@@ -13,6 +13,9 @@ import {
   Save,
   Send,
 } from "lucide-react";
+import {
+  evaluationQueryKeys,
+} from "@/features/evaluations/queryKeys";
 
 import { toast } from "sonner";
 
@@ -53,27 +56,27 @@ const recommendations: Array<{
   value: HiringRecommendation;
   label: string;
 }> = [
-  {
-    value: "STRONG_NO",
-    label: "Strong No",
-  },
-  {
-    value: "NO",
-    label: "No",
-  },
-  {
-    value: "NEUTRAL",
-    label: "Neutral",
-  },
-  {
-    value: "YES",
-    label: "Yes",
-  },
-  {
-    value: "STRONG_YES",
-    label: "Strong Yes",
-  },
-];
+    {
+      value: "STRONG_NO",
+      label: "Strong No",
+    },
+    {
+      value: "NO",
+      label: "No",
+    },
+    {
+      value: "NEUTRAL",
+      label: "Neutral",
+    },
+    {
+      value: "YES",
+      label: "Yes",
+    },
+    {
+      value: "STRONG_YES",
+      label: "Strong Yes",
+    },
+  ];
 
 export function FeedbackForm({
   tenantId,
@@ -171,11 +174,11 @@ export function FeedbackForm({
     setRatings((current) =>
       current.map((rating) =>
         rating.criterionId ===
-        criterionId
+          criterionId
           ? {
-              ...rating,
-              ...patch,
-            }
+            ...rating,
+            ...patch,
+          }
           : rating,
       ),
     );
@@ -249,7 +252,7 @@ export function FeedbackForm({
       onError: (error: Error) => {
         toast.error(
           error.message ||
-            "Failed to save feedback",
+          "Failed to save feedback",
         );
       },
     });
@@ -301,6 +304,22 @@ export function FeedbackForm({
                 feedback.interviewId,
               ),
           }),
+
+          queryClient.invalidateQueries({
+            queryKey:
+              applicationQueryKeys.activities(
+                tenantId,
+                feedback.applicationId,
+              ),
+          }),
+
+          queryClient.invalidateQueries({
+            queryKey:
+              evaluationQueryKeys.summary(
+                tenantId,
+                feedback.applicationId,
+              ),
+          }),
         ]);
 
         toast.success(
@@ -311,7 +330,7 @@ export function FeedbackForm({
       onError: (error: Error) => {
         toast.error(
           error.message ||
-            "Failed to submit feedback",
+          "Failed to submit feedback",
         );
       },
     });
@@ -450,7 +469,7 @@ export function FeedbackForm({
                 className={[
                   "rounded-md border px-3 py-3 text-sm font-medium",
                   recommendation ===
-                  option.value
+                    option.value
                     ? "border-primary bg-primary text-primary-foreground"
                     : "hover:bg-muted",
                 ].join(" ")}
