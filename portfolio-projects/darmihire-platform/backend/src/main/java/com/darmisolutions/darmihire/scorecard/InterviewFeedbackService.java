@@ -695,4 +695,37 @@ public class InterviewFeedbackService {
                 ? null
                 : trimmed;
     }
+
+    @Transactional(readOnly = true)
+        public Optional<InterviewFeedbackResponse> getMyFeedback(
+                        UUID interviewId) {
+                UUID tenantId = requireTenantId();
+
+                UUID userId = tenantContext.getUserId();
+
+                if (userId == null) {
+                        throw new IllegalStateException(
+                                        "Authenticated user context is required");
+                }
+
+                TenantUser currentTenantUser = tenantUserRepository
+                                .findByTenantIdAndUserId(
+                                                tenantId,
+                                                userId)
+                                .orElseThrow(() -> new IllegalStateException(
+                                                "Current user is not a member of this tenant"));
+
+                return feedbackRepository
+                    .findByTenantIdAndInterviewIdAndInterviewerId(
+                            tenantId,
+                            interviewId,
+                            currentTenantUser.getId()
+                    )
+                    .map(feedback ->
+                            toResponse(
+                                    feedback,
+                                    tenantId
+                            )
+                    );
+        }
 }
