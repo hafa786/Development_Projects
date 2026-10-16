@@ -35,4 +35,8 @@ public interface InterviewFeedbackRepository
             UUID tenantId,
             UUID templateId);
 
+    List<InterviewFeedback> findAllByTenantIdAndInterviewApplicationIdAndSubmittedAtIsNotNullOrderBySubmittedAtAsc(
+            UUID tenantId,
+            UUID applicationId);
+
 }
