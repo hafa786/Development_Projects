@@ -8,6 +8,8 @@ import {
   type LucideIcon,
   BriefcaseBusiness,
   ClipboardCheck,
+  FileSignature,
+  ClipboardList,
 } from "lucide-react";
 
 export type NavigationItem = {
@@ -81,6 +83,17 @@ export const navigationSections: NavigationSection[] = [
         to: "/candidates",
         icon: Users,
         end: true,
+      },
+      {
+        label: "Offers",
+        to: "/offers",
+        icon: FileSignature,
+        end: true,
+      },
+      {
+        label: "Applications",
+        to: "/applications",
+        icon: ClipboardList,
       },
     ],
   },

@@ -22,6 +22,9 @@ import CandidatesPage from "@/pages/CandidatesPage";
 import CandidateDetailsPage from "@/pages/CandidateDetailsPage";
 import UsersPage from "@/pages/UsersPage";
 import { ScorecardsPage } from "@/pages/ScorecardsPage";
+import { OffersPage } from "@/pages/OffersPage";
+import { ApplicationDetailsPage } from "@/features/applications/ApplicationDetailsPage";
+import { ApplicationsPage } from "@/pages/ApplicationsPage";
 
 export function AppRouter() {
   return (
@@ -66,24 +69,22 @@ export function AppRouter() {
           }
         >
           <Route path="/onboarding" element={<OnboardingPage />} />
-
           <Route path="/dashboard" element={<DashboardPage />} />
-
           <Route path="scorecards" element={<ScorecardsPage />} />
-
           <Route path="/departments" element={<DepartmentsPage />} />
-
           <Route path="/members" element={<MembersPage />} />
-
           <Route path="/locations" element={<LocationsPage />} />
-
           <Route path="/teams" element={<TeamsPage />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="jobs" element={<JobsPage />} />
           <Route path="jobs/:jobId" element={<JobDetailsPage />} />
-
+          <Route path="/offers" element={<OffersPage />} />
           <Route path="/candidates" element={<CandidatesPage />} />
-
+          <Route path="/applications" element={<ApplicationsPage />} />
+          <Route
+            path="/applications/:applicationId"
+            element={<ApplicationDetailsPage />}
+          />
           <Route
             path="/candidates/:candidateId"
             element={<CandidateDetailsPage />}

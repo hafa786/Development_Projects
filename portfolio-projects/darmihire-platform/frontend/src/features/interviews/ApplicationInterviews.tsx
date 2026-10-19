@@ -26,6 +26,7 @@ type ApplicationInterviewsProps = {
   applicationId: string;
   candidateName?: string;
   jobTitle?: string;
+  tenantId?: string
 };
 
 export function ApplicationInterviews({
