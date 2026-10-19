@@ -22,16 +22,8 @@ public class AuthorizationService {
 
         return switch (role) {
 
-            /*
-             * Company administrators have full access
-             * to tenant administration functionality.
-             */
             case COMPANY_ADMIN -> true;
 
-            /*
-             * Recruiters can manage the recruitment
-             * workspace structure.
-             */
             case RECRUITER ->
                 permission == Permission.MANAGE_DEPARTMENTS
                         || permission == Permission.MANAGE_TEAMS
@@ -42,12 +34,10 @@ public class AuthorizationService {
                         || permission == Permission.MANAGE_SCORECARDS
                         || permission == Permission.MANAGE_OFFERS;
 
-            /*
-             * These roles currently have read-only /
-             * workflow-level access.
-             */
-            case HIRING_MANAGER,
-                    INTERVIEWER,
+            case HIRING_MANAGER ->
+                permission == Permission.APPROVE_OFFERS;
+
+            case INTERVIEWER,
                     VIEWER ->
                 false;
         };

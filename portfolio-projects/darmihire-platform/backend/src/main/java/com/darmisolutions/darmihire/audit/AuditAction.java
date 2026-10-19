@@ -87,5 +87,5 @@ public enum AuditAction {
     OFFER_ACCEPTED,
     OFFER_DECLINED,
     OFFER_WITHDRAWN,
-    OFFER_DELETED
+    OFFER_DELETED,
 }

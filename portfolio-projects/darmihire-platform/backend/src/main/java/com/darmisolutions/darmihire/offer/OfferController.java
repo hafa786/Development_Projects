@@ -1,8 +1,11 @@
 package com.darmisolutions.darmihire.offer;
 
 import com.darmisolutions.darmihire.offer.dto.CreateOfferRequest;
+import com.darmisolutions.darmihire.offer.dto.DeclineOfferRequest;
 import com.darmisolutions.darmihire.offer.dto.OfferResponse;
+import com.darmisolutions.darmihire.offer.dto.RejectOfferRequest;
 import com.darmisolutions.darmihire.offer.dto.UpdateOfferRequest;
+import com.darmisolutions.darmihire.offer.dto.WithdrawOfferRequest;
 
 import jakarta.validation.Valid;
 
@@ -22,7 +25,13 @@ public class OfferController {
     private final OfferService offerService;
 
     @GetMapping
-    public List<OfferResponse> findAll() {
+    public List<OfferResponse> findAll(
+            @RequestParam(required = false)
+            OfferStatus status
+    ) {
+        if (status != null) {
+            return offerService.findAllByStatus(status);
+        }
 
         return offerService.findAll();
     }
@@ -31,51 +40,35 @@ public class OfferController {
     public OfferResponse findById(
             @PathVariable UUID offerId
     ) {
+        return offerService.findById(offerId);
+    }
 
-        return offerService.findById(
-                offerId
+    @GetMapping("/application/{applicationId}")
+    public List<OfferResponse> findByApplication(
+            @PathVariable UUID applicationId
+    ) {
+        return offerService.findByApplication(
+                applicationId
         );
     }
 
-    @GetMapping(
-            "/application/{applicationId}"
-    )
-    public List<OfferResponse>
-    findByApplication(
-            @PathVariable
-            UUID applicationId
-    ) {
-
-        return offerService
-                .findByApplication(
-                        applicationId
-                );
-    }
-
     @PostMapping
-    @ResponseStatus(
-            HttpStatus.CREATED
-    )
+    @ResponseStatus(HttpStatus.CREATED)
     public OfferResponse create(
             @Valid
             @RequestBody
             CreateOfferRequest request
     ) {
-
-        return offerService.create(
-                request
-        );
+        return offerService.create(request);
     }
 
     @PutMapping("/{offerId}")
     public OfferResponse update(
             @PathVariable UUID offerId,
-
             @Valid
             @RequestBody
             UpdateOfferRequest request
     ) {
-
         return offerService.update(
                 offerId,
                 request
@@ -83,15 +76,78 @@ public class OfferController {
     }
 
     @DeleteMapping("/{offerId}")
-    @ResponseStatus(
-            HttpStatus.NO_CONTENT
-    )
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
             @PathVariable UUID offerId
     ) {
+        offerService.delete(offerId);
+    }
 
-        offerService.delete(
-                offerId
+    @PatchMapping("/{offerId}/submit")
+    public OfferResponse submit(
+            @PathVariable UUID offerId
+    ) {
+        return offerService
+                .submitForApproval(offerId);
+    }
+
+    @PatchMapping("/{offerId}/approve")
+    public OfferResponse approve(
+            @PathVariable UUID offerId
+    ) {
+        return offerService.approve(offerId);
+    }
+
+    @PatchMapping("/{offerId}/reject")
+    public OfferResponse reject(
+            @PathVariable UUID offerId,
+            @Valid
+            @RequestBody
+            RejectOfferRequest request
+    ) {
+        return offerService.reject(
+                offerId,
+                request
+        );
+    }
+
+    @PatchMapping("/{offerId}/send")
+    public OfferResponse send(
+            @PathVariable UUID offerId
+    ) {
+        return offerService.send(offerId);
+    }
+
+    @PatchMapping("/{offerId}/accept")
+    public OfferResponse accept(
+            @PathVariable UUID offerId
+    ) {
+        return offerService.accept(offerId);
+    }
+
+    @PatchMapping("/{offerId}/decline")
+    public OfferResponse decline(
+            @PathVariable UUID offerId,
+            @Valid
+            @RequestBody
+            DeclineOfferRequest request
+    ) {
+        return offerService.decline(
+                offerId,
+                request
+        );
+    }
+
+    @PatchMapping("/{offerId}/withdraw")
+    public OfferResponse withdraw(
+            @PathVariable UUID offerId,
+            @Valid
+            @RequestBody
+            WithdrawOfferRequest request
+    ) {
+        return offerService.withdraw(
+                offerId,
+                request
         );
     }
 }

@@ -9,14 +9,12 @@ import java.util.UUID;
 public interface OfferRepository
         extends JpaRepository<Offer, UUID> {
 
-    Optional<Offer>
-    findByIdAndTenantId(
+    Optional<Offer> findByIdAndTenantId(
             UUID id,
             UUID tenantId
     );
 
-    List<Offer>
-    findAllByTenantIdOrderByCreatedAtDesc(
+    List<Offer> findAllByTenantIdOrderByCreatedAtDesc(
             UUID tenantId
     );
 
@@ -34,6 +32,13 @@ public interface OfferRepository
 
     boolean
     existsByTenantIdAndApplicationIdAndStatus(
+            UUID tenantId,
+            UUID applicationId,
+            OfferStatus status
+    );
+
+    List<Offer>
+    findAllByTenantIdAndApplicationIdAndStatus(
             UUID tenantId,
             UUID applicationId,
             OfferStatus status

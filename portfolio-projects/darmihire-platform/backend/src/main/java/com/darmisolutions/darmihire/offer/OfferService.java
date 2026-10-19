@@ -1,12 +1,17 @@
 package com.darmisolutions.darmihire.offer;
 
+import com.darmisolutions.darmihire.application.ApplicationStage;
+import com.darmisolutions.darmihire.application.ApplicationStatus;
 import com.darmisolutions.darmihire.application.JobApplication;
 import com.darmisolutions.darmihire.application.JobApplicationRepository;
 import com.darmisolutions.darmihire.audit.AuditAction;
 import com.darmisolutions.darmihire.audit.AuditService;
 import com.darmisolutions.darmihire.offer.dto.CreateOfferRequest;
+import com.darmisolutions.darmihire.offer.dto.DeclineOfferRequest;
 import com.darmisolutions.darmihire.offer.dto.OfferResponse;
+import com.darmisolutions.darmihire.offer.dto.RejectOfferRequest;
 import com.darmisolutions.darmihire.offer.dto.UpdateOfferRequest;
+import com.darmisolutions.darmihire.offer.dto.WithdrawOfferRequest;
 import com.darmisolutions.darmihire.security.AuthorizationService;
 import com.darmisolutions.darmihire.security.Permission;
 import com.darmisolutions.darmihire.tenant.TenantUser;
@@ -18,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
@@ -43,17 +49,15 @@ public class OfferService {
     private final AuditService auditService;
 
     /*
-     * ------------------------------------------------
+     * ==================================================
      * READ
-     * ------------------------------------------------
+     * ==================================================
      */
 
     @Transactional(readOnly = true)
     public List<OfferResponse> findAll() {
 
-        authorizationService.require(
-                Permission.MANAGE_OFFERS
-        );
+        requireManageOffers();
 
         UUID tenantId = requireTenantId();
 
@@ -67,23 +71,39 @@ public class OfferService {
     }
 
     @Transactional(readOnly = true)
+    public List<OfferResponse> findAllByStatus(
+            OfferStatus status
+    ) {
+
+        requireManageOffers();
+
+        UUID tenantId = requireTenantId();
+
+        return offerRepository
+                .findAllByTenantIdAndStatusOrderByCreatedAtDesc(
+                        tenantId,
+                        status
+                )
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public OfferResponse findById(
             UUID offerId
     ) {
 
-        authorizationService.require(
-                Permission.MANAGE_OFFERS
-        );
+        requireManageOffers();
 
         UUID tenantId = requireTenantId();
 
-        Offer offer =
+        return toResponse(
                 findOffer(
                         tenantId,
                         offerId
-                );
-
-        return toResponse(offer);
+                )
+        );
     }
 
     @Transactional(readOnly = true)
@@ -91,15 +111,13 @@ public class OfferService {
             UUID applicationId
     ) {
 
-        authorizationService.require(
-                Permission.MANAGE_OFFERS
-        );
+        requireManageOffers();
 
         UUID tenantId = requireTenantId();
 
         /*
-         * Validate that the application itself
-         * belongs to this tenant.
+         * Prevent probing another tenant's
+         * application UUID.
          */
         findApplication(
                 tenantId,
@@ -117,9 +135,9 @@ public class OfferService {
     }
 
     /*
-     * ------------------------------------------------
+     * ==================================================
      * CREATE
-     * ------------------------------------------------
+     * ==================================================
      */
 
     @Transactional
@@ -127,9 +145,7 @@ public class OfferService {
             CreateOfferRequest request
     ) {
 
-        authorizationService.require(
-                Permission.MANAGE_OFFERS
-        );
+        requireManageOffers();
 
         UUID tenantId = requireTenantId();
 
@@ -138,6 +154,14 @@ public class OfferService {
                         tenantId,
                         request.applicationId()
                 );
+
+        if (application.getStatus()
+                != ApplicationStatus.ACTIVE) {
+
+            throw new IllegalStateException(
+                    "Offers can only be created for active applications"
+            );
+        }
 
         TenantUser currentUser =
                 requireCurrentTenantUser(
@@ -151,10 +175,6 @@ public class OfferService {
 
         Offer offer = new Offer();
 
-        /*
-         * Tenant comes from the trusted,
-         * tenant-scoped application.
-         */
         offer.setTenant(
                 application.getTenant()
         );
@@ -164,7 +184,7 @@ public class OfferService {
         );
 
         /*
-         * Never accept status from client.
+         * Lifecycle status is server-owned.
          */
         offer.setStatus(
                 OfferStatus.DRAFT
@@ -223,19 +243,18 @@ public class OfferService {
                         offer
                 );
 
-        auditService.log(
+        audit(
                 AuditAction.OFFER_CREATED,
-                "Offer",
-                saved.getId()
+                saved
         );
 
         return toResponse(saved);
     }
 
     /*
-     * ------------------------------------------------
+     * ==================================================
      * UPDATE
-     * ------------------------------------------------
+     * ==================================================
      */
 
     @Transactional
@@ -244,9 +263,7 @@ public class OfferService {
             UpdateOfferRequest request
     ) {
 
-        authorizationService.require(
-                Permission.MANAGE_OFFERS
-        );
+        requireManageOffers();
 
         UUID tenantId = requireTenantId();
 
@@ -256,7 +273,10 @@ public class OfferService {
                         offerId
                 );
 
-        requireDraft(offer);
+        requireStatus(
+                offer,
+                OfferStatus.DRAFT
+        );
 
         validateDates(
                 request.startDate(),
@@ -312,19 +332,18 @@ public class OfferService {
                         offer
                 );
 
-        auditService.log(
+        audit(
                 AuditAction.OFFER_UPDATED,
-                "Offer",
-                saved.getId()
+                saved
         );
 
         return toResponse(saved);
     }
 
     /*
-     * ------------------------------------------------
+     * ==================================================
      * DELETE
-     * ------------------------------------------------
+     * ==================================================
      */
 
     @Transactional
@@ -332,8 +351,99 @@ public class OfferService {
             UUID offerId
     ) {
 
+        requireManageOffers();
+
+        UUID tenantId = requireTenantId();
+
+        Offer offer =
+                findOffer(
+                        tenantId,
+                        offerId
+                );
+
+        requireStatus(
+                offer,
+                OfferStatus.DRAFT
+        );
+
+        UUID id = offer.getId();
+
+        offerRepository.delete(
+                offer
+        );
+
+        auditService.log(
+                AuditAction.OFFER_DELETED,
+                "Offer",
+                id
+        );
+    }
+
+    /*
+     * ==================================================
+     * SUBMIT
+     * ==================================================
+     */
+
+    @Transactional
+    public OfferResponse submitForApproval(
+            UUID offerId
+    ) {
+
+        requireManageOffers();
+
+        UUID tenantId = requireTenantId();
+
+        Offer offer =
+                findOffer(
+                        tenantId,
+                        offerId
+                );
+
+        requireStatus(
+                offer,
+                OfferStatus.DRAFT
+        );
+
+        validateForSubmission(
+                offer
+        );
+
+        offer.setStatus(
+                OfferStatus.PENDING_APPROVAL
+        );
+
+        offer.setSubmittedForApprovalAt(
+                Instant.now()
+        );
+
+        Offer saved =
+                offerRepository.save(
+                        offer
+                );
+
+        audit(
+                AuditAction
+                        .OFFER_SUBMITTED_FOR_APPROVAL,
+                saved
+        );
+
+        return toResponse(saved);
+    }
+
+    /*
+     * ==================================================
+     * APPROVE
+     * ==================================================
+     */
+
+    @Transactional
+    public OfferResponse approve(
+            UUID offerId
+    ) {
+
         authorizationService.require(
-                Permission.MANAGE_OFFERS
+                Permission.APPROVE_OFFERS
         );
 
         UUID tenantId = requireTenantId();
@@ -344,23 +454,515 @@ public class OfferService {
                         offerId
                 );
 
-        requireDraft(offer);
-
-        UUID id = offer.getId();
-
-        offerRepository.delete(offer);
-
-        auditService.log(
-                AuditAction.OFFER_DELETED,
-                "Offer",
-                id
+        requireStatus(
+                offer,
+                OfferStatus.PENDING_APPROVAL
         );
+
+        TenantUser currentUser =
+                requireCurrentTenantUser(
+                        tenantId
+                );
+
+        offer.setStatus(
+                OfferStatus.APPROVED
+        );
+
+        offer.setApprovedBy(
+                currentUser
+        );
+
+        offer.setApprovedAt(
+                Instant.now()
+        );
+
+        offer.setRejectedAt(null);
+        offer.setRejectionReason(null);
+
+        Offer saved =
+                offerRepository.save(
+                        offer
+                );
+
+        audit(
+                AuditAction.OFFER_APPROVED,
+                saved
+        );
+
+        return toResponse(saved);
     }
 
     /*
-     * ------------------------------------------------
+     * ==================================================
+     * REJECT
+     * ==================================================
+     */
+
+    @Transactional
+    public OfferResponse reject(
+            UUID offerId,
+            RejectOfferRequest request
+    ) {
+
+        authorizationService.require(
+                Permission.APPROVE_OFFERS
+        );
+
+        UUID tenantId = requireTenantId();
+
+        Offer offer =
+                findOffer(
+                        tenantId,
+                        offerId
+                );
+
+        requireStatus(
+                offer,
+                OfferStatus.PENDING_APPROVAL
+        );
+
+        offer.setStatus(
+                OfferStatus.REJECTED
+        );
+
+        offer.setRejectedAt(
+                Instant.now()
+        );
+
+        offer.setRejectionReason(
+                request.reason().trim()
+        );
+
+        Offer saved =
+                offerRepository.save(
+                        offer
+                );
+
+        audit(
+                AuditAction.OFFER_REJECTED,
+                saved
+        );
+
+        return toResponse(saved);
+    }
+
+    /*
+     * ==================================================
+     * SEND
+     * ==================================================
+     */
+
+    @Transactional
+    public OfferResponse send(
+            UUID offerId
+    ) {
+
+        requireManageOffers();
+
+        UUID tenantId = requireTenantId();
+
+        Offer offer =
+                findOffer(
+                        tenantId,
+                        offerId
+                );
+
+        requireStatus(
+                offer,
+                OfferStatus.APPROVED
+        );
+
+        if (
+                offer.getExpirationDate() != null
+                        && offer
+                        .getExpirationDate()
+                        .isBefore(
+                                LocalDate.now()
+                        )
+        ) {
+
+            throw new IllegalStateException(
+                    "Expired offer cannot be sent"
+            );
+        }
+
+        if (
+                offer.getApplication()
+                        .getStatus()
+                        != ApplicationStatus.ACTIVE
+        ) {
+
+            throw new IllegalStateException(
+                    "Offer application is no longer active"
+            );
+        }
+
+        offer.setStatus(
+                OfferStatus.SENT
+        );
+
+        offer.setSentAt(
+                Instant.now()
+        );
+
+        Offer saved =
+                offerRepository.save(
+                        offer
+                );
+
+        audit(
+                AuditAction.OFFER_SENT,
+                saved
+        );
+
+        return toResponse(saved);
+    }
+
+    /*
+     * ==================================================
+     * ACCEPT + HIRE
+     * ==================================================
+     */
+
+    @Transactional
+    public OfferResponse accept(
+            UUID offerId
+    ) {
+
+        requireManageOffers();
+
+        UUID tenantId = requireTenantId();
+
+        Offer offer =
+                findOffer(
+                        tenantId,
+                        offerId
+                );
+
+        requireStatus(
+                offer,
+                OfferStatus.SENT
+        );
+
+        JobApplication application =
+                offer.getApplication();
+
+        if (
+                application.getStatus()
+                        != ApplicationStatus.ACTIVE
+        ) {
+
+            throw new IllegalStateException(
+                    "Only an active application can be hired"
+            );
+        }
+
+        boolean acceptedExists =
+                offerRepository
+                        .existsByTenantIdAndApplicationIdAndStatus(
+                                tenantId,
+                                application.getId(),
+                                OfferStatus.ACCEPTED
+                        );
+
+        if (acceptedExists) {
+
+            throw new IllegalStateException(
+                    "Application already has an accepted offer"
+            );
+        }
+
+        Instant now =
+                Instant.now();
+
+        /*
+         * Offer acceptance.
+         */
+        offer.setStatus(
+                OfferStatus.ACCEPTED
+        );
+
+        offer.setAcceptedAt(now);
+
+        /*
+         * Hiring must happen in the same
+         * database transaction.
+         */
+        application.setStatus(
+                ApplicationStatus.HIRED
+        );
+
+        application.setStage(
+                ApplicationStage.HIRED
+        );
+
+        application.setHiredAt(now);
+
+        applicationRepository.save(
+                application
+        );
+
+        /*
+         * Withdraw every other SENT offer
+         * for this application.
+         */
+        List<Offer> sentOffers =
+                offerRepository
+                        .findAllByTenantIdAndApplicationIdAndStatus(
+                                tenantId,
+                                application.getId(),
+                                OfferStatus.SENT
+                        );
+
+        for (Offer other :
+                sentOffers) {
+
+            if (other.getId()
+                    .equals(
+                            offer.getId()
+                    )) {
+                continue;
+            }
+
+            other.setStatus(
+                    OfferStatus.WITHDRAWN
+            );
+
+            other.setWithdrawnAt(now);
+
+            other.setWithdrawalReason(
+                    "Another offer for this application was accepted"
+            );
+
+            offerRepository.save(
+                    other
+            );
+
+            audit(
+                    AuditAction.OFFER_WITHDRAWN,
+                    other
+            );
+        }
+
+        Offer saved =
+                offerRepository.save(
+                        offer
+                );
+
+        audit(
+                AuditAction.OFFER_ACCEPTED,
+                saved
+        );
+
+        return toResponse(saved);
+    }
+
+    /*
+     * ==================================================
+     * DECLINE
+     * ==================================================
+     */
+
+    @Transactional
+    public OfferResponse decline(
+            UUID offerId,
+            DeclineOfferRequest request
+    ) {
+
+        requireManageOffers();
+
+        UUID tenantId = requireTenantId();
+
+        Offer offer =
+                findOffer(
+                        tenantId,
+                        offerId
+                );
+
+        requireStatus(
+                offer,
+                OfferStatus.SENT
+        );
+
+        offer.setStatus(
+                OfferStatus.DECLINED
+        );
+
+        offer.setDeclinedAt(
+                Instant.now()
+        );
+
+        offer.setDeclineReason(
+                normalizeNullable(
+                        request.reason()
+                )
+        );
+
+        Offer saved =
+                offerRepository.save(
+                        offer
+                );
+
+        audit(
+                AuditAction.OFFER_DECLINED,
+                saved
+        );
+
+        return toResponse(saved);
+    }
+
+    /*
+     * ==================================================
+     * WITHDRAW
+     * ==================================================
+     */
+
+    @Transactional
+    public OfferResponse withdraw(
+            UUID offerId,
+            WithdrawOfferRequest request
+    ) {
+
+        requireManageOffers();
+
+        UUID tenantId = requireTenantId();
+
+        Offer offer =
+                findOffer(
+                        tenantId,
+                        offerId
+                );
+
+        if (
+                offer.getStatus()
+                        != OfferStatus.APPROVED
+                        &&
+                        offer.getStatus()
+                                != OfferStatus.SENT
+        ) {
+
+            throw new IllegalStateException(
+                    "Only approved or sent offers can be withdrawn"
+            );
+        }
+
+        offer.setStatus(
+                OfferStatus.WITHDRAWN
+        );
+
+        offer.setWithdrawnAt(
+                Instant.now()
+        );
+
+        offer.setWithdrawalReason(
+                request.reason().trim()
+        );
+
+        Offer saved =
+                offerRepository.save(
+                        offer
+                );
+
+        audit(
+                AuditAction.OFFER_WITHDRAWN,
+                saved
+        );
+
+        return toResponse(saved);
+    }
+
+    /*
+     * ==================================================
+     * VALIDATION
+     * ==================================================
+     */
+
+    private void validateForSubmission(
+            Offer offer
+    ) {
+
+        if (offer.getSalary() == null) {
+            throw new IllegalStateException(
+                    "Salary is required"
+            );
+        }
+
+        if (offer.getCurrency() == null
+                || offer.getCurrency()
+                .isBlank()) {
+
+            throw new IllegalStateException(
+                    "Currency is required"
+            );
+        }
+
+        if (offer.getSalaryPeriod() == null) {
+            throw new IllegalStateException(
+                    "Salary period is required"
+            );
+        }
+
+        if (offer.getEmploymentType() == null) {
+            throw new IllegalStateException(
+                    "Employment type is required"
+            );
+        }
+
+        if (
+                offer.getApplication()
+                        .getStatus()
+                        != ApplicationStatus.ACTIVE
+        ) {
+
+            throw new IllegalStateException(
+                    "Offer application is no longer active"
+            );
+        }
+
+        validateDates(
+                offer.getStartDate(),
+                offer.getExpirationDate()
+        );
+    }
+
+    private void validateDates(
+            LocalDate startDate,
+            LocalDate expirationDate
+    ) {
+
+        if (
+                startDate != null
+                        && expirationDate != null
+                        && expirationDate
+                        .isAfter(startDate)
+        ) {
+
+            throw new IllegalArgumentException(
+                    "Offer expiration date cannot be after employment start date"
+            );
+        }
+    }
+
+    private void requireStatus(
+            Offer offer,
+            OfferStatus required
+    ) {
+
+        if (offer.getStatus() != required) {
+
+            throw new IllegalStateException(
+                    "Offer must be "
+                            + required
+                            + " but is "
+                            + offer.getStatus()
+            );
+        }
+    }
+
+    /*
+     * ==================================================
      * LOOKUPS
-     * ------------------------------------------------
+     * ==================================================
      */
 
     private Offer findOffer(
@@ -405,6 +1007,7 @@ public class OfferService {
                 tenantContext.getUserId();
 
         if (userId == null) {
+
             throw new IllegalStateException(
                     "Authenticated user context is required"
             );
@@ -423,69 +1026,66 @@ public class OfferService {
     }
 
     /*
-     * ------------------------------------------------
-     * VALIDATION
-     * ------------------------------------------------
+     * ==================================================
+     * HELPERS
+     * ==================================================
      */
 
-    private void requireDraft(
+    private void requireManageOffers() {
+
+        authorizationService.require(
+                Permission.MANAGE_OFFERS
+        );
+    }
+
+    private UUID requireTenantId() {
+
+        UUID tenantId =
+                tenantContext.getTenantId();
+
+        if (tenantId == null) {
+
+            throw new IllegalStateException(
+                    "Tenant context is required"
+            );
+        }
+
+        return tenantId;
+    }
+
+    private void audit(
+            AuditAction action,
             Offer offer
     ) {
 
-        if (offer.getStatus()
-                != OfferStatus.DRAFT) {
-
-            throw new IllegalStateException(
-                    "Only draft offers can be modified"
-            );
-        }
-    }
-
-    private void validateDates(
-            LocalDate startDate,
-            LocalDate expirationDate
-    ) {
-
-        if (
-                startDate != null
-                        && expirationDate != null
-                        && expirationDate
-                        .isAfter(startDate)
-        ) {
-
-            throw new IllegalArgumentException(
-                    "Offer expiration date cannot be after the employment start date"
-            );
-        }
+        auditService.log(
+                action,
+                "Offer",
+                offer.getId()
+        );
     }
 
     private String normalizeCurrency(
             String currency
     ) {
 
-        String normalized =
+        String value =
                 currency
                         .trim()
                         .toUpperCase(
                                 Locale.ROOT
                         );
 
-        if (normalized.length() != 3) {
+        if (!value.matches(
+                "[A-Z]{3}"
+        )) {
+
             throw new IllegalArgumentException(
                     "Currency must be a 3-letter code"
             );
         }
 
-        /*
-         * ISO-style alphabetic validation.
-         */
-        if (!normalized.matches("[A-Z]{3}")) {
-            throw new IllegalArgumentException(
-                    "Currency must contain exactly 3 letters"
-            );
-        }
-
-        return normalized;
+        return value;
     }
 
     private String normalizeNullable(
@@ -505,9 +1105,9 @@ public class OfferService {
     }
 
     /*
-     * ------------------------------------------------
-     * MAPPER
-     * ------------------------------------------------
+     * ==================================================
+     * RESPONSE MAPPER
+     * ==================================================
      */
 
     private OfferResponse toResponse(
@@ -536,7 +1136,7 @@ public class OfferService {
 
                 candidate.getId(),
 
-                buildCandidateName(
+                buildName(
                         candidate.getFirstName(),
                         candidate.getLastName()
                 ),
@@ -570,7 +1170,9 @@ public class OfferService {
                         : null,
 
                 createdBy != null
-                        ? tenantUserName(createdBy)
+                        ? tenantUserName(
+                                createdBy
+                        )
                         : null,
 
                 approvedBy != null
@@ -578,7 +1180,9 @@ public class OfferService {
                         : null,
 
                 approvedBy != null
-                        ? tenantUserName(approvedBy)
+                        ? tenantUserName(
+                                approvedBy
+                        )
                         : null,
 
                 offer.getSubmittedForApprovalAt(),
@@ -607,7 +1211,20 @@ public class OfferService {
         );
     }
 
-    private String buildCandidateName(
+    private String tenantUserName(
+            TenantUser tenantUser
+    ) {
+
+        var user =
+                tenantUser.getUser();
+
+        return buildName(
+                user.getFirstName(),
+                user.getLastName()
+        );
+    }
+
+    private String buildName(
             String firstName,
             String lastName
     ) {
@@ -619,20 +1236,6 @@ public class OfferService {
         ).trim();
     }
 
-    private String tenantUserName(
-            TenantUser tenantUser
-    ) {
-
-        var user =
-                tenantUser.getUser();
-
-        return (
-                safe(user.getFirstName())
-                        + " "
-                        + safe(user.getLastName())
-        ).trim();
-    }
-
     private String safe(
             String value
     ) {
@@ -640,19 +1243,5 @@ public class OfferService {
         return value == null
                 ? ""
                 : value;
-    }
-
-    private UUID requireTenantId() {
-
-        UUID tenantId =
-                tenantContext.getTenantId();
-
-        if (tenantId == null) {
-            throw new IllegalStateException(
-                    "Tenant context is required"
-            );
-        }
-
-        return tenantId;
     }
 }
