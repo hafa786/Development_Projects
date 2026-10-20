@@ -16,7 +16,7 @@ public class Tenant extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(name = "slug", length = 150)
     private String slug;
 
     @Column(name = "logo_url", length = 1000)

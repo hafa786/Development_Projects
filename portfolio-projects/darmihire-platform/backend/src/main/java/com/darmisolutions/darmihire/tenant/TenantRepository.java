@@ -11,4 +11,10 @@ public interface TenantRepository
     Optional<Tenant> findBySlug(String slug);
 
     boolean existsBySlug(String slug);
+
+    Optional<Tenant> findBySlugIgnoreCase(
+            String slug);
+
+    boolean existsBySlugIgnoreCase(
+            String slug);
 }
