@@ -1,5 +1,8 @@
 package com.darmisolutions.darmihire.job;
 
+import java.time.Instant;
+import java.time.LocalDate;
+
 import com.darmisolutions.darmihire.common.entity.BaseEntity;
 import com.darmisolutions.darmihire.department.Department;
 import com.darmisolutions.darmihire.location.Location;
@@ -13,38 +16,22 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(
-        name = "jobs",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_jobs_tenant_job_code",
-                        columnNames = {
-                                "tenant_id",
-                                "job_code"
-                        }
-                )
-        }
-)
+@Table(name = "jobs", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_jobs_tenant_job_code", columnNames = {
+                "tenant_id",
+                "job_code"
+        })
+})
 public class Job extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "tenant_id",
-            nullable = false
-    )
+    @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
 
-    @Column(
-            nullable = false,
-            length = 200
-    )
+    @Column(nullable = false, length = 200)
     private String title;
 
-    @Column(
-            name = "job_code",
-            nullable = false,
-            length = 50
-    )
+    @Column(name = "job_code", nullable = false, length = 50)
     private String jobCode;
 
     @Column(columnDefinition = "TEXT")
@@ -71,28 +58,29 @@ public class Job extends BaseEntity {
     private TenantUser hiringManager;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "employment_type",
-            nullable = false,
-            length = 30
-    )
+    @Column(name = "employment_type", nullable = false, length = 30)
     private EmploymentType employmentType;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "workplace_type",
-            nullable = false,
-            length = 30
-    )
+    @Column(name = "workplace_type", nullable = false, length = 30)
     private WorkplaceType workplaceType;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            nullable = false,
-            length = 30
-    )
+    @Column(nullable = false, length = 30)
     private JobStatus status;
 
     @Column(nullable = false)
     private int openings = 1;
+
+    @Column(name = "published", nullable = false)
+    private boolean published = false;
+
+    @Column(name = "published_at")
+    private Instant publishedAt;
+
+    @Column(name = "public_slug", length = 250)
+    private String publicSlug;
+
+    @Column(name = "application_deadline")
+    private LocalDate applicationDeadline;
 }

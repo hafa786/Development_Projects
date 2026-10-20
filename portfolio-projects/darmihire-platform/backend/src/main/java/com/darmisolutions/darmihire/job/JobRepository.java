@@ -10,16 +10,25 @@ public interface JobRepository
         extends JpaRepository<Job, UUID> {
 
     List<Job> findAllByTenantIdOrderByCreatedAtDesc(
-            UUID tenantId
-    );
+            UUID tenantId);
 
     Optional<Job> findByIdAndTenantId(
             UUID id,
-            UUID tenantId
-    );
+            UUID tenantId);
 
     boolean existsByTenantIdAndJobCodeIgnoreCase(
             UUID tenantId,
-            String jobCode
-    );
+            String jobCode);
+
+    Optional<Job> findByTenantIdAndPublicSlug(
+            UUID tenantId,
+            String publicSlug);
+
+    boolean existsByTenantIdAndPublicSlug(
+            UUID tenantId,
+            String publicSlug);
+
+    List<Job> findAllByTenantIdAndPublishedTrueAndStatusOrderByCreatedAtDesc(
+            UUID tenantId,
+            JobStatus status);
 }

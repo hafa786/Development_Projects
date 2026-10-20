@@ -88,4 +88,8 @@ public enum AuditAction {
     OFFER_DECLINED,
     OFFER_WITHDRAWN,
     OFFER_DELETED,
+
+    // publishing job
+    JOB_PUBLISHED,
+    JOB_UNPUBLISHED,
 }

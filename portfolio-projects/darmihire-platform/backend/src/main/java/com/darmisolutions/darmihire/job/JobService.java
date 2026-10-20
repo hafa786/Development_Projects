@@ -8,6 +8,7 @@ import com.darmisolutions.darmihire.exception.ConflictException;
 import com.darmisolutions.darmihire.exception.ResourceNotFoundException;
 import com.darmisolutions.darmihire.job.dto.CreateJobRequest;
 import com.darmisolutions.darmihire.job.dto.JobResponse;
+import com.darmisolutions.darmihire.job.dto.PublishJobRequest;
 import com.darmisolutions.darmihire.job.dto.UpdateJobRequest;
 import com.darmisolutions.darmihire.job.dto.UpdateJobStatusRequest;
 import com.darmisolutions.darmihire.location.Location;
@@ -22,10 +23,14 @@ import com.darmisolutions.darmihire.tenant.TenantRepository;
 import com.darmisolutions.darmihire.tenant.TenantUser;
 import com.darmisolutions.darmihire.tenant.TenantUserRepository;
 import com.darmisolutions.darmihire.tenant.context.TenantContext;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,7 +44,7 @@ public class JobService {
     private final TeamRepository teamRepository;
     private final LocationRepository locationRepository;
     private final TenantUserRepository tenantUserRepository;
-
+    private final JobSlugService jobSlugService;
     private final TenantContext tenantContext;
     private final AuthorizationService authorizationService;
     private final AuditService auditService;
@@ -172,6 +177,15 @@ public class JobService {
                         ? 1
                         : request.openings());
 
+        /*
+         * Step 21.1:
+         * New jobs are never publicly published automatically.
+         */
+        job.setPublished(false);
+        job.setPublishedAt(null);
+        job.setPublicSlug(null);
+        job.setApplicationDeadline(null);
+
         Job savedJob = jobRepository.save(job);
 
         auditService.log(
@@ -242,6 +256,13 @@ public class JobService {
         job.setOpenings(
                 request.openings());
 
+        /*
+         * Do not regenerate publicSlug when the title changes.
+         *
+         * Once a public URL has been generated, it should
+         * remain stable.
+         */
+
         Job savedJob = jobRepository.save(job);
 
         auditService.log(
@@ -284,6 +305,21 @@ public class JobService {
         }
 
         job.setStatus(newStatus);
+
+        /*
+         * Step 21.1:
+         *
+         * PAUSED and CLOSED jobs must immediately disappear
+         * from the public careers portal.
+         *
+         * Keep publicSlug so reopening + republishing can use
+         * the same public URL.
+         */
+        if (newStatus == JobStatus.PAUSED
+                || newStatus == JobStatus.CLOSED) {
+
+            job.setPublished(false);
+        }
 
         Job savedJob = jobRepository.save(job);
 
@@ -330,6 +366,181 @@ public class JobService {
                 AuditAction.JOB_DELETED,
                 "Job",
                 jobId);
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * PUBLISH JOB
+     * Step 21.1
+     * ---------------------------------------------------------
+     */
+
+    @Transactional
+    public JobResponse publish(
+            UUID jobId,
+            PublishJobRequest request) {
+
+        authorizationService.require(
+                Permission.MANAGE_JOBS);
+
+        UUID tenantId = requireTenantId();
+
+        Job job = jobRepository
+                .findByIdAndTenantId(
+                        jobId,
+                        tenantId)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                "Job not found"));
+
+        /*
+         * Only OPEN jobs may be published.
+         */
+        if (job.getStatus() != JobStatus.OPEN) {
+
+            throw new IllegalStateException(
+                    "Only open jobs can be published");
+        }
+
+        LocalDate applicationDeadline = request.applicationDeadline();
+
+        /*
+         * Today's deadline is valid.
+         *
+         * Only dates before today are rejected.
+         */
+        if (applicationDeadline != null
+                && applicationDeadline.isBefore(
+                        LocalDate.now())) {
+
+            throw new IllegalArgumentException(
+                    "Application deadline cannot be in the past");
+        }
+
+        /*
+         * Generate the slug only once.
+         *
+         * This means:
+         *
+         * publish
+         * -> senior-backend-engineer
+         *
+         * unpublish
+         * -> slug preserved
+         *
+         * republish
+         * -> senior-backend-engineer
+         */
+        if (job.getPublicSlug() == null
+                || job.getPublicSlug().isBlank()) {
+
+            job.setPublicSlug(
+                    jobSlugService.generate(
+                            tenantId,
+                            job.getTitle()));
+        }
+
+        job.setPublished(true);
+
+        job.setPublishedAt(
+                Instant.now());
+
+        job.setApplicationDeadline(
+                applicationDeadline);
+
+        Job savedJob = jobRepository.save(job);
+
+        auditService.log(
+                AuditAction.JOB_PUBLISHED,
+                "Job",
+                savedJob.getId());
+
+        return toResponse(savedJob);
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * UNPUBLISH JOB
+     * Step 21.1
+     * ---------------------------------------------------------
+     */
+
+    @Transactional
+    public JobResponse unpublish(
+            UUID jobId) {
+
+        authorizationService.require(
+                Permission.MANAGE_JOBS);
+
+        UUID tenantId = requireTenantId();
+
+        Job job = jobRepository
+                .findByIdAndTenantId(
+                        jobId,
+                        tenantId)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                "Job not found"));
+
+        /*
+         * Make unpublish idempotent.
+         */
+        if (!job.isPublished()) {
+            return toResponse(job);
+        }
+
+        job.setPublished(false);
+
+        /*
+         * Do NOT clear:
+         *
+         * publicSlug
+         * publishedAt
+         * applicationDeadline
+         *
+         * The slug remains stable for future republishing.
+         */
+
+        Job savedJob = jobRepository.save(job);
+
+        auditService.log(
+                AuditAction.JOB_UNPUBLISHED,
+                "Job",
+                savedJob.getId());
+
+        return toResponse(savedJob);
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * PUBLIC AVAILABILITY
+     * Step 21.1
+     * ---------------------------------------------------------
+     *
+     * Step 21.2/21.3 will use the same business rule when
+     * exposing public jobs and accepting applications.
+     */
+
+    public boolean isPubliclyAvailable(
+            Job job) {
+
+        if (job == null) {
+            return false;
+        }
+
+        if (!job.isPublished()) {
+            return false;
+        }
+
+        if (job.getStatus() != JobStatus.OPEN) {
+            return false;
+        }
+
+        LocalDate deadline = job.getApplicationDeadline();
+
+        return deadline == null
+                || !deadline.isBefore(
+                        LocalDate.now());
     }
 
     /*
@@ -479,7 +690,8 @@ public class JobService {
                 newStatus == JobStatus.OPEN
                         || newStatus == JobStatus.CLOSED;
 
-            case CLOSED -> false;
+            case CLOSED ->
+                false;
         };
     }
 
@@ -632,8 +844,9 @@ public class JobService {
                 job.getWorkplaceType(),
                 job.getStatus(),
                 job.getOpenings(),
-                job.getCreatedAt(),
-                job.getUpdatedAt());
+
+                job.getPublishedAt(),
+                job.getCreatedAt());
     }
 
     /*
@@ -651,25 +864,22 @@ public class JobService {
             return null;
         }
 
-        String firstName =
-                tenantUser
-                        .getUser()
-                        .getFirstName();
+        String firstName = tenantUser
+                .getUser()
+                .getFirstName();
 
-        String lastName =
-                tenantUser
-                        .getUser()
-                        .getLastName();
+        String lastName = tenantUser
+                .getUser()
+                .getLastName();
 
-        String fullName =
-                ((firstName == null
-                        ? ""
-                        : firstName)
-                        + " "
-                        + (lastName == null
+        String fullName = ((firstName == null
+                ? ""
+                : firstName)
+                + " "
+                + (lastName == null
                         ? ""
                         : lastName))
-                        .trim();
+                .trim();
 
         if (!fullName.isEmpty()) {
             return fullName;
