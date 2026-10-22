@@ -5,6 +5,7 @@ import com.darmisolutions.darmihire.job.JobStatus;
 import com.darmisolutions.darmihire.job.WorkplaceType;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 public record JobResponse(
@@ -35,6 +36,11 @@ public record JobResponse(
         EmploymentType employmentType,
 
         WorkplaceType workplaceType,
+
+        boolean published,
+        Instant publishedAt,
+        String publicSlug,
+        LocalDate applicationDeadline,
 
         JobStatus status,
 

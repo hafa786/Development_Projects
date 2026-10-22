@@ -380,6 +380,12 @@ public class JobService {
             UUID jobId,
             PublishJobRequest request) {
 
+        System.out.println("=== PUBLISH JOB ===");
+        System.out.println("Job ID: " + jobId);
+        System.out.println("Tenant ID: " + tenantContext.getTenantId());
+        System.out.println("User ID: " + tenantContext.getUserId());
+        System.out.println("Role: " + tenantContext.getRole());
+
         authorizationService.require(
                 Permission.MANAGE_JOBS);
 
@@ -842,11 +848,12 @@ public class JobService {
 
                 job.getEmploymentType(),
                 job.getWorkplaceType(),
-                job.getStatus(),
+                false, null, null, null, job.getStatus(),
                 job.getOpenings(),
 
                 job.getPublishedAt(),
-                job.getCreatedAt());
+                job.getPublishedAt());
+
     }
 
     /*

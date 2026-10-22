@@ -32,7 +32,11 @@ public class AuthorizationService {
                         || permission == Permission.MANAGE_APPLICATIONS
                         || permission == Permission.MANAGE_INTERVIEWS
                         || permission == Permission.MANAGE_SCORECARDS
-                        || permission == Permission.MANAGE_OFFERS;
+                        || permission == Permission.MANAGE_OFFERS
+                        || permission == Permission.MANAGE_DEPARTMENTS
+                        || permission == Permission.MANAGE_TEAMS
+                        || permission == Permission.MANAGE_LOCATIONS
+                        || permission == Permission.MANAGE_JOBS;
 
             case HIRING_MANAGER ->
                 permission == Permission.APPROVE_OFFERS;
