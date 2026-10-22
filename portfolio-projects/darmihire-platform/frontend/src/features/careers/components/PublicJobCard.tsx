@@ -148,6 +148,7 @@ export function PublicJobCard({
         </div>
 
         <Button
+          style={{display: 'ruby'}}
           variant="outline"
           className="shrink-0 gap-2 group-hover:border-emerald-600 group-hover:text-emerald-700"
         >

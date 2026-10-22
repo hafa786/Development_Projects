@@ -1,8 +1,4 @@
-export type JobStatus =
-  | "DRAFT"
-  | "OPEN"
-  | "PAUSED"
-  | "CLOSED";
+export type JobStatus = "DRAFT" | "OPEN" | "PAUSED" | "CLOSED";
 
 export type EmploymentType =
   | "FULL_TIME"
@@ -11,10 +7,7 @@ export type EmploymentType =
   | "TEMPORARY"
   | "INTERNSHIP";
 
-export type WorkplaceType =
-  | "ON_SITE"
-  | "HYBRID"
-  | "REMOTE";
+export type WorkplaceType = "ON_SITE" | "HYBRID" | "REMOTE";
 
 export type Job = {
   id: string;
@@ -46,6 +39,13 @@ export type Job = {
 
   createdAt: string;
   updatedAt: string;
+  published: boolean;
+
+  publishedAt: string | null;
+
+  publicSlug: string | null;
+
+  applicationDeadline: string | null;
 };
 
 export type CreateJobRequest = {
@@ -85,4 +85,7 @@ export type UpdateJobRequest = {
 
 export type UpdateJobStatusRequest = {
   status: JobStatus;
+};
+export type PublishJobRequest = {
+  applicationDeadline?: string | null;
 };

@@ -1,0 +1,218 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CheckCircle2, Loader2, Send } from "lucide-react";
+import { useForm } from "react-hook-form";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+import {
+  publicApplicationSchema,
+  type PublicApplicationFormValues,
+} from "../applicationSchema";
+
+import type { PublicJobApplicationResponse } from "../types";
+
+type PublicApplicationFormProps = {
+  jobTitle: string;
+
+  isSubmitting: boolean;
+
+  error: string | null;
+
+  result: PublicJobApplicationResponse | null;
+
+  onSubmit: (values: PublicApplicationFormValues) => void;
+};
+
+export function PublicApplicationForm({
+  jobTitle,
+  isSubmitting,
+  error,
+  result,
+  onSubmit,
+}: PublicApplicationFormProps) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<PublicApplicationFormValues>({
+    resolver: zodResolver(publicApplicationSchema),
+
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      location: "",
+      linkedinUrl: "",
+      portfolioUrl: "",
+    },
+  });
+
+  if (result) {
+    return (
+      <div className="rounded-2xl border bg-background p-6 shadow-sm sm:p-8">
+        <div className="flex size-12 items-center justify-center rounded-full bg-emerald-100">
+          <CheckCircle2 className="size-6 text-emerald-700" />
+        </div>
+
+        <h2 className="mt-5 text-2xl font-semibold">Application submitted</h2>
+
+        <p className="mt-3 leading-7 text-muted-foreground">
+          Thank you, {result.candidateName}. Your application for{" "}
+          <span className="font-medium text-foreground">{result.jobTitle}</span>{" "}
+          has been received.
+        </p>
+
+        <p className="mt-4 text-sm text-muted-foreground">
+          The hiring team will review your application and contact you if your
+          profile matches the next stage of the process.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border bg-background p-6 shadow-sm sm:p-8">
+      <div>
+        <p className="text-sm font-semibold text-emerald-700">Apply now</p>
+
+        <h2 className="mt-2 text-2xl font-semibold">Apply for {jobTitle}</h2>
+
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          Fill in your details below to submit your application.
+        </p>
+      </div>
+
+      <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <FormField
+            label="First name"
+            required
+            error={errors.firstName?.message}
+          >
+            <Input
+              {...register("firstName")}
+              placeholder="John"
+              autoComplete="given-name"
+            />
+          </FormField>
+
+          <FormField
+            label="Last name"
+            required
+            error={errors.lastName?.message}
+          >
+            <Input
+              {...register("lastName")}
+              placeholder="Doe"
+              autoComplete="family-name"
+            />
+          </FormField>
+        </div>
+
+        <FormField label="Email" required error={errors.email?.message}>
+          <Input
+            {...register("email")}
+            type="email"
+            placeholder="john.doe@example.com"
+            autoComplete="email"
+          />
+        </FormField>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <FormField label="Phone" error={errors.phone?.message}>
+            <Input
+              {...register("phone")}
+              type="tel"
+              placeholder="+358 40 123 4567"
+              autoComplete="tel"
+            />
+          </FormField>
+
+          <FormField label="Location" error={errors.location?.message}>
+            <Input
+              {...register("location")}
+              placeholder="Helsinki, Finland"
+              autoComplete="address-level2"
+            />
+          </FormField>
+        </div>
+
+        <FormField label="LinkedIn profile" error={errors.linkedinUrl?.message}>
+          <Input
+            {...register("linkedinUrl")}
+            placeholder="https://linkedin.com/in/..."
+          />
+        </FormField>
+
+        <FormField
+          label="Portfolio / website"
+          error={errors.portfolioUrl?.message}
+        >
+          <Input {...register("portfolioUrl")} placeholder="https://..." />
+        </FormField>
+
+        {error && (
+          <div
+            role="alert"
+            className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+          >
+            {error}
+          </div>
+        )}
+
+        <Button
+          type="submit"
+          size="lg"
+          disabled={isSubmitting}
+          className="w-full gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Submitting...
+            </>
+          ) : (
+            <>
+              <Send className="size-4" />
+              Submit application
+            </>
+          )}
+        </Button>
+
+        <p className="text-center text-xs leading-5 text-muted-foreground">
+          By submitting this form, your information will be shared with the
+          hiring team for recruitment purposes.
+        </p>
+      </form>
+    </div>
+  );
+}
+
+function FormField({
+  label,
+  required = false,
+  error,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label>
+        {label}
+
+        {required && <span className="ml-1 text-destructive">*</span>}
+      </Label>
+
+      {children}
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
+  );
+}

@@ -5,10 +5,7 @@ export type EmploymentType =
   | "TEMPORARY"
   | "INTERNSHIP";
 
-export type WorkplaceType =
-  | "ON_SITE"
-  | "HYBRID"
-  | "REMOTE";
+export type WorkplaceType = "ON_SITE" | "HYBRID" | "REMOTE";
 
 export type PublicCareer = {
   name: string;
@@ -29,4 +26,44 @@ export type PublicJob = {
   openings: number;
 
   applicationDeadline: string | null;
+};
+
+export type PublicJobDetails = {
+  title: string;
+  slug: string;
+  description: string;
+
+  department: string | null;
+  team: string | null;
+  location: string | null;
+
+  employmentType: EmploymentType;
+  workplaceType: WorkplaceType;
+
+  openings: number;
+
+  applicationDeadline: string | null;
+};
+
+export type PublicJobApplicationRequest = {
+  firstName: string;
+  lastName: string;
+  email: string;
+
+  phone?: string;
+  location?: string;
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+};
+
+export type PublicJobApplicationResponse = {
+  applicationId: string;
+
+  jobTitle: string;
+
+  candidateName: string;
+
+  appliedAt: string;
+
+  message: string;
 };

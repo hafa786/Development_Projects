@@ -26,6 +26,7 @@ import { OffersPage } from "@/pages/OffersPage";
 import { ApplicationDetailsPage } from "@/features/applications/ApplicationDetailsPage";
 import { ApplicationsPage } from "@/pages/ApplicationsPage";
 import CareersPage from "@/pages/CareersPage";
+import PublicJobDetailsPage from "@/pages/PublicJobDetailsPage";
 
 export function AppRouter() {
   return (
@@ -57,7 +58,10 @@ export function AppRouter() {
         }
       />
       <Route path="/careers/:companySlug" element={<CareersPage />} />
-
+      <Route
+        path="/careers/:companySlug/jobs/:jobSlug"
+        element={<PublicJobDetailsPage />}
+      />
       {/* =========================
           AUTHENTICATED
           ========================= */}
