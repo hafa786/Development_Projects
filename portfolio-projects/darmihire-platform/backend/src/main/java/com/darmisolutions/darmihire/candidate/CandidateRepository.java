@@ -10,27 +10,23 @@ public interface CandidateRepository
         extends JpaRepository<Candidate, UUID> {
 
     List<Candidate> findAllByTenantIdOrderByCreatedAtDesc(
-            UUID tenantId
-    );
+            UUID tenantId);
 
     Optional<Candidate> findByIdAndTenantId(
             UUID id,
-            UUID tenantId
-    );
+            UUID tenantId);
 
     Optional<Candidate> findByTenantIdAndEmailIgnoreCase(
             UUID tenantId,
-            String email
-    );
+            String email);
 
     boolean existsByTenantIdAndEmailIgnoreCase(
             UUID tenantId,
-            String email
-    );
+            String email);
 
     boolean existsByTenantIdAndEmailIgnoreCaseAndIdNot(
             UUID tenantId,
             String email,
-            UUID id
-    );
+            UUID id);
+
 }

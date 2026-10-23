@@ -9,13 +9,24 @@ import com.darmisolutions.darmihire.exception.ConflictException;
 import com.darmisolutions.darmihire.exception.ResourceNotFoundException;
 import com.darmisolutions.darmihire.security.AuthorizationService;
 import com.darmisolutions.darmihire.security.Permission;
+import com.darmisolutions.darmihire.storage.ResumeStorageService;
+import com.darmisolutions.darmihire.storage.ResumeStorageService.StoredResumeResource;
 import com.darmisolutions.darmihire.tenant.Tenant;
 import com.darmisolutions.darmihire.tenant.TenantRepository;
 import com.darmisolutions.darmihire.tenant.context.TenantContext;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+import org.springframework.core.io.Resource;
 
+
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -29,16 +40,17 @@ public class CandidateService {
     private final TenantContext tenantContext;
     private final AuthorizationService authorizationService;
     private final AuditService auditService;
+    private final ResumeStorageService resumeStorageService;
 
     @Transactional(readOnly = true)
     public List<CandidateResponse> findAll() {
         UUID tenantId = requireTenantId();
 
         return candidateRepository
-            .findAllByTenantIdOrderByCreatedAtDesc(tenantId)
-            .stream()
-            .map(this::toResponse)
-            .toList();
+                .findAllByTenantIdOrderByCreatedAtDesc(tenantId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -59,19 +71,16 @@ public class CandidateService {
         String email = normalizeEmail(request.email());
 
         if (candidateRepository.existsByTenantIdAndEmailIgnoreCase(
-            tenantId,
-            email
-        )) {
+                tenantId,
+                email)) {
             throw new ConflictException(
-                "A candidate with this email already exists"
-            );
+                    "A candidate with this email already exists");
         }
 
         Tenant tenant = tenantRepository
-            .findById(tenantId)
-            .orElseThrow(
-                () -> new ResourceNotFoundException("Tenant not found")
-            );
+                .findById(tenantId)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Tenant not found"));
 
         Candidate candidate = new Candidate();
 
@@ -85,40 +94,33 @@ public class CandidateService {
         candidate.setPortfolioUrl(normalizeOptional(request.portfolioUrl()));
 
         candidate.setSource(
-            request.source() != null
-                ? request.source()
-                : CandidateSource.MANUAL
-        );
+                request.source() != null
+                        ? request.source()
+                        : CandidateSource.MANUAL);
 
         candidate.setResumeFileName(
-            normalizeOptional(request.resumeFileName())
-        );
+                normalizeOptional(request.resumeFileName()));
 
         candidate.setResumeUrl(
-            normalizeOptional(request.resumeUrl())
-        );
+                normalizeOptional(request.resumeUrl()));
 
         candidate.setNotes(
-            normalizeOptional(request.notes())
-        );
+                normalizeOptional(request.notes()));
 
-        Candidate savedCandidate =
-            candidateRepository.save(candidate);
+        Candidate savedCandidate = candidateRepository.save(candidate);
 
         auditService.log(
-            AuditAction.CANDIDATE_CREATED,
-            "Candidate",
-            savedCandidate.getId()
-        );
+                AuditAction.CANDIDATE_CREATED,
+                "Candidate",
+                savedCandidate.getId());
 
         return toResponse(savedCandidate);
     }
 
     @Transactional
     public CandidateResponse update(
-        UUID id,
-        UpdateCandidateRequest request
-    ) {
+            UUID id,
+            UpdateCandidateRequest request) {
         authorizationService.require(Permission.MANAGE_CANDIDATES);
 
         UUID tenantId = requireTenantId();
@@ -127,71 +129,55 @@ public class CandidateService {
 
         String email = normalizeEmail(request.email());
 
-        if (
-            candidateRepository
+        if (candidateRepository
                 .existsByTenantIdAndEmailIgnoreCaseAndIdNot(
-                    tenantId,
-                    email,
-                    id
-                )
-        ) {
+                        tenantId,
+                        email,
+                        id)) {
             throw new ConflictException(
-                "A candidate with this email already exists"
-            );
+                    "A candidate with this email already exists");
         }
 
         candidate.setFirstName(
-            normalizeRequired(request.firstName())
-        );
+                normalizeRequired(request.firstName()));
 
         candidate.setLastName(
-            normalizeRequired(request.lastName())
-        );
+                normalizeRequired(request.lastName()));
 
         candidate.setEmail(email);
 
         candidate.setPhone(
-            normalizeOptional(request.phone())
-        );
+                normalizeOptional(request.phone()));
 
         candidate.setLocation(
-            normalizeOptional(request.location())
-        );
+                normalizeOptional(request.location()));
 
         candidate.setLinkedinUrl(
-            normalizeOptional(request.linkedinUrl())
-        );
+                normalizeOptional(request.linkedinUrl()));
 
         candidate.setPortfolioUrl(
-            normalizeOptional(request.portfolioUrl())
-        );
+                normalizeOptional(request.portfolioUrl()));
 
         candidate.setSource(
-            request.source() != null
-                ? request.source()
-                : CandidateSource.MANUAL
-        );
+                request.source() != null
+                        ? request.source()
+                        : CandidateSource.MANUAL);
 
         candidate.setResumeFileName(
-            normalizeOptional(request.resumeFileName())
-        );
+                normalizeOptional(request.resumeFileName()));
 
         candidate.setResumeUrl(
-            normalizeOptional(request.resumeUrl())
-        );
+                normalizeOptional(request.resumeUrl()));
 
         candidate.setNotes(
-            normalizeOptional(request.notes())
-        );
+                normalizeOptional(request.notes()));
 
-        Candidate savedCandidate =
-            candidateRepository.save(candidate);
+        Candidate savedCandidate = candidateRepository.save(candidate);
 
         auditService.log(
-            AuditAction.CANDIDATE_UPDATED,
-            "Candidate",
-            savedCandidate.getId()
-        );
+                AuditAction.CANDIDATE_UPDATED,
+                "Candidate",
+                savedCandidate.getId());
 
         return toResponse(savedCandidate);
     }
@@ -207,23 +193,19 @@ public class CandidateService {
         candidateRepository.delete(candidate);
 
         auditService.log(
-            AuditAction.CANDIDATE_DELETED,
-            "Candidate",
-            candidate.getId()
-        );
+                AuditAction.CANDIDATE_DELETED,
+                "Candidate",
+                candidate.getId());
     }
 
     private Candidate findCandidate(
-        UUID candidateId,
-        UUID tenantId
-    ) {
+            UUID candidateId,
+            UUID tenantId) {
         return candidateRepository
-            .findByIdAndTenantId(candidateId, tenantId)
-            .orElseThrow(
-                () -> new ResourceNotFoundException(
-                    "Candidate not found"
-                )
-            );
+                .findByIdAndTenantId(candidateId, tenantId)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                "Candidate not found"));
     }
 
     private UUID requireTenantId() {
@@ -231,8 +213,7 @@ public class CandidateService {
 
         if (tenantId == null) {
             throw new IllegalStateException(
-                "Tenant context is required"
-            );
+                    "Tenant context is required");
         }
 
         return tenantId;
@@ -250,40 +231,113 @@ public class CandidateService {
         String normalized = value.trim();
 
         return normalized.isEmpty()
-            ? null
-            : normalized;
+                ? null
+                : normalized;
     }
 
     private String normalizeEmail(String email) {
         return email
-            .trim()
-            .toLowerCase(Locale.ROOT);
+                .trim()
+                .toLowerCase(Locale.ROOT);
     }
 
     private CandidateResponse toResponse(
-        Candidate candidate
-    ) {
-        String fullName =
-            candidate.getFirstName()
+            Candidate candidate) {
+        String fullName = candidate.getFirstName()
                 + " "
                 + candidate.getLastName();
 
         return new CandidateResponse(
-            candidate.getId(),
-            candidate.getFirstName(),
-            candidate.getLastName(),
-            fullName,
-            candidate.getEmail(),
-            candidate.getPhone(),
-            candidate.getLocation(),
-            candidate.getLinkedinUrl(),
-            candidate.getPortfolioUrl(),
-            candidate.getSource(),
-            candidate.getResumeFileName(),
-            candidate.getResumeUrl(),
-            candidate.getNotes(),
-            candidate.getCreatedAt(),
-            candidate.getUpdatedAt()
-        );
+                candidate.getId(),
+                candidate.getFirstName(),
+                candidate.getLastName(),
+                fullName,
+                candidate.getEmail(),
+                candidate.getPhone(),
+                candidate.getLocation(),
+                candidate.getLinkedinUrl(),
+                candidate.getPortfolioUrl(),
+                candidate.getSource(),
+                candidate.getResumeFileName(),
+                candidate.getResumeUrl(),
+                candidate.getNotes(),
+                candidate.getCreatedAt(),
+                candidate.getUpdatedAt());
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<Resource> downloadResume(
+            UUID candidateId) {
+        authorizationService.require(
+                Permission.MANAGE_CANDIDATES);
+
+        UUID tenantId = requireTenantId();
+
+        Candidate candidate = findCandidate(
+                candidateId,
+                tenantId);
+
+        String storageKey = candidate.getResumeUrl();
+
+        if (storageKey == null
+                || storageKey.isBlank()) {
+
+            throw new ResourceNotFoundException(
+                    "Candidate resume not found");
+        }
+
+        /*
+         * Extra defense-in-depth:
+         * the stored key must belong to the active tenant and
+         * requested candidate.
+         */
+        String expectedPrefix = tenantId
+                + "/"
+                + candidate.getId()
+                + "/";
+
+        if (!storageKey.startsWith(
+                expectedPrefix)) {
+            throw new ResourceNotFoundException(
+                    "Candidate resume not found");
+        }
+
+        StoredResumeResource stored = resumeStorageService.load(
+                storageKey);
+
+        String fileName = candidate.getResumeFileName();
+
+        if (fileName == null
+                || fileName.isBlank()) {
+
+            fileName = "resume";
+        }
+
+        ContentDisposition disposition = ContentDisposition
+                .attachment()
+                .filename(
+                        fileName,
+                        StandardCharsets.UTF_8)
+                .build();
+
+        MediaType mediaType;
+
+        try {
+            mediaType = MediaType.parseMediaType(
+                    stored.contentType());
+        } catch (Exception ignored) {
+            mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        }
+
+        return ResponseEntity
+                .ok()
+                .contentType(mediaType)
+                .contentLength(
+                        stored.size())
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        disposition.toString())
+                .body(
+                        stored.resource());
     }
 }

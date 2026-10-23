@@ -6,7 +6,9 @@ import com.darmisolutions.darmihire.candidate.dto.UpdateCandidateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.core.io.Resource;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,32 +27,36 @@ public class CandidateController {
 
     @GetMapping("/{id}")
     public CandidateResponse findById(
-        @PathVariable UUID id
-    ) {
+            @PathVariable UUID id) {
         return candidateService.findById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CandidateResponse create(
-        @Valid @RequestBody CreateCandidateRequest request
-    ) {
+            @Valid @RequestBody CreateCandidateRequest request) {
         return candidateService.create(request);
     }
 
     @PutMapping("/{id}")
     public CandidateResponse update(
-        @PathVariable UUID id,
-        @Valid @RequestBody UpdateCandidateRequest request
-    ) {
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateCandidateRequest request) {
         return candidateService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
-        @PathVariable UUID id
-    ) {
+            @PathVariable UUID id) {
         candidateService.delete(id);
+    }
+
+    @GetMapping("/{candidateId}/resume")
+    public ResponseEntity<Resource> downloadResume(
+            @PathVariable UUID candidateId) {
+        return candidateService
+                .downloadResume(
+                        candidateId);
     }
 }

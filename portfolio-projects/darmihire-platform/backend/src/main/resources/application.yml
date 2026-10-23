@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
 
   application:
     name: darmihire-backend
@@ -20,6 +24,11 @@ spring:
 
   flyway:
     enabled: true
+
+darmihire:
+  storage:
+    resume:
+      location: ${DARMIHIRE_RESUME_STORAGE:./uploads/resumes}
 
 server:
   port: ${SERVER_PORT:8080}

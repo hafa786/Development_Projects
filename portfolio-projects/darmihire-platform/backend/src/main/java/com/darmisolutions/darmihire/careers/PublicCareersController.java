@@ -17,7 +17,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -99,21 +103,19 @@ public class PublicCareersController {
                 .body(response);
     }
 
-    @PostMapping("/{companySlug}/jobs/{jobSlug}/applications")
-    public ResponseEntity<PublicJobApplicationResponse> apply(
+    @PostMapping(value = "/{companySlug}/jobs/{jobSlug}/applications", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public PublicJobApplicationResponse apply(
             @PathVariable String companySlug,
-
             @PathVariable String jobSlug,
 
-            @Valid @RequestBody PublicJobApplicationRequest request) {
+            @Valid @RequestPart("application") PublicJobApplicationRequest request,
 
-        PublicJobApplicationResponse response = publicCareersService.apply(
+            @RequestPart(value = "resume", required = false) MultipartFile resume) {
+        return publicCareersService.apply(
                 companySlug,
                 jobSlug,
-                request);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+                request,
+                resume);
     }
 }
