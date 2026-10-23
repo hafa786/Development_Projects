@@ -8,7 +8,10 @@ import type {
 
 const API_BASE_URL =
   import.meta.env.VITE_BACKEND_URL ?? "http://localhost:8080";
-
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL ??
+  "http://localhost:8080";
+  
 type PublicRequestOptions = {
   method?: "GET" | "POST";
   body?: unknown;
@@ -94,18 +97,49 @@ export function getPublicJob(companySlug: string, jobSlug: string) {
  * ---------------------------------------------------------
  */
 
-export function submitPublicApplication(
+export async function submitPublicApplication(
   companySlug: string,
   jobSlug: string,
   data: PublicJobApplicationRequest,
-) {
-  return publicRequest<PublicJobApplicationResponse>(
-    `/api/public/careers/${encodeURIComponent(
-      companySlug,
-    )}/jobs/${encodeURIComponent(jobSlug)}/applications`,
+  resume?: File | null,
+): Promise<PublicJobApplicationResponse> {
+  const formData = new FormData();
+
+  formData.append(
+    "application",
+    new Blob([JSON.stringify(data)], {
+      type: "application/json",
+    }),
+  );
+
+  if (resume) {
+    formData.append("resume", resume);
+  }
+
+  const response = await fetch(
+    `${BACKEND_URL}/api/public/careers/${encodeURIComponent(companySlug)}/jobs/${encodeURIComponent(jobSlug)}/applications`,
     {
       method: "POST",
-      body: data,
+      body: formData,
+      headers: {
+        Accept: "application/json",
+      },
     },
   );
+
+  if (!response.ok) {
+    let message = "Failed to submit application.";
+
+    try {
+      const error = await response.json();
+
+      message = error.message ?? error.error ?? message;
+    } catch {
+      // Ignore malformed/non-JSON response.
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json();
 }

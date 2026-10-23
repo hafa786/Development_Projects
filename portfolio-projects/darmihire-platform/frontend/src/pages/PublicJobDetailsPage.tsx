@@ -69,7 +69,7 @@ export default function PublicJobDetailsPage() {
     Error,
     PublicJobApplicationRequest
   >({
-    mutationFn: (data) => submitPublicApplication(company, job, data),
+    mutationFn: (data) => submitPublicApplication(company, job, data ),
   });
 
   function handleApplicationSubmit(values: PublicApplicationFormValues) {
@@ -87,6 +87,7 @@ export default function PublicJobDetailsPage() {
       linkedinUrl: emptyToUndefined(values.linkedinUrl),
 
       portfolioUrl: emptyToUndefined(values.portfolioUrl),
+
     });
   }
 

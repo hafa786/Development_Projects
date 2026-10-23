@@ -10,8 +10,11 @@ import {
   publicApplicationSchema,
   type PublicApplicationFormValues,
 } from "../applicationSchema";
+import { FileText, Upload, X } from "lucide-react";
+import { RESUME_ACCEPT, validateResume } from "@/features/careers/resume";
 
 import type { PublicJobApplicationResponse } from "../types";
+import { useState } from "react";
 
 type PublicApplicationFormProps = {
   jobTitle: string;
@@ -49,6 +52,10 @@ export function PublicApplicationForm({
       portfolioUrl: "",
     },
   });
+
+  const [resume, setResume] = useState<File | null>(null);
+
+  const [resumeError, setResumeError] = useState<string | null>(null);
 
   if (result) {
     return (
@@ -154,6 +161,78 @@ export function PublicApplicationForm({
           <Input {...register("portfolioUrl")} placeholder="https://..." />
         </FormField>
 
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Resume</label>
+
+          {!resume ? (
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center transition-colors hover:bg-muted/50">
+              <Upload className="mb-3 h-6 w-6 text-muted-foreground" />
+
+              <span className="text-sm font-medium">Upload your resume</span>
+
+              <span className="mt-1 text-xs text-muted-foreground">
+                PDF, DOC or DOCX • Max 5 MB
+              </span>
+
+              <input
+                type="file"
+                className="hidden"
+                accept={RESUME_ACCEPT}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+
+                  if (!file) {
+                    return;
+                  }
+
+                  const error = validateResume(file);
+
+                  if (error) {
+                    setResume(null);
+                    setResumeError(error);
+
+                    event.target.value = "";
+
+                    return;
+                  }
+
+                  setResume(file);
+                  setResumeError(null);
+                }}
+              />
+            </label>
+          ) : (
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
+
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{resume.name}</p>
+
+                  <p className="text-xs text-muted-foreground">
+                    {(resume.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="rounded-md p-2 hover:bg-muted"
+                onClick={() => {
+                  setResume(null);
+                  setResumeError(null);
+                }}
+                aria-label="Remove resume"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          {resumeError && (
+            <p className="text-sm text-destructive">{resumeError}</p>
+          )}
+        </div>
         {error && (
           <div
             role="alert"
