@@ -11,7 +11,7 @@ import {
   type PublicApplicationFormValues,
 } from "../applicationSchema";
 import { FileText, Upload, X } from "lucide-react";
-import { RESUME_ACCEPT, validateResume } from "@/features/careers/resume";
+import { RESUME_ACCEPT } from "@/features/careers/resume";
 
 import type { PublicJobApplicationResponse } from "../types";
 import { useState } from "react";
@@ -25,7 +25,7 @@ type PublicApplicationFormProps = {
 
   result: PublicJobApplicationResponse | null;
 
-  onSubmit: (values: PublicApplicationFormValues) => void;
+  onSubmit: (values: PublicApplicationFormValues, resume: File | null) => void;
 };
 
 export function PublicApplicationForm({
@@ -57,6 +57,14 @@ export function PublicApplicationForm({
 
   const [resumeError, setResumeError] = useState<string | null>(null);
 
+  const handleApplicationSubmit = (
+  values: PublicApplicationFormValues,
+) => {
+  onSubmit(
+    values,
+    resume,
+  );
+};
   if (result) {
     return (
       <div className="rounded-2xl border bg-background p-6 shadow-sm sm:p-8">
@@ -92,7 +100,9 @@ export function PublicApplicationForm({
         </p>
       </div>
 
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+      <form className="mt-8 space-y-6" onSubmit={handleSubmit(
+    handleApplicationSubmit,
+  )}>
         <div className="grid gap-5 sm:grid-cols-2">
           <FormField
             label="First name"
@@ -182,22 +192,18 @@ export function PublicApplicationForm({
                   const file = event.target.files?.[0];
 
                   if (!file) {
-                    return;
-                  }
-
-                  const error = validateResume(file);
-
-                  if (error) {
                     setResume(null);
-                    setResumeError(error);
-
-                    event.target.value = "";
-
                     return;
                   }
 
                   setResume(file);
-                  setResumeError(null);
+
+                  console.log(
+                    "Selected resume:",
+                    file.name,
+                    file.size,
+                    file.type,
+                  );
                 }}
               />
             </label>

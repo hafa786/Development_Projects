@@ -54,6 +54,7 @@ export type PublicJobApplicationRequest = {
   location?: string;
   linkedinUrl?: string;
   portfolioUrl?: string;
+  resume?: File | null;
 };
 
 export type PublicJobApplicationResponse = {

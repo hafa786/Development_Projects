@@ -23,10 +23,10 @@ import {
   submitPublicApplication,
 } from "@/features/careers/api";
 
-import type {
-  PublicJobApplicationRequest,
-  PublicJobApplicationResponse,
-} from "@/features/careers/types";
+// import type {
+//   PublicJobApplicationRequest,
+//   PublicJobApplicationResponse,
+// } from "@/features/careers/types";
 
 import type { PublicApplicationFormValues } from "@/features/careers/applicationSchema";
 
@@ -34,12 +34,16 @@ import { CareersHeader } from "@/features/careers/components/CareersHeader";
 import { PublicApplicationForm } from "@/features/careers/components/PublicApplicationForm";
 
 import { careersQueryKeys } from "@/features/careers/queryKeys";
+import { useState } from "react";
+import { PublicJobApplicationResponse } from "@/features/careers/types";
 
 export default function PublicJobDetailsPage() {
   const { companySlug, jobSlug } = useParams<{
     companySlug: string;
     jobSlug: string;
   }>();
+  const [applicationError, setApplicationError] = useState<string | null>(null);
+  const [applicationResult, setApplicationResult] = useState<PublicJobApplicationResponse | null>(null);
 
   const company = companySlug ?? "";
   const job = jobSlug ?? "";
@@ -64,30 +68,31 @@ export default function PublicJobDetailsPage() {
     retry: false,
   });
 
-  const applicationMutation = useMutation<
-    PublicJobApplicationResponse,
-    Error,
-    PublicJobApplicationRequest
-  >({
-    mutationFn: (data) => submitPublicApplication(company, job, data ),
+  const applicationMutation = useMutation({
+    mutationFn: ({
+      values,
+      resume,
+    }: {
+      values: PublicApplicationFormValues;
+      resume: File | null;
+    }) => submitPublicApplication(companySlug!, jobSlug!, values, resume),
+
+    onSuccess: (data :  PublicJobApplicationResponse) => {
+      setApplicationResult(data);
+    },
+
+    onError: (error: Error) => {
+      setApplicationError(error.message);
+    },
   });
 
-  function handleApplicationSubmit(values: PublicApplicationFormValues) {
+  function handleApplicationSubmit(
+    values: PublicApplicationFormValues,
+    resume: File | null,
+  ) {
     applicationMutation.mutate({
-      firstName: values.firstName.trim(),
-
-      lastName: values.lastName.trim(),
-
-      email: values.email.trim(),
-
-      phone: emptyToUndefined(values.phone),
-
-      location: emptyToUndefined(values.location),
-
-      linkedinUrl: emptyToUndefined(values.linkedinUrl),
-
-      portfolioUrl: emptyToUndefined(values.portfolioUrl),
-
+      values,
+      resume,
     });
   }
 
@@ -192,8 +197,8 @@ export default function PublicJobDetailsPage() {
             <PublicApplicationForm
               jobTitle={jobDetails.title}
               isSubmitting={applicationMutation.isPending}
-              error={applicationMutation.error?.message ?? null}
-              result={applicationMutation.data ?? null}
+              error={applicationError}
+              result={applicationResult}
               onSubmit={handleApplicationSubmit}
             />
           </aside>
@@ -302,11 +307,11 @@ function JobDetailsSkeleton() {
   );
 }
 
-function emptyToUndefined(value?: string) {
-  const normalized = value?.trim();
+// function emptyToUndefined(value?: string) {
+//   const normalized = value?.trim();
 
-  return normalized ? normalized : undefined;
-}
+//   return normalized ? normalized : undefined;
+// }
 
 function employmentTypeLabel(value: string) {
   switch (value) {

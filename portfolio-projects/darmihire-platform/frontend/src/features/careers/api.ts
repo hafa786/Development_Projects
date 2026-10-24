@@ -11,7 +11,7 @@ const API_BASE_URL =
 const BACKEND_URL =
   import.meta.env.VITE_BACKEND_URL ??
   "http://localhost:8080";
-  
+
 type PublicRequestOptions = {
   method?: "GET" | "POST";
   body?: unknown;
@@ -96,24 +96,31 @@ export function getPublicJob(companySlug: string, jobSlug: string) {
  * PUBLIC JOB APPLICATION
  * ---------------------------------------------------------
  */
-
 export async function submitPublicApplication(
   companySlug: string,
   jobSlug: string,
   data: PublicJobApplicationRequest,
-  resume?: File | null,
+  resume?: File | null, // ← ADD THIS
 ): Promise<PublicJobApplicationResponse> {
   const formData = new FormData();
 
   formData.append(
     "application",
-    new Blob([JSON.stringify(data)], {
-      type: "application/json",
-    }),
+    new Blob(
+      [JSON.stringify(data)],
+      {
+        type: "application/json",
+      },
+    ),
   );
 
+  // Now TypeScript knows what "resume" is
   if (resume) {
-    formData.append("resume", resume);
+    formData.append(
+      "resume",
+      resume,
+      resume.name,
+    );
   }
 
   const response = await fetch(
@@ -121,21 +128,23 @@ export async function submitPublicApplication(
     {
       method: "POST",
       body: formData,
-      headers: {
-        Accept: "application/json",
-      },
     },
   );
 
   if (!response.ok) {
-    let message = "Failed to submit application.";
+    let message =
+      "Failed to submit application.";
 
     try {
-      const error = await response.json();
+      const error =
+        await response.json();
 
-      message = error.message ?? error.error ?? message;
+      message =
+        error.message ??
+        error.error ??
+        message;
     } catch {
-      // Ignore malformed/non-JSON response.
+      // Ignore non-JSON responses
     }
 
     throw new Error(message);
