@@ -8,9 +8,6 @@ import type {
 
 const API_BASE_URL =
   import.meta.env.VITE_BACKEND_URL ?? "http://localhost:8080";
-const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL ??
-  "http://localhost:8080";
 
 type PublicRequestOptions = {
   method?: "GET" | "POST";
@@ -106,25 +103,18 @@ export async function submitPublicApplication(
 
   formData.append(
     "application",
-    new Blob(
-      [JSON.stringify(data)],
-      {
-        type: "application/json",
-      },
-    ),
+    new Blob([JSON.stringify(data)], {
+      type: "application/json",
+    }),
   );
 
   // Now TypeScript knows what "resume" is
   if (resume) {
-    formData.append(
-      "resume",
-      resume,
-      resume.name,
-    );
+    formData.append("resume", resume, resume.name);
   }
 
   const response = await fetch(
-    `${BACKEND_URL}/api/public/careers/${encodeURIComponent(companySlug)}/jobs/${encodeURIComponent(jobSlug)}/applications`,
+    `${API_BASE_URL}/api/public/careers/${encodeURIComponent(companySlug)}/jobs/${encodeURIComponent(jobSlug)}/applications`,
     {
       method: "POST",
       body: formData,
@@ -132,19 +122,22 @@ export async function submitPublicApplication(
   );
 
   if (!response.ok) {
-    let message =
-      "Failed to submit application.";
+    let message = "Failed to submit application.";
 
     try {
-      const error =
-        await response.json();
+      const error = (await response.json()) as {
+        message?: string;
+        detail?: string;
+        error?: string;
+      };
 
-      message =
-        error.message ??
-        error.error ??
-        message;
+      message = error.message ?? error.detail ?? error.error ?? message;
     } catch {
-      // Ignore non-JSON responses
+      // Ignore non-JSON error responses.
+    }
+
+    if (response.status === 409) {
+      throw new Error(message || "You have already applied for this position.");
     }
 
     throw new Error(message);

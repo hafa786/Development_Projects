@@ -57,14 +57,9 @@ export function PublicApplicationForm({
 
   const [resumeError, setResumeError] = useState<string | null>(null);
 
-  const handleApplicationSubmit = (
-  values: PublicApplicationFormValues,
-) => {
-  onSubmit(
-    values,
-    resume,
-  );
-};
+  const handleApplicationSubmit = (values: PublicApplicationFormValues) => {
+    onSubmit(values, resume);
+  };
   if (result) {
     return (
       <div className="rounded-2xl border bg-background p-6 shadow-sm sm:p-8">
@@ -80,7 +75,17 @@ export function PublicApplicationForm({
           has been received.
         </p>
 
-        <p className="mt-4 text-sm text-muted-foreground">
+        <div className="mt-5 rounded-lg border bg-muted/40 p-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Application reference
+          </p>
+
+          <p className="mt-2 break-all font-mono text-sm font-medium">
+            {result.applicationId}
+          </p>
+        </div>
+
+        <p className="mt-5 text-sm leading-6 text-muted-foreground">
           The hiring team will review your application and contact you if your
           profile matches the next stage of the process.
         </p>
@@ -100,9 +105,10 @@ export function PublicApplicationForm({
         </p>
       </div>
 
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit(
-    handleApplicationSubmit,
-  )}>
+      <form
+        className="mt-8 space-y-6"
+        onSubmit={handleSubmit(handleApplicationSubmit)}
+      >
         <div className="grid gap-5 sm:grid-cols-2">
           <FormField
             label="First name"

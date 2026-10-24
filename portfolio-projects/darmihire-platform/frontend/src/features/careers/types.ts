@@ -59,12 +59,8 @@ export type PublicJobApplicationRequest = {
 
 export type PublicJobApplicationResponse = {
   applicationId: string;
-
   jobTitle: string;
-
   candidateName: string;
-
   appliedAt: string;
-
   message: string;
 };
