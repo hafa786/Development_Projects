@@ -29,6 +29,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -75,26 +76,61 @@ public class PublicCareersService {
             String jobSlug,
             PublicJobApplicationRequest request,
             MultipartFile resume) {
-        Tenant tenant = findTenant(companySlug);
+        /*
+         * ---------------------------------------------------------
+         * RESOLVE TENANT
+         * ---------------------------------------------------------
+         */
+
+        Tenant tenant = tenantRepository
+                .findBySlugIgnoreCase(companySlug.trim())
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                "Company careers page not found"));
+
+        UUID tenantId = tenant.getId();
+
+        /*
+         * ---------------------------------------------------------
+         * RESOLVE PUBLIC JOB
+         * ---------------------------------------------------------
+         */
 
         Job job = jobRepository
                 .findByTenantIdAndPublicSlugAndPublishedTrueAndStatus(
-                        tenant.getId(),
-                        normalizeSlug(jobSlug),
+                        tenantId,
+                        jobSlug.trim(),
                         JobStatus.OPEN)
                 .orElseThrow(
                         () -> new ResourceNotFoundException(
                                 "Job not found"));
 
-        if (!isDeadlineValid(job)) {
-            throw new ResourceNotFoundException(
-                    "Job not found");
+        /*
+         * ---------------------------------------------------------
+         * APPLICATION DEADLINE
+         * ---------------------------------------------------------
+         */
+
+        if (job.getApplicationDeadline() != null
+                && job.getApplicationDeadline()
+                        .isBefore(LocalDate.now())) {
+            throw new ConflictException(
+                    "Applications for this position are closed.");
         }
 
-        UUID tenantId = tenant.getId();
+        /*
+         * ---------------------------------------------------------
+         * NORMALIZE EMAIL
+         * ---------------------------------------------------------
+         */
 
-        String email = normalizeEmail(
-                request.email());
+        String email = normalizeEmail(request.email());
+
+        /*
+         * ---------------------------------------------------------
+         * FIND OR CREATE CANDIDATE
+         * ---------------------------------------------------------
+         */
 
         Candidate candidate = candidateRepository
                 .findByTenantIdAndEmailIgnoreCase(
@@ -102,23 +138,19 @@ public class PublicCareersService {
                         email)
                 .orElse(null);
 
-        /*
-         * -----------------------------------------------------
-         * CREATE NEW CANDIDATE
-         * -----------------------------------------------------
-         */
         if (candidate == null) {
+
             candidate = new Candidate();
 
             candidate.setTenant(tenant);
 
             candidate.setFirstName(
                     normalizeRequired(
-                            request.firstName(), email));
+                            request.firstName()));
 
             candidate.setLastName(
                     normalizeRequired(
-                            request.lastName(), email));
+                            request.lastName()));
 
             candidate.setEmail(email);
 
@@ -141,19 +173,53 @@ public class PublicCareersService {
             candidate.setSource(
                     CandidateSource.CAREERS_PAGE);
 
-            /*
-             * Save first because resume storage is separated
-             * using candidate ID.
-             */
-            candidate = candidateRepository.save(
+            candidate = candidateRepository.saveAndFlush(
                     candidate);
+
+        } else {
+
+            /*
+             * Existing candidate:
+             * update useful profile information from
+             * the newest application.
+             */
+
+            candidate.setFirstName(
+                    normalizeRequired(
+                            request.firstName()));
+
+            candidate.setLastName(
+                    normalizeRequired(
+                            request.lastName()));
+
+            candidate.setPhone(
+                    normalizeOptional(
+                            request.phone()));
+
+            candidate.setLocation(
+                    normalizeOptional(
+                            request.location()));
+
+            candidate.setLinkedinUrl(
+                    normalizeOptional(
+                            request.linkedinUrl()));
+
+            candidate.setPortfolioUrl(
+                    normalizeOptional(
+                            request.portfolioUrl()));
+
+            candidate = candidateRepository.save(candidate);
         }
 
         /*
-         * -----------------------------------------------------
-         * PREVENT SAME CANDIDATE APPLYING TWICE
-         * -----------------------------------------------------
+         * ---------------------------------------------------------
+         * PREVENT DUPLICATE APPLICATION
+         * ---------------------------------------------------------
+         *
+         * IMPORTANT:
+         * Do this BEFORE storing the new resume.
          */
+
         boolean alreadyApplied = applicationRepository
                 .existsByTenantIdAndJobIdAndCandidateId(
                         tenantId,
@@ -162,18 +228,15 @@ public class PublicCareersService {
 
         if (alreadyApplied) {
             throw new ConflictException(
-                    "You have already applied for this job");
+                    "You have already applied for this position.");
         }
 
         /*
-         * -----------------------------------------------------
+         * ---------------------------------------------------------
          * STORE RESUME
-         * -----------------------------------------------------
-         *
-         * Existing candidate + new resume:
-         * latest submitted resume becomes candidate's current
-         * resume.
+         * ---------------------------------------------------------
          */
+
         if (resume != null
                 && !resume.isEmpty()) {
 
@@ -185,24 +248,18 @@ public class PublicCareersService {
             candidate.setResumeFileName(
                     storedResume.originalFileName());
 
-            /*
-             * Despite the historical field name "resumeUrl",
-             * this is intentionally a private storage key.
-             *
-             * Never expose it as a public static URL.
-             */
             candidate.setResumeUrl(
                     storedResume.storageKey());
 
-            candidate = candidateRepository.save(
-                    candidate);
+            candidate = candidateRepository.save(candidate);
         }
 
         /*
-         * -----------------------------------------------------
+         * ---------------------------------------------------------
          * CREATE APPLICATION
-         * -----------------------------------------------------
+         * ---------------------------------------------------------
          */
+
         JobApplication application = new JobApplication();
 
         application.setTenant(tenant);
@@ -218,12 +275,40 @@ public class PublicCareersService {
         application.setAppliedAt(
                 Instant.now());
 
-        JobApplication savedApplication = applicationRepository.save(
-                application);
+        /*
+         * ---------------------------------------------------------
+         * DATABASE-SAFE DUPLICATE PROTECTION
+         * ---------------------------------------------------------
+         */
+
+        JobApplication savedApplication;
+
+        try {
+
+            savedApplication = applicationRepository
+                    .saveAndFlush(application);
+
+        } catch (DataIntegrityViolationException exception) {
+
+            throw new ConflictException(
+                    "You have already applied for this position.");
+        }
+
+        /*
+         * ---------------------------------------------------------
+         * ACTIVITY
+         * ---------------------------------------------------------
+         */
 
         activityService.recordCreated(
                 savedApplication,
                 null);
+
+        /*
+         * ---------------------------------------------------------
+         * RESPONSE
+         * ---------------------------------------------------------
+         */
 
         String candidateName = candidate.getFirstName()
                 + " "
@@ -234,7 +319,7 @@ public class PublicCareersService {
                 job.getTitle(),
                 candidateName,
                 savedApplication.getAppliedAt(),
-                "Application submitted successfully");
+                "Application submitted successfully.");
     }
 
     /*

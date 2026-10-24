@@ -28,5 +28,4 @@ public interface CandidateRepository
             UUID tenantId,
             String email,
             UUID id);
-
 }

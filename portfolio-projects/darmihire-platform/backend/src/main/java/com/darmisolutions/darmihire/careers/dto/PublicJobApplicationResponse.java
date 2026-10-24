@@ -4,16 +4,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record PublicJobApplicationResponse(
-
         UUID applicationId,
-
         String jobTitle,
-
         String candidateName,
-
         Instant appliedAt,
-
-        String message
-
-) {
+        String message) {
 }
