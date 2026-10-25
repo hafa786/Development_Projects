@@ -29,83 +29,77 @@ import CareersPage from "@/pages/CareersPage";
 import PublicJobDetailsPage from "@/pages/PublicJobDetailsPage";
 
 export function AppRouter() {
-  return (
-    <Routes>
-      {/* =========================
+    return (
+        <Routes>
+            {/* =========================
           ROOT
           ========================= */}
 
-      <Route path="/" element={<RootRoute />} />
+            <Route path="/" element={<RootRoute />} />
 
-      {/* =========================
+            {/* =========================
           PUBLIC AUTH
           ========================= */}
 
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <LoginPage />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <RegisterPage />
-          </PublicRoute>
-        }
-      />
-      <Route path="/careers/:companySlug" element={<CareersPage />} />
-      <Route
-        path="/careers/:companySlug/jobs/:jobSlug"
-        element={<PublicJobDetailsPage />}
-      />
-      {/* =========================
+            <Route
+                path="/login"
+                element={
+                    <PublicRoute>
+                        <LoginPage />
+                    </PublicRoute>
+                }
+            />
+            <Route
+                path="/register"
+                element={
+                    <PublicRoute>
+                        <RegisterPage />
+                    </PublicRoute>
+                }
+            />
+            <Route path="/careers/:companySlug" element={<CareersPage />} />
+            <Route path="/careers/:companySlug/jobs/:jobSlug" element={<PublicJobDetailsPage />} />
+            {/* =========================
           AUTHENTICATED
           ========================= */}
 
-      <Route element={<ProtectedRoute />}>
-        <Route
-          element={
-            <WorkspaceRoute>
-              <AppLayout />
-            </WorkspaceRoute>
-          }
-        >
-          <Route path="/onboarding" element={<OnboardingPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="scorecards" element={<ScorecardsPage />} />
-          <Route path="/departments" element={<DepartmentsPage />} />
-          <Route path="/members" element={<MembersPage />} />
-          <Route path="/locations" element={<LocationsPage />} />
-          <Route path="/teams" element={<TeamsPage />} />
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="jobs" element={<JobsPage />} />
-          <Route path="jobs/:jobId" element={<JobDetailsPage />} />
-          <Route path="/offers" element={<OffersPage />} />
-          <Route path="/candidates" element={<CandidatesPage />} />
-          <Route path="/applications" element={<ApplicationsPage />} />
+            <Route element={<ProtectedRoute />}>
+                <Route
+                    element={
+                        <WorkspaceRoute>
+                            <AppLayout />
+                        </WorkspaceRoute>
+                    }
+                >
+                    <Route path="/onboarding" element={<OnboardingPage />} />
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="scorecards" element={<ScorecardsPage />} />
+                    <Route path="/departments" element={<DepartmentsPage />} />
+                    <Route path="/members" element={<MembersPage />} />
+                    <Route path="/locations" element={<LocationsPage />} />
+                    <Route path="/teams" element={<TeamsPage />} />
+                    <Route path="/users" element={<UsersPage />} />
+                    <Route path="jobs" element={<JobsPage />} />
+                    <Route path="jobs/:jobId" element={<JobDetailsPage />} />
+                    <Route path="/offers" element={<OffersPage />} />
+                    <Route path="/candidates" element={<CandidatesPage />} />
+                    <Route path="/applications" element={<ApplicationsPage />} />
 
-          <Route
-            path="/applications/:applicationId"
-            element={<ApplicationDetailsPage />}
-          />
-          <Route
-            path="/candidates/:candidateId"
-            element={<CandidateDetailsPage />}
-          />
-        </Route>
-      </Route>
+                    <Route
+                        path="/applications/:applicationId"
+                        element={<ApplicationDetailsPage />}
+                    />
+                    <Route path="/candidates/:candidateId" element={<CandidateDetailsPage />} />
+                </Route>
+            </Route>
 
-      {/* =========================
+            {/* =========================
           NOT FOUND
           ========================= */}
 
-      <Route path="*" element={<NotFoundRedirect />} />
-    </Routes>
-  );
+            <Route path="*" element={<NotFoundRedirect />} />
+        </Routes>
+    );
 }
 
 export default AppRouter;

@@ -4,17 +4,17 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 
 export function AppLayout() {
-  return (
-    <div className="flex h-screen overflow-hidden bg-muted/30">
-      <Sidebar />
+    return (
+        <div className="flex h-screen overflow-hidden bg-muted/30">
+            <Sidebar />
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar />
+            <div className="flex min-w-0 flex-1 flex-col">
+                <Topbar />
 
-        <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-          <Outlet />
-        </main>
-      </div>
-    </div>
-  );
+                <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+                    <Outlet />
+                </main>
+            </div>
+        </div>
+    );
 }

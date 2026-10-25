@@ -1,91 +1,79 @@
-export type ApplicationStage =
-  | "APPLIED"
-  | "SCREENING"
-  | "INTERVIEW"
-  | "OFFER"
-  | "HIRED";
+export type ApplicationStage = "APPLIED" | "SCREENING" | "INTERVIEW" | "OFFER" | "HIRED";
 
-export type ApplicationStatus =
-  | "ACTIVE"
-  | "HIRED"
-  | "REJECTED"
-  | "WITHDRAWN";
+export type ApplicationStatus = "ACTIVE" | "HIRED" | "REJECTED" | "WITHDRAWN";
 
 export type JobApplication = {
-  id: string;
+    id: string;
 
-  jobId: string;
-  jobTitle: string;
-  jobCode: string;
+    jobId: string;
+    jobTitle: string;
+    jobCode: string;
 
-  candidateId: string;
-  candidateFirstName: string;
-  candidateLastName: string;
-  candidateFullName: string;
-  candidateEmail: string;
-  candidatePhone: string | null;
-  candidateLocation: string | null;
+    candidateId: string;
+    candidateFirstName: string;
+    candidateLastName: string;
+    candidateFullName: string;
+    candidateEmail: string;
+    candidatePhone: string | null;
+    candidateLocation: string | null;
 
-  stage: ApplicationStage;
-  status: ApplicationStatus;
+    stage: ApplicationStage;
+    status: ApplicationStatus;
 
-  appliedAt: string;
+    appliedAt: string;
 
-  rejectedAt: string | null;
-  rejectionReason: string | null;
+    rejectedAt: string | null;
+    rejectionReason: string | null;
 
-  withdrawnAt: string | null;
-  hiredAt: string | null;
+    withdrawnAt: string | null;
+    hiredAt: string | null;
 
-  createdAt: string;
-  updatedAt: string;
+    createdAt: string;
+    updatedAt: string;
 };
 
 export type ApplicationActivityType =
-  | "APPLICATION_CREATED"
-  | "STAGE_CHANGED"
-  | "REJECTED"
-  | "WITHDRAWN"
-  | "HIRED"
-  | "INTERVIEW_SCHEDULED"
-  | "INTERVIEW_RESCHEDULED"
-  | "INTERVIEW_CANCELLED"
-  | "INTERVIEW_COMPLETED"
-  | "INTERVIEWER_ADDED"
-  | "INTERVIEWER_REMOVED";
+    | "APPLICATION_CREATED"
+    | "STAGE_CHANGED"
+    | "REJECTED"
+    | "WITHDRAWN"
+    | "HIRED"
+    | "INTERVIEW_SCHEDULED"
+    | "INTERVIEW_RESCHEDULED"
+    | "INTERVIEW_CANCELLED"
+    | "INTERVIEW_COMPLETED"
+    | "INTERVIEWER_ADDED"
+    | "INTERVIEWER_REMOVED";
 
 export type ApplicationActivity = {
-  id: string;
+    id: string;
 
-  applicationId: string;
+    applicationId: string;
 
-  activityType:
-    ApplicationActivityType;
+    activityType: ApplicationActivityType;
 
-  fromStage:
-    ApplicationStage | null;
+    fromStage: ApplicationStage | null;
 
-  toStage:
-    ApplicationStage | null;
+    toStage: ApplicationStage | null;
 
-  description: string | null;
+    description: string | null;
 
-  performedById: string | null;
+    performedById: string | null;
 
-  performedByName: string | null;
+    performedByName: string | null;
 
-  createdAt: string;
+    createdAt: string;
 };
 
 export type CreateJobApplicationRequest = {
-  jobId: string;
-  candidateId: string;
+    jobId: string;
+    candidateId: string;
 };
 
 export type UpdateApplicationStageRequest = {
-  stage: ApplicationStage;
+    stage: ApplicationStage;
 };
 
 export type RejectApplicationRequest = {
-  reason?: string | null;
+    reason?: string | null;
 };

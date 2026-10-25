@@ -5,147 +5,131 @@ import { useForm } from "react-hook-form";
 
 import { FormError } from "@/components/auth/FormError";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  type CreateTenantFormData,
-  createTenantSchema,
-} from "@/features/tenants/schemas";
+import { type CreateTenantFormData, createTenantSchema } from "@/features/tenants/schemas";
 import { createSlug } from "@/features/tenants/utils";
 
 type CreateWorkspaceFormProps = {
-  isSubmitting: boolean;
+    isSubmitting: boolean;
 
-  onSubmit: (data: CreateTenantFormData) => Promise<void>;
+    onSubmit: (data: CreateTenantFormData) => Promise<void>;
 };
 
-export function CreateWorkspaceForm({
-  isSubmitting,
-  onSubmit,
-}: CreateWorkspaceFormProps) {
-  const [slugEditedManually, setSlugEditedManually] = useState(false);
+export function CreateWorkspaceForm({ isSubmitting, onSubmit }: CreateWorkspaceFormProps) {
+    const [slugEditedManually, setSlugEditedManually] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
+    const {
+        register,
+        handleSubmit,
+        watch,
+        setValue,
 
-    formState: { errors },
-  } = useForm<CreateTenantFormData>({
-    resolver: zodResolver(createTenantSchema),
+        formState: { errors },
+    } = useForm<CreateTenantFormData>({
+        resolver: zodResolver(createTenantSchema),
 
-    defaultValues: {
-      name: "",
-      slug: "",
-    },
-  });
-
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const workspaceName = watch("name");
-
-  useEffect(() => {
-    if (slugEditedManually) {
-      return;
-    }
-
-    setValue("slug", createSlug(workspaceName), {
-      shouldValidate: false,
+        defaultValues: {
+            name: "",
+            slug: "",
+        },
     });
-  }, [workspaceName, slugEditedManually, setValue]);
 
-  const slugRegistration = register("slug");
+    // eslint-disable-next-line react-hooks/incompatible-library
+    const workspaceName = watch("name");
 
-  return (
-    <Card>
-      <CardHeader>
-        <div className="mb-2 flex size-10 items-center justify-center rounded-lg bg-primary/10">
-          <Building2 className="size-5 text-primary" />
-        </div>
+    useEffect(() => {
+        if (slugEditedManually) {
+            return;
+        }
 
-        <CardTitle>Create a workspace</CardTitle>
+        setValue("slug", createSlug(workspaceName), {
+            shouldValidate: false,
+        });
+    }, [workspaceName, slugEditedManually, setValue]);
 
-        <CardDescription>
-          Create a workspace for your organization and hiring team.
-        </CardDescription>
-      </CardHeader>
+    const slugRegistration = register("slug");
 
-      <CardContent>
-        <form
-          className="space-y-5"
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-        >
-          <div className="space-y-2">
-            <Label htmlFor="workspace-name">Workspace name</Label>
+    return (
+        <Card>
+            <CardHeader>
+                <div className="mb-2 flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                    <Building2 className="size-5 text-primary" />
+                </div>
 
-            <Input
-              id="workspace-name"
-              placeholder="Darmi Solutions"
-              disabled={isSubmitting}
-              aria-invalid={errors.name ? "true" : "false"}
-              {...register("name")}
-            />
+                <CardTitle>Create a workspace</CardTitle>
 
-            <FormError message={errors.name?.message} />
-          </div>
+                <CardDescription>
+                    Create a workspace for your organization and hiring team.
+                </CardDescription>
+            </CardHeader>
 
-          <div className="space-y-2">
-            <Label htmlFor="workspace-slug">Workspace URL</Label>
+            <CardContent>
+                <form className="space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
+                    <div className="space-y-2">
+                        <Label htmlFor="workspace-name">Workspace name</Label>
 
-            <div className="flex items-center rounded-md border bg-background focus-within:ring-2 focus-within:ring-ring">
-              <span className="shrink-0 border-r px-3 text-sm text-muted-foreground">
-                darmihire.app/
-              </span>
+                        <Input
+                            id="workspace-name"
+                            placeholder="Darmi Solutions"
+                            disabled={isSubmitting}
+                            aria-invalid={errors.name ? "true" : "false"}
+                            {...register("name")}
+                        />
 
-              <input
-                id="workspace-slug"
-                className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="darmi-solutions"
-                disabled={isSubmitting}
-                aria-invalid={errors.slug ? "true" : "false"}
-                name={slugRegistration.name}
-                ref={slugRegistration.ref}
-                onBlur={slugRegistration.onBlur}
-                onChange={(event) => {
-                  setSlugEditedManually(true);
+                        <FormError message={errors.name?.message} />
+                    </div>
 
-                  slugRegistration.onChange(event);
-                }}
-              />
-            </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="workspace-slug">Workspace URL</Label>
 
-            <FormError message={errors.slug?.message} />
+                        <div className="flex items-center rounded-md border bg-background focus-within:ring-2 focus-within:ring-ring">
+                            <span className="shrink-0 border-r px-3 text-sm text-muted-foreground">
+                                darmihire.app/
+                            </span>
 
-            {!errors.slug && (
-              <p className="text-xs text-muted-foreground">
-                This identifies your workspace inside DarmiHire.
-              </p>
-            )}
-          </div>
+                            <input
+                                id="workspace-slug"
+                                className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="darmi-solutions"
+                                disabled={isSubmitting}
+                                aria-invalid={errors.slug ? "true" : "false"}
+                                name={slugRegistration.name}
+                                ref={slugRegistration.ref}
+                                onBlur={slugRegistration.onBlur}
+                                onChange={(event) => {
+                                    setSlugEditedManually(true);
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <Loader2 className="animate-spin" />
-                Creating workspace...
-              </>
-            ) : (
-              <>
-                <Plus />
-                Create workspace
-              </>
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  );
+                                    slugRegistration.onChange(event);
+                                }}
+                            />
+                        </div>
+
+                        <FormError message={errors.slug?.message} />
+
+                        {!errors.slug && (
+                            <p className="text-xs text-muted-foreground">
+                                This identifies your workspace inside DarmiHire.
+                            </p>
+                        )}
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="animate-spin" />
+                                Creating workspace...
+                            </>
+                        ) : (
+                            <>
+                                <Plus />
+                                Create workspace
+                            </>
+                        )}
+                    </Button>
+                </form>
+            </CardContent>
+        </Card>
+    );
 }

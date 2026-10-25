@@ -1,27 +1,12 @@
-import {
-    Check,
-    CheckCircle2,
-    Send,
-    Upload,
-} from "lucide-react";
+import { Check, CheckCircle2, Send, Upload } from "lucide-react";
 
-import {
-    useMutation,
-    useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toast } from "sonner";
 
-import {
-    Button,
-} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
     acceptOffer,
@@ -34,33 +19,19 @@ import {
     withdrawOffer,
 } from "./api";
 
-import {
-    ConfirmOfferActionDialog,
-} from "./ConfirmOfferActionDialog";
+import { ConfirmOfferActionDialog } from "./ConfirmOfferActionDialog";
 
-import {
-    DeclineOfferDialog,
-} from "./DeclineOfferDialog";
+import { DeclineOfferDialog } from "./DeclineOfferDialog";
 
-import {
-    DeleteOfferDialog,
-} from "./DeleteOfferDialog";
+import { DeleteOfferDialog } from "./DeleteOfferDialog";
 
-import {
-    EditOfferDialog,
-} from "./EditOfferDialog";
+import { EditOfferDialog } from "./EditOfferDialog";
 
-import {
-    OfferStatusBadge,
-} from "./OfferStatusBadge";
+import { OfferStatusBadge } from "./OfferStatusBadge";
 
-import {
-    RejectOfferDialog,
-} from "./RejectOfferDialog";
+import { RejectOfferDialog } from "./RejectOfferDialog";
 
-import {
-    WithdrawOfferDialog,
-} from "./WithdrawOfferDialog";
+import { WithdrawOfferDialog } from "./WithdrawOfferDialog";
 
 import {
     EMPLOYMENT_TYPE_LABELS,
@@ -71,13 +42,9 @@ import {
     SALARY_PERIOD_LABELS,
 } from "./offerUtils";
 
-import {
-    offerQueryKeys,
-} from "./queryKeys";
+import { offerQueryKeys } from "./queryKeys";
 
-import type {
-    Offer,
-} from "./types";
+import type { Offer } from "./types";
 
 type Props = {
     tenantId: string;
@@ -95,8 +62,7 @@ type Props = {
      * Application detail page can use this
      * to invalidate its own query/activity.
      */
-    onApplicationChanged?: () =>
-        Promise<void> | void;
+    onApplicationChanged?: () => Promise<void> | void;
 };
 
 export function OfferCard({
@@ -106,177 +72,104 @@ export function OfferCard({
     canApprove = true,
     onApplicationChanged,
 }: Props) {
-    const queryClient =
-        useQueryClient();
+    const queryClient = useQueryClient();
 
     const refresh = async () => {
         await Promise.all([
             queryClient.invalidateQueries({
-                queryKey:
-                    offerQueryKeys.application(
-                        tenantId,
-                        offer.applicationId,
-                    ),
+                queryKey: offerQueryKeys.application(tenantId, offer.applicationId),
             }),
 
             queryClient.invalidateQueries({
-                queryKey:
-                    offerQueryKeys.lists(),
+                queryKey: offerQueryKeys.lists(),
             }),
         ]);
 
         await onApplicationChanged?.();
     };
 
-    const simpleMutation =
-        useMutation({
-            mutationFn: (
-                operation:
-                    | "submit"
-                    | "approve"
-                    | "send"
-                    | "accept",
-            ) => {
-                switch (
-                    operation
-                ) {
-                    case "submit":
-                        return submitOffer(
-                            offer.id,
-                        );
+    const simpleMutation = useMutation({
+        mutationFn: (operation: "submit" | "approve" | "send" | "accept") => {
+            switch (operation) {
+                case "submit":
+                    return submitOffer(offer.id);
 
-                    case "approve":
-                        return approveOffer(
-                            offer.id,
-                        );
+                case "approve":
+                    return approveOffer(offer.id);
 
-                    case "send":
-                        return sendOffer(
-                            offer.id,
-                        );
+                case "send":
+                    return sendOffer(offer.id);
 
-                    case "accept":
-                        return acceptOffer(
-                            offer.id,
-                        );
-                }
-            },
+                case "accept":
+                    return acceptOffer(offer.id);
+            }
+        },
 
-            onSuccess: async (
-                _,
-                operation,
-            ) => {
-                await refresh();
+        onSuccess: async (_, operation) => {
+            await refresh();
 
-                const messages = {
-                    submit:
-                        "Offer submitted for approval",
-                    approve:
-                        "Offer approved",
-                    send:
-                        "Offer marked as sent",
-                    accept:
-                        "Offer accepted and candidate hired",
-                };
+            const messages = {
+                submit: "Offer submitted for approval",
+                approve: "Offer approved",
+                send: "Offer marked as sent",
+                accept: "Offer accepted and candidate hired",
+            };
 
-                toast.success(
-                    messages[
-                        operation
-                    ],
-                );
-            },
+            toast.success(messages[operation]);
+        },
 
-            onError: (
-                error,
-            ) => {
-                toast.error(
-                    error instanceof Error
-                        ? error.message
-                        : "Offer action failed",
-                );
-            },
-        });
+        onError: (error) => {
+            toast.error(error instanceof Error ? error.message : "Offer action failed");
+        },
+    });
 
-    const rejectMutation =
-        useMutation({
-            mutationFn: (
-                reason: string,
-            ) =>
-                rejectOffer(
-                    offer.id,
-                    reason,
-                ),
+    const rejectMutation = useMutation({
+        mutationFn: (reason: string) => rejectOffer(offer.id, reason),
 
-            onSuccess: async () => {
-                await refresh();
+        onSuccess: async () => {
+            await refresh();
 
-                toast.success(
-                    "Offer rejected",
-                );
-            },
+            toast.success("Offer rejected");
+        },
 
-            onError: showError,
-        });
+        onError: showError,
+    });
 
-    const declineMutation =
-        useMutation({
-            mutationFn: (
-                reason?: string,
-            ) =>
-                declineOffer(
-                    offer.id,
-                    reason,
-                ),
+    const declineMutation = useMutation({
+        mutationFn: (reason?: string) => declineOffer(offer.id, reason),
 
-            onSuccess: async () => {
-                await refresh();
+        onSuccess: async () => {
+            await refresh();
 
-                toast.success(
-                    "Offer declined",
-                );
-            },
+            toast.success("Offer declined");
+        },
 
-            onError: showError,
-        });
+        onError: showError,
+    });
 
-    const withdrawMutation =
-        useMutation({
-            mutationFn: (
-                reason: string,
-            ) =>
-                withdrawOffer(
-                    offer.id,
-                    reason,
-                ),
+    const withdrawMutation = useMutation({
+        mutationFn: (reason: string) => withdrawOffer(offer.id, reason),
 
-            onSuccess: async () => {
-                await refresh();
+        onSuccess: async () => {
+            await refresh();
 
-                toast.success(
-                    "Offer withdrawn",
-                );
-            },
+            toast.success("Offer withdrawn");
+        },
 
-            onError: showError,
-        });
+        onError: showError,
+    });
 
-    const deleteMutation =
-        useMutation({
-            mutationFn: () =>
-                deleteOffer(
-                    offer.id,
-                ),
+    const deleteMutation = useMutation({
+        mutationFn: () => deleteOffer(offer.id),
 
-            onSuccess: async () => {
-                await refresh();
+        onSuccess: async () => {
+            await refresh();
 
-                toast.success(
-                    "Draft offer deleted",
-                );
-            },
+            toast.success("Draft offer deleted");
+        },
 
-            onError: showError,
-        });
+        onError: showError,
+    });
 
     return (
         <Card>
@@ -284,339 +177,179 @@ export function OfferCard({
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <CardTitle className="text-xl">
-                            {formatMoney(
-                                offer.salary,
-                                offer.currency,
-                            )}
+                            {formatMoney(offer.salary, offer.currency)}
                         </CardTitle>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            {
-                                SALARY_PERIOD_LABELS[
-                                    offer
-                                        .salaryPeriod
-                                ]
-                            }
+                            {SALARY_PERIOD_LABELS[offer.salaryPeriod]}
                             {" · "}
-                            {
-                                EMPLOYMENT_TYPE_LABELS[
-                                    offer
-                                        .employmentType
-                                ]
-                            }
+                            {EMPLOYMENT_TYPE_LABELS[offer.employmentType]}
                         </p>
                     </div>
 
-                    <OfferStatusBadge
-                        status={
-                            offer.status
-                        }
-                    />
+                    <OfferStatusBadge status={offer.status} />
                 </div>
             </CardHeader>
 
             <CardContent className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <Detail
-                        label="Start date"
-                        value={formatDate(
-                            offer.startDate,
-                        )}
-                    />
+                    <Detail label="Start date" value={formatDate(offer.startDate)} />
 
-                    <Detail
-                        label="Offer expires"
-                        value={formatDate(
-                            offer.expirationDate,
-                        )}
-                    />
+                    <Detail label="Offer expires" value={formatDate(offer.expirationDate)} />
 
-                    <Detail
-                        label="Probation"
-                        value={
-                            offer.probationPeriod ??
-                            "Not specified"
-                        }
-                    />
+                    <Detail label="Probation" value={offer.probationPeriod ?? "Not specified"} />
 
-                    <Detail
-                        label="Created by"
-                        value={
-                            offer.createdByName ??
-                            "Unknown"
-                        }
-                    />
+                    <Detail label="Created by" value={offer.createdByName ?? "Unknown"} />
                 </div>
 
                 {offer.approvedByName && (
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <Detail
-                            label="Approved by"
-                            value={
-                                offer.approvedByName
-                            }
-                        />
+                        <Detail label="Approved by" value={offer.approvedByName} />
 
-                        <Detail
-                            label="Approved"
-                            value={formatDateTime(
-                                offer.approvedAt,
-                            )}
-                        />
+                        <Detail label="Approved" value={formatDateTime(offer.approvedAt)} />
                     </div>
                 )}
 
-                {offer.benefits && (
-                    <TextSection
-                        title="Benefits"
-                        value={
-                            offer.benefits
-                        }
-                    />
-                )}
+                {offer.benefits && <TextSection title="Benefits" value={offer.benefits} />}
 
                 {offer.additionalTerms && (
-                    <TextSection
-                        title="Additional terms"
-                        value={
-                            offer.additionalTerms
-                        }
-                    />
+                    <TextSection title="Additional terms" value={offer.additionalTerms} />
                 )}
 
                 {offer.rejectionReason && (
-                    <ReasonSection
-                        title="Rejection reason"
-                        value={
-                            offer.rejectionReason
-                        }
-                    />
+                    <ReasonSection title="Rejection reason" value={offer.rejectionReason} />
                 )}
 
                 {offer.declineReason && (
-                    <ReasonSection
-                        title="Decline reason"
-                        value={
-                            offer.declineReason
-                        }
-                    />
+                    <ReasonSection title="Decline reason" value={offer.declineReason} />
                 )}
 
                 {offer.withdrawalReason && (
-                    <ReasonSection
-                        title="Withdrawal reason"
-                        value={
-                            offer.withdrawalReason
-                        }
-                    />
+                    <ReasonSection title="Withdrawal reason" value={offer.withdrawalReason} />
                 )}
 
                 <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-4">
                     <p className="text-xs text-muted-foreground">
-                        Last lifecycle event:{" "}
-                        {formatDateTime(
-                            getOfferCurrentEvent(
-                                offer,
-                            ),
-                        )}
+                        Last lifecycle event: {formatDateTime(getOfferCurrentEvent(offer))}
                     </p>
 
                     <div className="flex flex-wrap gap-2">
-                        {canManage &&
-                            offer.status ===
-                                "DRAFT" && (
-                                <>
-                                    <EditOfferDialog
-                                        tenantId={
-                                            tenantId
-                                        }
-                                        offer={
-                                            offer
-                                        }
-                                    />
+                        {canManage && offer.status === "DRAFT" && (
+                            <>
+                                <EditOfferDialog tenantId={tenantId} offer={offer} />
 
-                                    <DeleteOfferDialog
-                                        loading={
-                                            deleteMutation
-                                                .isPending
-                                        }
-                                        onConfirm={async () => {
-                                            await deleteMutation
-                                                .mutateAsync();
-                                        }}
-                                    />
+                                <DeleteOfferDialog
+                                    loading={deleteMutation.isPending}
+                                    onConfirm={async () => {
+                                        await deleteMutation.mutateAsync();
+                                    }}
+                                />
 
-                                    <ConfirmOfferActionDialog
-                                        title="Submit offer for approval?"
-                                        description="The draft will become read-only while it is awaiting approval."
-                                        confirmLabel="Submit for approval"
-                                        loading={
-                                            simpleMutation
-                                                .isPending
-                                        }
-                                        onConfirm={async () => {
-                                            await simpleMutation
-                                                .mutateAsync(
-                                                    "submit",
-                                                );
-                                        }}
-                                        trigger={
-                                            <Button size="sm">
-                                                <Upload className="mr-2 size-4" />
+                                <ConfirmOfferActionDialog
+                                    title="Submit offer for approval?"
+                                    description="The draft will become read-only while it is awaiting approval."
+                                    confirmLabel="Submit for approval"
+                                    loading={simpleMutation.isPending}
+                                    onConfirm={async () => {
+                                        await simpleMutation.mutateAsync("submit");
+                                    }}
+                                    trigger={
+                                        <Button size="sm">
+                                            <Upload className="mr-2 size-4" />
+                                            Submit
+                                        </Button>
+                                    }
+                                />
+                            </>
+                        )}
 
-                                                Submit
-                                            </Button>
-                                        }
-                                    />
-                                </>
-                            )}
+                        {canApprove && offer.status === "PENDING_APPROVAL" && (
+                            <>
+                                <ConfirmOfferActionDialog
+                                    title="Approve offer?"
+                                    description="The recruiter will be able to send this offer to the candidate."
+                                    confirmLabel="Approve"
+                                    loading={simpleMutation.isPending}
+                                    onConfirm={async () => {
+                                        await simpleMutation.mutateAsync("approve");
+                                    }}
+                                    trigger={
+                                        <Button size="sm">
+                                            <Check className="mr-2 size-4" />
+                                            Approve
+                                        </Button>
+                                    }
+                                />
 
-                        {canApprove &&
-                            offer.status ===
-                                "PENDING_APPROVAL" && (
-                                <>
-                                    <ConfirmOfferActionDialog
-                                        title="Approve offer?"
-                                        description="The recruiter will be able to send this offer to the candidate."
-                                        confirmLabel="Approve"
-                                        loading={
-                                            simpleMutation
-                                                .isPending
-                                        }
-                                        onConfirm={async () => {
-                                            await simpleMutation
-                                                .mutateAsync(
-                                                    "approve",
-                                                );
-                                        }}
-                                        trigger={
-                                            <Button size="sm">
-                                                <Check className="mr-2 size-4" />
+                                <RejectOfferDialog
+                                    loading={rejectMutation.isPending}
+                                    onConfirm={async (reason) => {
+                                        await rejectMutation.mutateAsync(reason);
+                                    }}
+                                />
+                            </>
+                        )}
 
-                                                Approve
-                                            </Button>
-                                        }
-                                    />
+                        {canManage && offer.status === "APPROVED" && (
+                            <>
+                                <ConfirmOfferActionDialog
+                                    title="Mark offer as sent?"
+                                    description="Confirm that this approved offer has been sent to the candidate."
+                                    confirmLabel="Mark as sent"
+                                    loading={simpleMutation.isPending}
+                                    onConfirm={async () => {
+                                        await simpleMutation.mutateAsync("send");
+                                    }}
+                                    trigger={
+                                        <Button size="sm">
+                                            <Send className="mr-2 size-4" />
+                                            Mark as sent
+                                        </Button>
+                                    }
+                                />
 
-                                    <RejectOfferDialog
-                                        loading={
-                                            rejectMutation
-                                                .isPending
-                                        }
-                                        onConfirm={async (
-                                            reason,
-                                        ) => {
-                                            await rejectMutation
-                                                .mutateAsync(
-                                                    reason,
-                                                );
-                                        }}
-                                    />
-                                </>
-                            )}
+                                <WithdrawOfferDialog
+                                    loading={withdrawMutation.isPending}
+                                    onConfirm={async (reason) => {
+                                        await withdrawMutation.mutateAsync(reason);
+                                    }}
+                                />
+                            </>
+                        )}
 
-                        {canManage &&
-                            offer.status ===
-                                "APPROVED" && (
-                                <>
-                                    <ConfirmOfferActionDialog
-                                        title="Mark offer as sent?"
-                                        description="Confirm that this approved offer has been sent to the candidate."
-                                        confirmLabel="Mark as sent"
-                                        loading={
-                                            simpleMutation
-                                                .isPending
-                                        }
-                                        onConfirm={async () => {
-                                            await simpleMutation
-                                                .mutateAsync(
-                                                    "send",
-                                                );
-                                        }}
-                                        trigger={
-                                            <Button size="sm">
-                                                <Send className="mr-2 size-4" />
+                        {canManage && offer.status === "SENT" && (
+                            <>
+                                <ConfirmOfferActionDialog
+                                    title="Accept offer and hire candidate?"
+                                    description="This will mark the offer as accepted and move the application to Hired. This should only be used after the candidate has accepted the offer."
+                                    confirmLabel="Accept & hire"
+                                    loading={simpleMutation.isPending}
+                                    onConfirm={async () => {
+                                        await simpleMutation.mutateAsync("accept");
+                                    }}
+                                    trigger={
+                                        <Button size="sm">
+                                            <CheckCircle2 className="mr-2 size-4" />
+                                            Accept & hire
+                                        </Button>
+                                    }
+                                />
 
-                                                Mark as sent
-                                            </Button>
-                                        }
-                                    />
+                                <DeclineOfferDialog
+                                    loading={declineMutation.isPending}
+                                    onConfirm={async (reason) => {
+                                        await declineMutation.mutateAsync(reason);
+                                    }}
+                                />
 
-                                    <WithdrawOfferDialog
-                                        loading={
-                                            withdrawMutation
-                                                .isPending
-                                        }
-                                        onConfirm={async (
-                                            reason,
-                                        ) => {
-                                            await withdrawMutation
-                                                .mutateAsync(
-                                                    reason,
-                                                );
-                                        }}
-                                    />
-                                </>
-                            )}
-
-                        {canManage &&
-                            offer.status ===
-                                "SENT" && (
-                                <>
-                                    <ConfirmOfferActionDialog
-                                        title="Accept offer and hire candidate?"
-                                        description="This will mark the offer as accepted and move the application to Hired. This should only be used after the candidate has accepted the offer."
-                                        confirmLabel="Accept & hire"
-                                        loading={
-                                            simpleMutation
-                                                .isPending
-                                        }
-                                        onConfirm={async () => {
-                                            await simpleMutation
-                                                .mutateAsync(
-                                                    "accept",
-                                                );
-                                        }}
-                                        trigger={
-                                            <Button size="sm">
-                                                <CheckCircle2 className="mr-2 size-4" />
-
-                                                Accept & hire
-                                            </Button>
-                                        }
-                                    />
-
-                                    <DeclineOfferDialog
-                                        loading={
-                                            declineMutation
-                                                .isPending
-                                        }
-                                        onConfirm={async (
-                                            reason,
-                                        ) => {
-                                            await declineMutation
-                                                .mutateAsync(
-                                                    reason,
-                                                );
-                                        }}
-                                    />
-
-                                    <WithdrawOfferDialog
-                                        loading={
-                                            withdrawMutation
-                                                .isPending
-                                        }
-                                        onConfirm={async (
-                                            reason,
-                                        ) => {
-                                            await withdrawMutation
-                                                .mutateAsync(
-                                                    reason,
-                                                );
-                                        }}
-                                    />
-                                </>
-                            )}
+                                <WithdrawOfferDialog
+                                    loading={withdrawMutation.isPending}
+                                    onConfirm={async (reason) => {
+                                        await withdrawMutation.mutateAsync(reason);
+                                    }}
+                                />
+                            </>
+                        )}
                     </div>
                 </div>
             </CardContent>
@@ -624,72 +357,38 @@ export function OfferCard({
     );
 }
 
-function Detail({
-    label,
-    value,
-}: {
-    label: string;
-    value: string;
-}) {
+function Detail({ label, value }: { label: string; value: string }) {
     return (
         <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {label}
             </p>
 
-            <p className="mt-1 text-sm font-medium">
-                {value}
-            </p>
+            <p className="mt-1 text-sm font-medium">{value}</p>
         </div>
     );
 }
 
-function TextSection({
-    title,
-    value,
-}: {
-    title: string;
-    value: string;
-}) {
+function TextSection({ title, value }: { title: string; value: string }) {
     return (
         <div>
-            <h4 className="text-sm font-semibold">
-                {title}
-            </h4>
+            <h4 className="text-sm font-semibold">{title}</h4>
 
-            <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
-                {value}
-            </p>
+            <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{value}</p>
         </div>
     );
 }
 
-function ReasonSection({
-    title,
-    value,
-}: {
-    title: string;
-    value: string;
-}) {
+function ReasonSection({ title, value }: { title: string; value: string }) {
     return (
         <div className="rounded-md border p-4">
-            <p className="text-sm font-semibold">
-                {title}
-            </p>
+            <p className="text-sm font-semibold">{title}</p>
 
-            <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
-                {value}
-            </p>
+            <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{value}</p>
         </div>
     );
 }
 
-function showError(
-    error: unknown,
-) {
-    toast.error(
-        error instanceof Error
-            ? error.message
-            : "Offer action failed",
-    );
+function showError(error: unknown) {
+    toast.error(error instanceof Error ? error.message : "Offer action failed");
 }

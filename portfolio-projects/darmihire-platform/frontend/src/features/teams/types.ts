@@ -1,27 +1,27 @@
 export type Team = {
-  id: string;
-  name: string;
-  description: string | null;
+    id: string;
+    name: string;
+    description: string | null;
 };
 
 export type CreateTeamRequest = {
-  name: string;
-  description?: string | null;
+    name: string;
+    description?: string | null;
 };
 
 export type UpdateTeamRequest = {
-  name: string;
-  description?: string | null;
+    name: string;
+    description?: string | null;
 };
 
 export type TeamMember = {
-  tenantUserId: string;
-  userId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
+    tenantUserId: string;
+    userId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
 };
 
 export type AddTeamMemberRequest = {
-  tenantUserId: string;
+    tenantUserId: string;
 };

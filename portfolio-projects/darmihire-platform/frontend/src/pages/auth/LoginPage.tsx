@@ -1,14 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-    ArrowRight,
-    Loader2,
-} from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import {
-    Link,
-    useLocation,
-    useNavigate,
-} from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/errors";
@@ -20,13 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login } from "@/features/auth/api";
-import {
-    type LoginFormData,
-    loginSchema,
-} from "@/features/auth/schemas";
+import { type LoginFormData, loginSchema } from "@/features/auth/schemas";
 import { getMyTenants } from "@/features/tenants/api";
 
-import { getTenantId, setTenantId,setTokens } from "@/utils/session";
+import { getTenantId, setTenantId, setTokens } from "@/utils/session";
 
 type LocationState = {
     from?: string;
@@ -41,10 +31,7 @@ export default function LoginPage() {
         handleSubmit,
         setError,
 
-        formState: {
-            errors,
-            isSubmitting,
-        },
+        formState: { errors, isSubmitting },
     } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
 
@@ -54,9 +41,7 @@ export default function LoginPage() {
         },
     });
 
-    async function onSubmit(
-        data: LoginFormData,
-    ) {
+    async function onSubmit(data: LoginFormData) {
         try {
             const response = await login({
                 email: data.email,
@@ -91,9 +76,7 @@ export default function LoginPage() {
                 }
             }
 
-            toast.success(
-                "Welcome back to DarmiHire.",
-            );
+            toast.success("Welcome back to DarmiHire.");
 
             /*
              * User has a workspace.
@@ -113,14 +96,9 @@ export default function LoginPage() {
                 replace: true,
             });
 
-            toast.success(
-                "Welcome back to DarmiHire.",
-            );
+            toast.success("Welcome back to DarmiHire.");
 
-            const state =
-                location.state as
-                | LocationState
-                | null;
+            const state = location.state as LocationState | null;
 
             const previousRoute = state?.from;
             const validPreviousRoute =
@@ -149,14 +127,10 @@ export default function LoginPage() {
                 replace: true,
             });
         } catch (error) {
-            if (
-                error instanceof ApiError &&
-                error.status === 401
-            ) {
+            if (error instanceof ApiError && error.status === 401) {
                 setError("root", {
                     type: "server",
-                    message:
-                        "Invalid email or password.",
+                    message: "Invalid email or password.",
                 });
 
                 return;
@@ -165,8 +139,7 @@ export default function LoginPage() {
             if (error instanceof ApiError) {
                 setError("root", {
                     type: "server",
-                    message:
-                        error.message,
+                    message: error.message,
                 });
 
                 return;
@@ -174,23 +147,15 @@ export default function LoginPage() {
 
             setError("root", {
                 type: "server",
-                message:
-                    "Unable to connect to DarmiHire. Please try again.",
+                message: "Unable to connect to DarmiHire. Please try again.",
             });
         }
     }
 
     return (
         <AuthLayout>
-            <AuthCard
-                title="Welcome back"
-                description="Sign in to your DarmiHire workspace."
-            >
-                <form
-                    className="space-y-5"
-                    onSubmit={handleSubmit(onSubmit)}
-                    noValidate
-                >
+            <AuthCard title="Welcome back" description="Sign in to your DarmiHire workspace.">
+                <form className="space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
                     {errors.root?.message && (
                         <div
                             className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
@@ -201,9 +166,7 @@ export default function LoginPage() {
                     )}
 
                     <div className="space-y-2">
-                        <Label htmlFor="email">
-                            Email address
-                        </Label>
+                        <Label htmlFor="email">Email address</Label>
 
                         <Input
                             id="email"
@@ -211,33 +174,19 @@ export default function LoginPage() {
                             autoComplete="email"
                             placeholder="you@company.com"
                             disabled={isSubmitting}
-                            aria-invalid={
-                                errors.email
-                                    ? "true"
-                                    : "false"
-                            }
-                            aria-describedby={
-                                errors.email
-                                    ? "email-error"
-                                    : undefined
-                            }
+                            aria-invalid={errors.email ? "true" : "false"}
+                            aria-describedby={errors.email ? "email-error" : undefined}
                             {...register("email")}
                         />
 
                         <div id="email-error">
-                            <FormError
-                                message={
-                                    errors.email?.message
-                                }
-                            />
+                            <FormError message={errors.email?.message} />
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <Label htmlFor="password">
-                                Password
-                            </Label>
+                            <Label htmlFor="password">Password</Label>
 
                             <button
                                 type="button"
@@ -252,33 +201,17 @@ export default function LoginPage() {
                             autoComplete="current-password"
                             placeholder="Enter your password"
                             disabled={isSubmitting}
-                            aria-invalid={
-                                errors.password
-                                    ? "true"
-                                    : "false"
-                            }
-                            aria-describedby={
-                                errors.password
-                                    ? "password-error"
-                                    : undefined
-                            }
+                            aria-invalid={errors.password ? "true" : "false"}
+                            aria-describedby={errors.password ? "password-error" : undefined}
                             {...register("password")}
                         />
 
                         <div id="password-error">
-                            <FormError
-                                message={
-                                    errors.password?.message
-                                }
-                            />
+                            <FormError message={errors.password?.message} />
                         </div>
                     </div>
 
-                    <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={isSubmitting}
-                    >
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
                         {isSubmitting ? (
                             <>
                                 <Loader2 className="animate-spin" />
@@ -294,10 +227,7 @@ export default function LoginPage() {
 
                     <div className="text-center text-sm text-muted-foreground">
                         Don't have an account?{" "}
-                        <Link
-                            to="/register"
-                            className="font-medium text-primary hover:underline"
-                        >
+                        <Link to="/register" className="font-medium text-primary hover:underline">
                             Create account
                         </Link>
                     </div>

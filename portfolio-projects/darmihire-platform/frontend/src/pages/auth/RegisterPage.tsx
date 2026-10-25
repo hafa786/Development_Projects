@@ -16,252 +16,238 @@ import { registerUser } from "@/features/auth/api";
 import { type RegisterFormData, registerSchema } from "@/features/auth/schemas";
 
 export default function RegisterPage() {
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setError,
+    const {
+        register,
+        handleSubmit,
+        watch,
+        setError,
 
-    formState: { errors, isSubmitting },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+        formState: { errors, isSubmitting },
+    } = useForm<RegisterFormData>({
+        resolver: zodResolver(registerSchema),
 
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
+        defaultValues: {
+            firstName: "",
+            lastName: "",
+            email: "",
+            password: "",
+            confirmPassword: "",
+        },
+    });
 
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const password = watch("password");
+    // eslint-disable-next-line react-hooks/incompatible-library
+    const password = watch("password");
 
-  const confirmPassword = watch("confirmPassword");
+    const confirmPassword = watch("confirmPassword");
 
-  const passwordsMatch =
-    confirmPassword.length > 0 && password === confirmPassword;
+    const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
 
-  async function onSubmit(data: RegisterFormData) {
-    try {
-      await registerUser({
-        firstName: data.firstName,
+    async function onSubmit(data: RegisterFormData) {
+        try {
+            await registerUser({
+                firstName: data.firstName,
 
-        lastName: data.lastName,
+                lastName: data.lastName,
 
-        email: data.email,
+                email: data.email,
 
-        password: data.password,
-      });
+                password: data.password,
+            });
 
-      toast.success("Account created successfully. Please sign in.");
+            toast.success("Account created successfully. Please sign in.");
 
-      navigate("/login", {
-        replace: true,
-      });
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 409) {
-        setError("email", {
-          type: "server",
-          message: "An account with this email already exists.",
-        });
+            navigate("/login", {
+                replace: true,
+            });
+        } catch (error) {
+            if (error instanceof ApiError && error.status === 409) {
+                setError("email", {
+                    type: "server",
+                    message: "An account with this email already exists.",
+                });
 
-        return;
-      }
+                return;
+            }
 
-      if (error instanceof ApiError) {
-        setError("root", {
-          type: "server",
-          message: error.message,
-        });
+            if (error instanceof ApiError) {
+                setError("root", {
+                    type: "server",
+                    message: error.message,
+                });
 
-        return;
-      }
+                return;
+            }
 
-      setError("root", {
-        type: "server",
-        message: "Unable to connect to DarmiHire. Please try again.",
-      });
+            setError("root", {
+                type: "server",
+                message: "Unable to connect to DarmiHire. Please try again.",
+            });
+        }
     }
-  }
 
-  return (
-    <AuthLayout>
-      <AuthCard
-        title="Create your account"
-        description="Get started with DarmiHire and build your hiring workspace."
-      >
-        <form
-          className="space-y-5"
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-        >
-          {errors.root?.message && (
-            <div
-              className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-              role="alert"
+    return (
+        <AuthLayout>
+            <AuthCard
+                title="Create your account"
+                description="Get started with DarmiHire and build your hiring workspace."
             >
-              {errors.root.message}
-            </div>
-          )}
+                <form className="space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
+                    {errors.root?.message && (
+                        <div
+                            className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                            role="alert"
+                        >
+                            {errors.root.message}
+                        </div>
+                    )}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">First name</Label>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="firstName">First name</Label>
 
-              <Input
-                id="firstName"
-                type="text"
-                autoComplete="given-name"
-                placeholder="Hafiz"
-                disabled={isSubmitting}
-                aria-invalid={errors.firstName ? "true" : "false"}
-                aria-describedby={
-                  errors.firstName ? "firstName-error" : undefined
-                }
-                {...register("firstName")}
-              />
+                            <Input
+                                id="firstName"
+                                type="text"
+                                autoComplete="given-name"
+                                placeholder="Hafiz"
+                                disabled={isSubmitting}
+                                aria-invalid={errors.firstName ? "true" : "false"}
+                                aria-describedby={errors.firstName ? "firstName-error" : undefined}
+                                {...register("firstName")}
+                            />
 
-              <div id="firstName-error">
-                <FormError message={errors.firstName?.message} />
-              </div>
-            </div>
+                            <div id="firstName-error">
+                                <FormError message={errors.firstName?.message} />
+                            </div>
+                        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Last name</Label>
+                        <div className="space-y-2">
+                            <Label htmlFor="lastName">Last name</Label>
 
-              <Input
-                id="lastName"
-                type="text"
-                autoComplete="family-name"
-                placeholder="Sikandar"
-                disabled={isSubmitting}
-                aria-invalid={errors.lastName ? "true" : "false"}
-                aria-describedby={
-                  errors.lastName ? "lastName-error" : undefined
-                }
-                {...register("lastName")}
-              />
+                            <Input
+                                id="lastName"
+                                type="text"
+                                autoComplete="family-name"
+                                placeholder="Sikandar"
+                                disabled={isSubmitting}
+                                aria-invalid={errors.lastName ? "true" : "false"}
+                                aria-describedby={errors.lastName ? "lastName-error" : undefined}
+                                {...register("lastName")}
+                            />
 
-              <div id="lastName-error">
-                <FormError message={errors.lastName?.message} />
-              </div>
-            </div>
-          </div>
+                            <div id="lastName-error">
+                                <FormError message={errors.lastName?.message} />
+                            </div>
+                        </div>
+                    </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Work email</Label>
+                    <div className="space-y-2">
+                        <Label htmlFor="email">Work email</Label>
 
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@company.com"
-              disabled={isSubmitting}
-              aria-invalid={errors.email ? "true" : "false"}
-              aria-describedby={
-                errors.email ? "register-email-error" : undefined
-              }
-              {...register("email")}
-            />
+                        <Input
+                            id="email"
+                            type="email"
+                            autoComplete="email"
+                            placeholder="you@company.com"
+                            disabled={isSubmitting}
+                            aria-invalid={errors.email ? "true" : "false"}
+                            aria-describedby={errors.email ? "register-email-error" : undefined}
+                            {...register("email")}
+                        />
 
-            <div id="register-email-error">
-              <FormError message={errors.email?.message} />
-            </div>
+                        <div id="register-email-error">
+                            <FormError message={errors.email?.message} />
+                        </div>
 
-            {!errors.email && (
-              <p className="text-xs text-muted-foreground">
-                You'll use this email to sign in to DarmiHire.
-              </p>
-            )}
-          </div>
+                        {!errors.email && (
+                            <p className="text-xs text-muted-foreground">
+                                You'll use this email to sign in to DarmiHire.
+                            </p>
+                        )}
+                    </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+                    <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
 
-            <PasswordInput
-              id="password"
-              autoComplete="new-password"
-              placeholder="Create a password"
-              disabled={isSubmitting}
-              aria-invalid={errors.password ? "true" : "false"}
-              aria-describedby={
-                errors.password ? "register-password-error" : undefined
-              }
-              {...register("password")}
-            />
+                        <PasswordInput
+                            id="password"
+                            autoComplete="new-password"
+                            placeholder="Create a password"
+                            disabled={isSubmitting}
+                            aria-invalid={errors.password ? "true" : "false"}
+                            aria-describedby={
+                                errors.password ? "register-password-error" : undefined
+                            }
+                            {...register("password")}
+                        />
 
-            <div id="register-password-error">
-              <FormError message={errors.password?.message} />
-            </div>
+                        <div id="register-password-error">
+                            <FormError message={errors.password?.message} />
+                        </div>
 
-            {!errors.password && (
-              <p className="text-xs text-muted-foreground">
-                Use at least 8 characters.
-              </p>
-            )}
-          </div>
+                        {!errors.password && (
+                            <p className="text-xs text-muted-foreground">
+                                Use at least 8 characters.
+                            </p>
+                        )}
+                    </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm password</Label>
+                    <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">Confirm password</Label>
 
-            <PasswordInput
-              id="confirmPassword"
-              autoComplete="new-password"
-              placeholder="Enter your password again"
-              disabled={isSubmitting}
-              aria-invalid={errors.confirmPassword ? "true" : "false"}
-              aria-describedby={
-                errors.confirmPassword ? "confirm-password-error" : undefined
-              }
-              {...register("confirmPassword")}
-            />
+                        <PasswordInput
+                            id="confirmPassword"
+                            autoComplete="new-password"
+                            placeholder="Enter your password again"
+                            disabled={isSubmitting}
+                            aria-invalid={errors.confirmPassword ? "true" : "false"}
+                            aria-describedby={
+                                errors.confirmPassword ? "confirm-password-error" : undefined
+                            }
+                            {...register("confirmPassword")}
+                        />
 
-            <div id="confirm-password-error">
-              <FormError message={errors.confirmPassword?.message} />
-            </div>
+                        <div id="confirm-password-error">
+                            <FormError message={errors.confirmPassword?.message} />
+                        </div>
 
-            {!errors.confirmPassword && passwordsMatch && (
-              <p className="flex items-center gap-1 text-xs text-green-600">
-                <Check className="size-3" />
-                Passwords match.
-              </p>
-            )}
-          </div>
+                        {!errors.confirmPassword && passwordsMatch && (
+                            <p className="flex items-center gap-1 text-xs text-green-600">
+                                <Check className="size-3" />
+                                Passwords match.
+                            </p>
+                        )}
+                    </div>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <Loader2 className="animate-spin" />
-                Creating account...
-              </>
-            ) : (
-              <>
-                Create account
-                <ArrowRight />
-              </>
-            )}
-          </Button>
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="animate-spin" />
+                                Creating account...
+                            </>
+                        ) : (
+                            <>
+                                Create account
+                                <ArrowRight />
+                            </>
+                        )}
+                    </Button>
 
-          <p className="text-center text-xs leading-relaxed text-muted-foreground">
-            By creating an account, you agree to DarmiHire's terms of service
-            and privacy policy.
-          </p>
+                    <p className="text-center text-xs leading-relaxed text-muted-foreground">
+                        By creating an account, you agree to DarmiHire's terms of service and
+                        privacy policy.
+                    </p>
 
-          <div className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="font-medium text-primary hover:underline"
-            >
-              Sign in
-            </Link>
-          </div>
-        </form>
-      </AuthCard>
-    </AuthLayout>
-  );
+                    <div className="text-center text-sm text-muted-foreground">
+                        Already have an account?{" "}
+                        <Link to="/login" className="font-medium text-primary hover:underline">
+                            Sign in
+                        </Link>
+                    </div>
+                </form>
+            </AuthCard>
+        </AuthLayout>
+    );
 }

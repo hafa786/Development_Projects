@@ -1,50 +1,37 @@
-import {
-  BriefcaseBusiness,
-  CalendarDays,
-  UserCheck,
-  Users,
-} from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, UserCheck, Users } from "lucide-react";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatCard } from "@/components/common/StatCard";
 
 export default function DashboardPage() {
-  return (
-    <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
-      <PageHeader
-        title="Dashboard"
-        description="Welcome to your DarmiHire workspace."
-      />
+    return (
+        <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+            <PageHeader title="Dashboard" description="Welcome to your DarmiHire workspace." />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Open Jobs"
-          value={0}
-          description="Active job openings"
-          icon={BriefcaseBusiness}
-        />
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard
+                    title="Open Jobs"
+                    value={0}
+                    description="Active job openings"
+                    icon={BriefcaseBusiness}
+                />
 
-        <StatCard
-          title="Candidates"
-          value={0}
-          description="Candidates in your pipeline"
-          icon={Users}
-        />
+                <StatCard
+                    title="Candidates"
+                    value={0}
+                    description="Candidates in your pipeline"
+                    icon={Users}
+                />
 
-        <StatCard
-          title="Interviews"
-          value={0}
-          description="Upcoming interviews"
-          icon={CalendarDays}
-        />
+                <StatCard
+                    title="Interviews"
+                    value={0}
+                    description="Upcoming interviews"
+                    icon={CalendarDays}
+                />
 
-        <StatCard
-          title="Hires"
-          value={0}
-          description="Successful hires"
-          icon={UserCheck}
-        />
-      </section>
-    </div>
-  );
+                <StatCard title="Hires" value={0} description="Successful hires" icon={UserCheck} />
+            </section>
+        </div>
+    );
 }

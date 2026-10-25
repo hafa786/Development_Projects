@@ -8,17 +8,9 @@ export type OfferStatus =
     | "DECLINED"
     | "WITHDRAWN";
 
-export type SalaryPeriod =
-    | "HOURLY"
-    | "MONTHLY"
-    | "ANNUAL";
+export type SalaryPeriod = "HOURLY" | "MONTHLY" | "ANNUAL";
 
-export type EmploymentType =
-    | "FULL_TIME"
-    | "PART_TIME"
-    | "CONTRACT"
-    | "TEMPORARY"
-    | "INTERNSHIP";
+export type EmploymentType = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "TEMPORARY" | "INTERNSHIP";
 
 export interface Offer {
     id: string;
@@ -87,5 +79,4 @@ export interface CreateOfferRequest {
     additionalTerms: string | null;
 }
 
-export type UpdateOfferRequest =
-    Omit<CreateOfferRequest, "applicationId">;
+export type UpdateOfferRequest = Omit<CreateOfferRequest, "applicationId">;

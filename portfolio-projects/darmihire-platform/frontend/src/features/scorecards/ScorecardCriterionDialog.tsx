@@ -34,11 +34,7 @@ type Props = {
     criterion?: ScorecardCriterion;
 };
 
-export function ScorecardCriterionDialog({
-    tenantId,
-    template,
-    criterion,
-}: Props) {
+export function ScorecardCriterionDialog({ tenantId, template, criterion }: Props) {
     const queryClient = useQueryClient();
 
     const editing = Boolean(criterion);
@@ -168,9 +164,7 @@ export function ScorecardCriterionDialog({
             <DialogContent className="sm:max-w-lg">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
-                        <DialogTitle>
-                            {editing ? "Edit criterion" : "Add criterion"}
-                        </DialogTitle>
+                        <DialogTitle>{editing ? "Edit criterion" : "Add criterion"}</DialogTitle>
 
                         <DialogDescription>
                             Define what interviewers should evaluate.
@@ -244,11 +238,7 @@ export function ScorecardCriterionDialog({
                     </div>
 
                     <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setOpen(false)}
-                        >
+                        <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                             Cancel
                         </Button>
 
@@ -256,8 +246,8 @@ export function ScorecardCriterionDialog({
                             {mutation.isPending
                                 ? "Saving..."
                                 : editing
-                                    ? "Save changes"
-                                    : "Add criterion"}
+                                  ? "Save changes"
+                                  : "Add criterion"}
                         </Button>
                     </DialogFooter>
                 </form>

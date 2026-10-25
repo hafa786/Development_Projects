@@ -1,56 +1,56 @@
 export type CandidateSource =
-  | "CAREERS_PAGE"
-  | "LINKEDIN"
-  | "REFERRAL"
-  | "RECRUITER"
-  | "AGENCY"
-  | "JOB_BOARD"
-  | "MANUAL"
-  | "OTHER";
+    | "CAREERS_PAGE"
+    | "LINKEDIN"
+    | "REFERRAL"
+    | "RECRUITER"
+    | "AGENCY"
+    | "JOB_BOARD"
+    | "MANUAL"
+    | "OTHER";
 
 export type Candidate = {
-  id: string;
+    id: string;
 
-  firstName: string;
-  lastName: string;
-  fullName: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
 
-  email: string;
-  phone: string | null;
+    email: string;
+    phone: string | null;
 
-  location: string | null;
+    location: string | null;
 
-  linkedinUrl: string | null;
-  portfolioUrl: string | null;
+    linkedinUrl: string | null;
+    portfolioUrl: string | null;
 
-  source: CandidateSource;
+    source: CandidateSource;
 
-  resumeFileName: string | null;
-  resumeUrl: string | null;
+    resumeFileName: string | null;
+    resumeUrl: string | null;
 
-  notes: string | null;
+    notes: string | null;
 
-  createdAt: string;
-  updatedAt: string;
+    createdAt: string;
+    updatedAt: string;
 };
 
 export type CreateCandidateRequest = {
-  firstName: string;
-  lastName: string;
-  email: string;
+    firstName: string;
+    lastName: string;
+    email: string;
 
-  phone?: string | null;
-  location?: string | null;
+    phone?: string | null;
+    location?: string | null;
 
-  linkedinUrl?: string | null;
-  portfolioUrl?: string | null;
+    linkedinUrl?: string | null;
+    portfolioUrl?: string | null;
 
-  source?: CandidateSource;
+    source?: CandidateSource;
 
-  resumeFileName?: string | null;
-  resumeUrl?: string | null;
+    resumeFileName?: string | null;
+    resumeUrl?: string | null;
 
-  notes?: string | null;
+    notes?: string | null;
 };
 
 export type UpdateCandidateRequest = CreateCandidateRequest;

@@ -1,27 +1,27 @@
 export type LoginRequest = {
-  email: string;
-  password: string;
+    email: string;
+    password: string;
 };
 
 export type RegisterRequest = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
 };
 
 export type AuthResponse = {
-  accessToken: string;
-  refreshToken: string;
+    accessToken: string;
+    refreshToken: string;
 };
 
 export type CurrentUser = {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
 };
 
 export type LogoutRequest = {
-  refreshToken: string;
+    refreshToken: string;
 };

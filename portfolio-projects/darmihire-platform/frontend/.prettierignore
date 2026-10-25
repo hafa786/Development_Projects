@@ -1,0 +1,15 @@
+node_modules
+dist
+build
+coverage
+
+.env
+.env.*
+!.env.example
+
+package-lock.json
+
+*.min.js
+*.min.css
+
+public

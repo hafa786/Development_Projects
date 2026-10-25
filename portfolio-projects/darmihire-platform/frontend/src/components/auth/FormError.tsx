@@ -1,20 +1,15 @@
 type FormErrorProps = {
-  message?: string;
+    message?: string;
 };
 
-export function FormError({
-  message,
-}: FormErrorProps) {
-  if (!message) {
-    return null;
-  }
+export function FormError({ message }: FormErrorProps) {
+    if (!message) {
+        return null;
+    }
 
-  return (
-    <p
-      className="text-xs text-destructive"
-      role="alert"
-    >
-      {message}
-    </p>
-  );
+    return (
+        <p className="text-xs text-destructive" role="alert">
+            {message}
+        </p>
+    );
 }

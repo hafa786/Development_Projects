@@ -8,263 +8,175 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 
-import {
-  candidateSchema,
-  type CandidateFormValues,
-} from "./schemas";
+import { candidateSchema, type CandidateFormValues } from "./schemas";
 
 import type { Candidate } from "./types";
 
 type CandidateFormProps = {
-  candidate?: Candidate | null;
-  submitting?: boolean;
-  onSubmit: (values: CandidateFormValues) => void;
-  onCancel: () => void;
+    candidate?: Candidate | null;
+    submitting?: boolean;
+    onSubmit: (values: CandidateFormValues) => void;
+    onCancel: () => void;
 };
 
 export function CandidateForm({
-  candidate,
-  submitting = false,
-  onSubmit,
-  onCancel,
+    candidate,
+    submitting = false,
+    onSubmit,
+    onCancel,
 }: CandidateFormProps) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<CandidateFormValues>({
-    resolver: zodResolver(candidateSchema),
+    const {
+        register,
+        handleSubmit,
+        reset,
+        setValue,
+        watch,
+        formState: { errors },
+    } = useForm<CandidateFormValues>({
+        resolver: zodResolver(candidateSchema),
 
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      location: "",
-      linkedinUrl: "",
-      portfolioUrl: "",
-      source: "MANUAL",
-      notes: "",
-    },
-  });
-
-  useEffect(() => {
-    reset({
-      firstName: candidate?.firstName ?? "",
-      lastName: candidate?.lastName ?? "",
-      email: candidate?.email ?? "",
-      phone: candidate?.phone ?? "",
-      location: candidate?.location ?? "",
-      linkedinUrl: candidate?.linkedinUrl ?? "",
-      portfolioUrl: candidate?.portfolioUrl ?? "",
-      source: candidate?.source ?? "MANUAL",
-      notes: candidate?.notes ?? "",
+        defaultValues: {
+            firstName: "",
+            lastName: "",
+            email: "",
+            phone: "",
+            location: "",
+            linkedinUrl: "",
+            portfolioUrl: "",
+            source: "MANUAL",
+            notes: "",
+        },
     });
-  }, [candidate, reset]);
 
-  const source = watch("source");
+    useEffect(() => {
+        reset({
+            firstName: candidate?.firstName ?? "",
+            lastName: candidate?.lastName ?? "",
+            email: candidate?.email ?? "",
+            phone: candidate?.phone ?? "",
+            location: candidate?.location ?? "",
+            linkedinUrl: candidate?.linkedinUrl ?? "",
+            portfolioUrl: candidate?.portfolioUrl ?? "",
+            source: candidate?.source ?? "MANUAL",
+            notes: candidate?.notes ?? "",
+        });
+    }, [candidate, reset]);
 
-  return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6"
-    >
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field
-          label="First name"
-          error={errors.firstName?.message}
-        >
-          <Input
-            placeholder="Emma"
-            {...register("firstName")}
-          />
-        </Field>
+    const source = watch("source");
 
-        <Field
-          label="Last name"
-          error={errors.lastName?.message}
-        >
-          <Input
-            placeholder="Anderson"
-            {...register("lastName")}
-          />
-        </Field>
-      </div>
+    return (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="First name" error={errors.firstName?.message}>
+                    <Input placeholder="Emma" {...register("firstName")} />
+                </Field>
 
-      <Field
-        label="Email"
-        error={errors.email?.message}
-      >
-        <Input
-          type="email"
-          placeholder="emma@example.com"
-          {...register("email")}
-        />
-      </Field>
+                <Field label="Last name" error={errors.lastName?.message}>
+                    <Input placeholder="Anderson" {...register("lastName")} />
+                </Field>
+            </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field
-          label="Phone"
-          error={errors.phone?.message}
-        >
-          <Input
-            placeholder="+358 40 123 4567"
-            {...register("phone")}
-          />
-        </Field>
+            <Field label="Email" error={errors.email?.message}>
+                <Input type="email" placeholder="emma@example.com" {...register("email")} />
+            </Field>
 
-        <Field
-          label="Location"
-          error={errors.location?.message}
-        >
-          <Input
-            placeholder="Helsinki, Finland"
-            {...register("location")}
-          />
-        </Field>
-      </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Phone" error={errors.phone?.message}>
+                    <Input placeholder="+358 40 123 4567" {...register("phone")} />
+                </Field>
 
-      <Field label="Source">
-        <Select
-          value={source}
-          onValueChange={(value) =>
-            setValue(
-              "source",
-              value as CandidateFormValues["source"],
-              {
-                shouldValidate: true,
-              },
-            )
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select source" />
-          </SelectTrigger>
+                <Field label="Location" error={errors.location?.message}>
+                    <Input placeholder="Helsinki, Finland" {...register("location")} />
+                </Field>
+            </div>
 
-          <SelectContent>
-            <SelectItem value="MANUAL">
-              Manual
-            </SelectItem>
+            <Field label="Source">
+                <Select
+                    value={source}
+                    onValueChange={(value) =>
+                        setValue("source", value as CandidateFormValues["source"], {
+                            shouldValidate: true,
+                        })
+                    }
+                >
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select source" />
+                    </SelectTrigger>
 
-            <SelectItem value="LINKEDIN">
-              LinkedIn
-            </SelectItem>
+                    <SelectContent>
+                        <SelectItem value="MANUAL">Manual</SelectItem>
 
-            <SelectItem value="CAREERS_PAGE">
-              Careers page
-            </SelectItem>
+                        <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
 
-            <SelectItem value="REFERRAL">
-              Referral
-            </SelectItem>
+                        <SelectItem value="CAREERS_PAGE">Careers page</SelectItem>
 
-            <SelectItem value="RECRUITER">
-              Recruiter
-            </SelectItem>
+                        <SelectItem value="REFERRAL">Referral</SelectItem>
 
-            <SelectItem value="AGENCY">
-              Agency
-            </SelectItem>
+                        <SelectItem value="RECRUITER">Recruiter</SelectItem>
 
-            <SelectItem value="JOB_BOARD">
-              Job board
-            </SelectItem>
+                        <SelectItem value="AGENCY">Agency</SelectItem>
 
-            <SelectItem value="OTHER">
-              Other
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
+                        <SelectItem value="JOB_BOARD">Job board</SelectItem>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field
-          label="LinkedIn"
-          error={errors.linkedinUrl?.message}
-        >
-          <Input
-            placeholder="https://linkedin.com/in/..."
-            {...register("linkedinUrl")}
-          />
-        </Field>
+                        <SelectItem value="OTHER">Other</SelectItem>
+                    </SelectContent>
+                </Select>
+            </Field>
 
-        <Field
-          label="Portfolio"
-          error={errors.portfolioUrl?.message}
-        >
-          <Input
-            placeholder="https://..."
-            {...register("portfolioUrl")}
-          />
-        </Field>
-      </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="LinkedIn" error={errors.linkedinUrl?.message}>
+                    <Input placeholder="https://linkedin.com/in/..." {...register("linkedinUrl")} />
+                </Field>
 
-      <Field
-        label="Notes"
-        error={errors.notes?.message}
-      >
-        <Textarea
-          rows={5}
-          placeholder="Add internal notes about this candidate..."
-          {...register("notes")}
-        />
-      </Field>
+                <Field label="Portfolio" error={errors.portfolioUrl?.message}>
+                    <Input placeholder="https://..." {...register("portfolioUrl")} />
+                </Field>
+            </div>
 
-      <div className="flex justify-end gap-3 border-t pt-5">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={submitting}
-        >
-          Cancel
-        </Button>
+            <Field label="Notes" error={errors.notes?.message}>
+                <Textarea
+                    rows={5}
+                    placeholder="Add internal notes about this candidate..."
+                    {...register("notes")}
+                />
+            </Field>
 
-        <Button
-          type="submit"
-          disabled={submitting}
-        >
-          {submitting
-            ? "Saving..."
-            : candidate
-              ? "Save changes"
-              : "Create candidate"}
-        </Button>
-      </div>
-    </form>
-  );
+            <div className="flex justify-end gap-3 border-t pt-5">
+                <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
+                    Cancel
+                </Button>
+
+                <Button type="submit" disabled={submitting}>
+                    {submitting ? "Saving..." : candidate ? "Save changes" : "Create candidate"}
+                </Button>
+            </div>
+        </form>
+    );
 }
 
 function Field({
-  label,
-  error,
-  children,
+    label,
+    error,
+    children,
 }: {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
+    label: string;
+    error?: string;
+    children: React.ReactNode;
 }) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
+    return (
+        <div className="space-y-2">
+            <Label>{label}</Label>
 
-      {children}
+            {children}
 
-      {error && (
-        <p className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-    </div>
-  );
+            {error && <p className="text-sm text-destructive">{error}</p>}
+        </div>
+    );
 }

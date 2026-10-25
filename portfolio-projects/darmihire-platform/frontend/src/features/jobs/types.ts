@@ -1,91 +1,86 @@
 export type JobStatus = "DRAFT" | "OPEN" | "PAUSED" | "CLOSED";
 
-export type EmploymentType =
-  | "FULL_TIME"
-  | "PART_TIME"
-  | "CONTRACT"
-  | "TEMPORARY"
-  | "INTERNSHIP";
+export type EmploymentType = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "TEMPORARY" | "INTERNSHIP";
 
 export type WorkplaceType = "ON_SITE" | "HYBRID" | "REMOTE";
 
 export type Job = {
-  id: string;
+    id: string;
 
-  title: string;
-  jobCode: string;
-  description: string | null;
+    title: string;
+    jobCode: string;
+    description: string | null;
 
-  departmentId: string | null;
-  departmentName: string | null;
+    departmentId: string | null;
+    departmentName: string | null;
 
-  teamId: string | null;
-  teamName: string | null;
+    teamId: string | null;
+    teamName: string | null;
 
-  locationId: string | null;
-  locationName: string | null;
+    locationId: string | null;
+    locationName: string | null;
 
-  recruiterId: string | null;
-  recruiterName: string | null;
+    recruiterId: string | null;
+    recruiterName: string | null;
 
-  hiringManagerId: string | null;
-  hiringManagerName: string | null;
+    hiringManagerId: string | null;
+    hiringManagerName: string | null;
 
-  employmentType: EmploymentType;
-  workplaceType: WorkplaceType;
-  status: JobStatus;
+    employmentType: EmploymentType;
+    workplaceType: WorkplaceType;
+    status: JobStatus;
 
-  openings: number;
+    openings: number;
 
-  createdAt: string;
-  updatedAt: string;
-  published: boolean;
+    createdAt: string;
+    updatedAt: string;
+    published: boolean;
 
-  publishedAt: string | null;
+    publishedAt: string | null;
 
-  publicSlug: string | null;
+    publicSlug: string | null;
 
-  applicationDeadline: string | null;
+    applicationDeadline: string | null;
 };
 
 export type CreateJobRequest = {
-  title: string;
-  jobCode?: string | null;
-  description?: string | null;
+    title: string;
+    jobCode?: string | null;
+    description?: string | null;
 
-  departmentId?: string | null;
-  teamId?: string | null;
-  locationId?: string | null;
+    departmentId?: string | null;
+    teamId?: string | null;
+    locationId?: string | null;
 
-  recruiterId?: string | null;
-  hiringManagerId?: string | null;
+    recruiterId?: string | null;
+    hiringManagerId?: string | null;
 
-  employmentType: EmploymentType;
-  workplaceType: WorkplaceType;
+    employmentType: EmploymentType;
+    workplaceType: WorkplaceType;
 
-  openings: number;
+    openings: number;
 };
 
 export type UpdateJobRequest = {
-  title: string;
-  description?: string | null;
+    title: string;
+    description?: string | null;
 
-  departmentId?: string | null;
-  teamId?: string | null;
-  locationId?: string | null;
+    departmentId?: string | null;
+    teamId?: string | null;
+    locationId?: string | null;
 
-  recruiterId?: string | null;
-  hiringManagerId?: string | null;
+    recruiterId?: string | null;
+    hiringManagerId?: string | null;
 
-  employmentType: EmploymentType;
-  workplaceType: WorkplaceType;
+    employmentType: EmploymentType;
+    workplaceType: WorkplaceType;
 
-  openings: number;
+    openings: number;
 };
 
 export type UpdateJobStatusRequest = {
-  status: JobStatus;
+    status: JobStatus;
 };
 export type PublishJobRequest = {
-  applicationDeadline?: string | null;
+    applicationDeadline?: string | null;
 };

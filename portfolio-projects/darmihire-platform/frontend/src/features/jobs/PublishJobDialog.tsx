@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 
-import {
-    CalendarDays,
-    Globe2,
-} from "lucide-react";
+import { CalendarDays, Globe2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,9 +22,7 @@ type PublishJobDialogProps = {
     job: Job | null;
     isPending: boolean;
     onOpenChange: (open: boolean) => void;
-    onConfirm: (
-        applicationDeadline: string | null,
-    ) => void;
+    onConfirm: (applicationDeadline: string | null) => void;
 };
 
 export function PublishJobDialog({
@@ -37,32 +32,19 @@ export function PublishJobDialog({
     onOpenChange,
     onConfirm,
 }: PublishJobDialogProps) {
-    const [
-        applicationDeadline,
-        setApplicationDeadline,
-    ] = useState("");
+    const [applicationDeadline, setApplicationDeadline] = useState("");
 
     useEffect(() => {
         if (open) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
-            setApplicationDeadline(
-                job?.applicationDeadline ?? "",
-            );
+            setApplicationDeadline(job?.applicationDeadline ?? "");
         }
-    }, [
-        open,
-        job?.applicationDeadline,
-    ]);
+    }, [open, job?.applicationDeadline]);
 
-    const today = new Date()
-        .toISOString()
-        .slice(0, 10);
+    const today = new Date().toISOString().slice(0, 10);
 
     return (
-        <Dialog
-            open={open}
-            onOpenChange={onOpenChange}
-        >
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
@@ -71,20 +53,13 @@ export function PublishJobDialog({
                     </DialogTitle>
 
                     <DialogDescription>
-                        Publish{" "}
-                        <strong>
-                            {job?.title}
-                        </strong>{" "}
-                        to your public careers page.
+                        Publish <strong>{job?.title}</strong> to your public careers page.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="py-4">
                     <div className="space-y-2">
-                        <Label
-                            htmlFor="applicationDeadline"
-                            className="flex items-center gap-2"
-                        >
+                        <Label htmlFor="applicationDeadline" className="flex items-center gap-2">
                             <CalendarDays className="size-4" />
                             Application deadline
                         </Label>
@@ -94,17 +69,12 @@ export function PublishJobDialog({
                             type="date"
                             min={today}
                             value={applicationDeadline}
-                            onChange={(event) =>
-                                setApplicationDeadline(
-                                    event.target.value,
-                                )
-                            }
+                            onChange={(event) => setApplicationDeadline(event.target.value)}
                         />
 
                         <p className="text-xs text-muted-foreground">
-                            Optional. Leave empty if
-                            the position should remain
-                            open without a deadline.
+                            Optional. Leave empty if the position should remain open without a
+                            deadline.
                         </p>
                     </div>
                 </div>
@@ -113,28 +83,17 @@ export function PublishJobDialog({
                     <Button
                         variant="outline"
                         disabled={isPending}
-                        onClick={() =>
-                            onOpenChange(false)
-                        }
+                        onClick={() => onOpenChange(false)}
                     >
                         Cancel
                     </Button>
 
                     <Button
-                        disabled={
-                            isPending || !job
-                        }
+                        disabled={isPending || !job}
                         className="bg-emerald-600 text-white hover:bg-emerald-700"
-                        onClick={() =>
-                            onConfirm(
-                                applicationDeadline ||
-                                null,
-                            )
-                        }
+                        onClick={() => onConfirm(applicationDeadline || null)}
                     >
-                        {isPending
-                            ? "Publishing..."
-                            : "Publish job"}
+                        {isPending ? "Publishing..." : "Publish job"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

@@ -1,13 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-    MoreHorizontal,
-    Pencil,
-    Plus,
-    RefreshCw,
-    Trash2,
-    UserRoundCog,
-    Users,
-} from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, RefreshCw, Trash2, UserRoundCog, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -30,15 +22,8 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-import {
-    createTeam,
-    deleteTeam,
-    getTeams,
-    updateTeam,
-} from "@/features/teams/api";
-import {
-    AddTeamMemberDialog,
-} from "@/features/teams/AddTeamMemberDialog";
+import { createTeam, deleteTeam, getTeams, updateTeam } from "@/features/teams/api";
+import { AddTeamMemberDialog } from "@/features/teams/AddTeamMemberDialog";
 
 import { DeleteTeamDialog } from "@/features/teams/DeleteTeamDialog";
 import { ManageTeamMembersDialog } from "@/features/teams/ManageTeamMembersDialog";
@@ -375,9 +360,7 @@ export default function TeamsPage() {
             <AddTeamMemberDialog
                 open={addMemberDialogOpen}
                 team={selectedTeam}
-                onOpenChange={
-                    setAddMemberDialogOpen
-                }
+                onOpenChange={setAddMemberDialogOpen}
             />
 
             {/* Delete Team */}
@@ -415,12 +398,7 @@ type TeamActionsProps = {
     onDelete: (team: Team) => void;
 };
 
-function TeamActions({
-    team,
-    onEdit,
-    onManageMembers,
-    onDelete,
-}: TeamActionsProps) {
+function TeamActions({ team, onEdit, onManageMembers, onDelete }: TeamActionsProps) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger
@@ -440,14 +418,21 @@ function TeamActions({
 
                 {/* Manage Members */}
 
-                <DropdownMenuItem onSelect={() => onManageMembers(team)} onClick={() => onManageMembers(team)}>
+                <DropdownMenuItem
+                    onSelect={() => onManageMembers(team)}
+                    onClick={() => onManageMembers(team)}
+                >
                     <UserRoundCog />
                     Manage members
                 </DropdownMenuItem>
 
                 {/* Delete */}
 
-                <DropdownMenuItem variant="destructive" onSelect={() => onDelete(team)} onClick={() => onDelete(team)}>
+                <DropdownMenuItem
+                    variant="destructive"
+                    onSelect={() => onDelete(team)}
+                    onClick={() => onDelete(team)}
+                >
                     <Trash2 />
                     Delete
                 </DropdownMenuItem>

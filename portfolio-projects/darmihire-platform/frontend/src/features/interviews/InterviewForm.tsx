@@ -4,393 +4,319 @@ import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import {
-  interviewFormSchema,
-  type InterviewFormValues,
-} from "./schemas";
+import { interviewFormSchema, type InterviewFormValues } from "./schemas";
 
 type InterviewFormProps = {
-  defaultValues?: Partial<InterviewFormValues>;
-  isPending?: boolean;
-  submitLabel?: string;
-  onSubmit: (values: InterviewFormValues) => void;
-  onCancel?: () => void;
+    defaultValues?: Partial<InterviewFormValues>;
+    isPending?: boolean;
+    submitLabel?: string;
+    onSubmit: (values: InterviewFormValues) => void;
+    onCancel?: () => void;
 };
 
 const interviewTypeOptions = [
-  {
-    value: "PHONE_SCREEN",
-    label: "Phone screen",
-  },
-  {
-    value: "VIDEO_INTERVIEW",
-    label: "Video interview",
-  },
-  {
-    value: "TECHNICAL_INTERVIEW",
-    label: "Technical interview",
-  },
-  {
-    value: "BEHAVIORAL_INTERVIEW",
-    label: "Behavioral interview",
-  },
-  {
-    value: "HR_INTERVIEW",
-    label: "HR interview",
-  },
-  {
-    value: "HIRING_MANAGER_INTERVIEW",
-    label: "Hiring manager interview",
-  },
-  {
-    value: "PANEL_INTERVIEW",
-    label: "Panel interview",
-  },
-  {
-    value: "FINAL_INTERVIEW",
-    label: "Final interview",
-  },
-  {
-    value: "OTHER",
-    label: "Other",
-  },
+    {
+        value: "PHONE_SCREEN",
+        label: "Phone screen",
+    },
+    {
+        value: "VIDEO_INTERVIEW",
+        label: "Video interview",
+    },
+    {
+        value: "TECHNICAL_INTERVIEW",
+        label: "Technical interview",
+    },
+    {
+        value: "BEHAVIORAL_INTERVIEW",
+        label: "Behavioral interview",
+    },
+    {
+        value: "HR_INTERVIEW",
+        label: "HR interview",
+    },
+    {
+        value: "HIRING_MANAGER_INTERVIEW",
+        label: "Hiring manager interview",
+    },
+    {
+        value: "PANEL_INTERVIEW",
+        label: "Panel interview",
+    },
+    {
+        value: "FINAL_INTERVIEW",
+        label: "Final interview",
+    },
+    {
+        value: "OTHER",
+        label: "Other",
+    },
 ] as const;
 
 function getBrowserTimezone(): string {
-  try {
-    return (
-      Intl.DateTimeFormat().resolvedOptions().timeZone ||
-      "UTC"
-    );
-  } catch {
-    return "UTC";
-  }
+    try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    } catch {
+        return "UTC";
+    }
 }
 
 export function InterviewForm({
-  defaultValues,
-  isPending = false,
-  submitLabel = "Schedule interview",
-  onSubmit,
-  onCancel,
+    defaultValues,
+    isPending = false,
+    submitLabel = "Schedule interview",
+    onSubmit,
+    onCancel,
 }: InterviewFormProps) {
-  const {
-    register,
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<InterviewFormValues>({
-    resolver: zodResolver(interviewFormSchema),
+    const {
+        register,
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<InterviewFormValues>({
+        resolver: zodResolver(interviewFormSchema),
 
-    defaultValues: {
-      title: "",
-      interviewType: "VIDEO_INTERVIEW",
-      date: "",
-      startTime: "",
-      endTime: "",
-      timezone: getBrowserTimezone(),
-      location: "",
-      meetingUrl: "",
-      notes: "",
-      ...defaultValues,
-    },
-  });
-
-  const submitForm = (
-    values: InterviewFormValues,
-  ) => {
-    onSubmit({
-      ...values,
-
-      title: values.title.trim(),
-
-      timezone: values.timezone.trim(),
-
-      location:
-        values.location?.trim() ?? "",
-
-      meetingUrl:
-        values.meetingUrl?.trim() ?? "",
-
-      notes:
-        values.notes?.trim() ?? "",
+        defaultValues: {
+            title: "",
+            interviewType: "VIDEO_INTERVIEW",
+            date: "",
+            startTime: "",
+            endTime: "",
+            timezone: getBrowserTimezone(),
+            location: "",
+            meetingUrl: "",
+            notes: "",
+            ...defaultValues,
+        },
     });
-  };
 
-  return (
-    <form
-      onSubmit={handleSubmit(submitForm)}
-      className="space-y-6"
-    >
-      {/* Interview title */}
-      <div className="space-y-2">
-        <label
-          htmlFor="interview-title"
-          className="text-sm font-medium"
-        >
-          Interview title
-        </label>
+    const submitForm = (values: InterviewFormValues) => {
+        onSubmit({
+            ...values,
 
-        <Input
-          id="interview-title"
-          placeholder="e.g. Technical Interview"
-          disabled={isPending}
-          {...register("title")}
-        />
+            title: values.title.trim(),
 
-        {errors.title?.message ? (
-          <p className="text-sm text-destructive">
-            {errors.title.message}
-          </p>
-        ) : null}
-      </div>
+            timezone: values.timezone.trim(),
 
-      {/* Interview type */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Interview type
-        </label>
+            location: values.location?.trim() ?? "",
 
-        <Controller
-          control={control}
-          name="interviewType"
-          render={({ field }) => (
-            <Select
-              value={field.value}
-              onValueChange={field.onChange}
-              disabled={isPending}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select interview type" />
-              </SelectTrigger>
+            meetingUrl: values.meetingUrl?.trim() ?? "",
 
-              <SelectContent>
-                {interviewTypeOptions.map(
-                  (option) => (
-                    <SelectItem
-                      key={option.value}
-                      value={option.value}
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ),
-                )}
-              </SelectContent>
-            </Select>
-          )}
-        />
+            notes: values.notes?.trim() ?? "",
+        });
+    };
 
-        {errors.interviewType?.message ? (
-          <p className="text-sm text-destructive">
-            {errors.interviewType.message}
-          </p>
-        ) : null}
-      </div>
+    return (
+        <form onSubmit={handleSubmit(submitForm)} className="space-y-6">
+            {/* Interview title */}
+            <div className="space-y-2">
+                <label htmlFor="interview-title" className="text-sm font-medium">
+                    Interview title
+                </label>
 
-      {/* Date / Start / End */}
-      <div className="grid gap-4 md:grid-cols-3">
-        {/* Date */}
-        <div className="space-y-2">
-          <label
-            htmlFor="interview-date"
-            className="text-sm font-medium"
-          >
-            Date
-          </label>
+                <Input
+                    id="interview-title"
+                    placeholder="e.g. Technical Interview"
+                    disabled={isPending}
+                    {...register("title")}
+                />
 
-          <Input
-            id="interview-date"
-            type="date"
-            disabled={isPending}
-            {...register("date")}
-          />
+                {errors.title?.message ? (
+                    <p className="text-sm text-destructive">{errors.title.message}</p>
+                ) : null}
+            </div>
 
-          {errors.date?.message ? (
-            <p className="text-sm text-destructive">
-              {errors.date.message}
-            </p>
-          ) : null}
-        </div>
+            {/* Interview type */}
+            <div className="space-y-2">
+                <label className="text-sm font-medium">Interview type</label>
 
-        {/* Start time */}
-        <div className="space-y-2">
-          <label
-            htmlFor="interview-start-time"
-            className="text-sm font-medium"
-          >
-            Start time
-          </label>
+                <Controller
+                    control={control}
+                    name="interviewType"
+                    render={({ field }) => (
+                        <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            disabled={isPending}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select interview type" />
+                            </SelectTrigger>
 
-          <Input
-            id="interview-start-time"
-            type="time"
-            disabled={isPending}
-            {...register("startTime")}
-          />
+                            <SelectContent>
+                                {interviewTypeOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
+                />
 
-          {errors.startTime?.message ? (
-            <p className="text-sm text-destructive">
-              {errors.startTime.message}
-            </p>
-          ) : null}
-        </div>
+                {errors.interviewType?.message ? (
+                    <p className="text-sm text-destructive">{errors.interviewType.message}</p>
+                ) : null}
+            </div>
 
-        {/* End time */}
-        <div className="space-y-2">
-          <label
-            htmlFor="interview-end-time"
-            className="text-sm font-medium"
-          >
-            End time
-          </label>
+            {/* Date / Start / End */}
+            <div className="grid gap-4 md:grid-cols-3">
+                {/* Date */}
+                <div className="space-y-2">
+                    <label htmlFor="interview-date" className="text-sm font-medium">
+                        Date
+                    </label>
 
-          <Input
-            id="interview-end-time"
-            type="time"
-            disabled={isPending}
-            {...register("endTime")}
-          />
+                    <Input
+                        id="interview-date"
+                        type="date"
+                        disabled={isPending}
+                        {...register("date")}
+                    />
 
-          {errors.endTime?.message ? (
-            <p className="text-sm text-destructive">
-              {errors.endTime.message}
-            </p>
-          ) : null}
-        </div>
-      </div>
+                    {errors.date?.message ? (
+                        <p className="text-sm text-destructive">{errors.date.message}</p>
+                    ) : null}
+                </div>
 
-      {/* Timezone */}
-      <div className="space-y-2">
-        <label
-          htmlFor="interview-timezone"
-          className="text-sm font-medium"
-        >
-          Timezone
-        </label>
+                {/* Start time */}
+                <div className="space-y-2">
+                    <label htmlFor="interview-start-time" className="text-sm font-medium">
+                        Start time
+                    </label>
 
-        <Input
-          id="interview-timezone"
-          placeholder="Europe/Helsinki"
-          disabled={isPending}
-          {...register("timezone")}
-        />
+                    <Input
+                        id="interview-start-time"
+                        type="time"
+                        disabled={isPending}
+                        {...register("startTime")}
+                    />
 
-        <p className="text-xs text-muted-foreground">
-          Times are entered in your current browser
-          timezone.
-        </p>
+                    {errors.startTime?.message ? (
+                        <p className="text-sm text-destructive">{errors.startTime.message}</p>
+                    ) : null}
+                </div>
 
-        {errors.timezone?.message ? (
-          <p className="text-sm text-destructive">
-            {errors.timezone.message}
-          </p>
-        ) : null}
-      </div>
+                {/* End time */}
+                <div className="space-y-2">
+                    <label htmlFor="interview-end-time" className="text-sm font-medium">
+                        End time
+                    </label>
 
-      {/* Location + meeting URL */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Location */}
-        <div className="space-y-2">
-          <label
-            htmlFor="interview-location"
-            className="text-sm font-medium"
-          >
-            Location
-          </label>
+                    <Input
+                        id="interview-end-time"
+                        type="time"
+                        disabled={isPending}
+                        {...register("endTime")}
+                    />
 
-          <Input
-            id="interview-location"
-            placeholder="Office, meeting room, etc."
-            disabled={isPending}
-            {...register("location")}
-          />
+                    {errors.endTime?.message ? (
+                        <p className="text-sm text-destructive">{errors.endTime.message}</p>
+                    ) : null}
+                </div>
+            </div>
 
-          {errors.location?.message ? (
-            <p className="text-sm text-destructive">
-              {errors.location.message}
-            </p>
-          ) : null}
-        </div>
+            {/* Timezone */}
+            <div className="space-y-2">
+                <label htmlFor="interview-timezone" className="text-sm font-medium">
+                    Timezone
+                </label>
 
-        {/* Meeting URL */}
-        <div className="space-y-2">
-          <label
-            htmlFor="interview-meeting-url"
-            className="text-sm font-medium"
-          >
-            Meeting URL
-          </label>
+                <Input
+                    id="interview-timezone"
+                    placeholder="Europe/Helsinki"
+                    disabled={isPending}
+                    {...register("timezone")}
+                />
 
-          <Input
-            id="interview-meeting-url"
-            type="url"
-            placeholder="https://meet.example.com/..."
-            disabled={isPending}
-            {...register("meetingUrl")}
-          />
+                <p className="text-xs text-muted-foreground">
+                    Times are entered in your current browser timezone.
+                </p>
 
-          {errors.meetingUrl?.message ? (
-            <p className="text-sm text-destructive">
-              {errors.meetingUrl.message}
-            </p>
-          ) : null}
-        </div>
-      </div>
+                {errors.timezone?.message ? (
+                    <p className="text-sm text-destructive">{errors.timezone.message}</p>
+                ) : null}
+            </div>
 
-      {/* Notes */}
-      <div className="space-y-2">
-        <label
-          htmlFor="interview-notes"
-          className="text-sm font-medium"
-        >
-          Notes
-        </label>
+            {/* Location + meeting URL */}
+            <div className="grid gap-4 md:grid-cols-2">
+                {/* Location */}
+                <div className="space-y-2">
+                    <label htmlFor="interview-location" className="text-sm font-medium">
+                        Location
+                    </label>
 
-        <Textarea
-          id="interview-notes"
-          placeholder="Interview instructions, preparation notes, topics to discuss..."
-          className="min-h-28 resize-y"
-          disabled={isPending}
-          {...register("notes")}
-        />
+                    <Input
+                        id="interview-location"
+                        placeholder="Office, meeting room, etc."
+                        disabled={isPending}
+                        {...register("location")}
+                    />
 
-        {errors.notes?.message ? (
-          <p className="text-sm text-destructive">
-            {errors.notes.message}
-          </p>
-        ) : null}
-      </div>
+                    {errors.location?.message ? (
+                        <p className="text-sm text-destructive">{errors.location.message}</p>
+                    ) : null}
+                </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-3 border-t pt-5">
-        {onCancel ? (
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isPending}
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-        ) : null}
+                {/* Meeting URL */}
+                <div className="space-y-2">
+                    <label htmlFor="interview-meeting-url" className="text-sm font-medium">
+                        Meeting URL
+                    </label>
 
-        <Button
-          type="submit"
-          disabled={isPending}
-        >
-          {isPending
-            ? "Scheduling..."
-            : submitLabel}
-        </Button>
-      </div>
-    </form>
-  );
+                    <Input
+                        id="interview-meeting-url"
+                        type="url"
+                        placeholder="https://meet.example.com/..."
+                        disabled={isPending}
+                        {...register("meetingUrl")}
+                    />
+
+                    {errors.meetingUrl?.message ? (
+                        <p className="text-sm text-destructive">{errors.meetingUrl.message}</p>
+                    ) : null}
+                </div>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+                <label htmlFor="interview-notes" className="text-sm font-medium">
+                    Notes
+                </label>
+
+                <Textarea
+                    id="interview-notes"
+                    placeholder="Interview instructions, preparation notes, topics to discuss..."
+                    className="min-h-28 resize-y"
+                    disabled={isPending}
+                    {...register("notes")}
+                />
+
+                {errors.notes?.message ? (
+                    <p className="text-sm text-destructive">{errors.notes.message}</p>
+                ) : null}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 border-t pt-5">
+                {onCancel ? (
+                    <Button type="button" variant="outline" disabled={isPending} onClick={onCancel}>
+                        Cancel
+                    </Button>
+                ) : null}
+
+                <Button type="submit" disabled={isPending}>
+                    {isPending ? "Scheduling..." : submitLabel}
+                </Button>
+            </div>
+        </form>
+    );
 }

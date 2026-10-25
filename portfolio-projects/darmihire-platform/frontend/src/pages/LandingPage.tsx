@@ -56,17 +56,12 @@ function LandingNavbar() {
     return (
         <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur-xl">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                <Link
-                    to="/"
-                    className="flex items-center gap-2"
-                >
+                <Link to="/" className="flex items-center gap-2">
                     <LogoMark />
 
                     <span className="text-xl font-bold tracking-tight">
                         Darmi
-                        <span className="text-emerald-600">
-                            Hire
-                        </span>
+                        <span className="text-emerald-600">Hire</span>
                     </span>
                 </Link>
 
@@ -101,20 +96,12 @@ function LandingNavbar() {
                 </nav>
 
                 <div className="hidden items-center gap-2 md:flex">
-                    <Button
-                        variant="ghost"
-
-                    >
-                        <Link to="/login">
-                            Sign in
-                        </Link>
+                    <Button variant="ghost">
+                        <Link to="/login">Sign in</Link>
                     </Button>
 
-                    <Button
-
-                        className="bg-emerald-600 text-white hover:bg-emerald-700"
-                    >
-                        <Link to="/login" style={{ display: 'ruby'}}>
+                    <Button className="bg-emerald-600 text-white hover:bg-emerald-700">
+                        <Link to="/login" style={{ display: "ruby" }}>
                             Get started
                             <ArrowRight className="size-4" />
                         </Link>
@@ -125,16 +112,10 @@ function LandingNavbar() {
                     variant="ghost"
                     size="icon"
                     className="md:hidden"
-                    onClick={() =>
-                        setMobileOpen((value) => !value)
-                    }
+                    onClick={() => setMobileOpen((value) => !value)}
                     aria-label="Toggle navigation"
                 >
-                    {mobileOpen ? (
-                        <X className="size-5" />
-                    ) : (
-                        <Menu className="size-5" />
-                    )}
+                    {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
                 </Button>
             </div>
 
@@ -157,11 +138,7 @@ function LandingNavbar() {
                             How it works
                         </a>
 
-                        <a
-                            href="#ai"
-                            onClick={() => setMobileOpen(false)}
-                            className="font-medium"
-                        >
+                        <a href="#ai" onClick={() => setMobileOpen(false)} className="font-medium">
                             AI
                         </a>
 
@@ -174,20 +151,14 @@ function LandingNavbar() {
                         </a>
 
                         <div className="mt-2 grid grid-cols-2 gap-2">
-                            <Button
-                                variant="outline"
-
-                            >
-                                <Link to="/login" style={{cursor: 'pointer'}}>
+                            <Button variant="outline">
+                                <Link to="/login" style={{ cursor: "pointer" }}>
                                     Sign in
                                 </Link>
                             </Button>
 
-                            <Button
-
-                                className="bg-emerald-600 text-white hover:bg-emerald-700"
-                            >
-                                <Link to="/login" style={{cursor: 'pointer'}}>
+                            <Button className="bg-emerald-600 text-white hover:bg-emerald-700">
+                                <Link to="/login" style={{ cursor: "pointer" }}>
                                     Get started
                                 </Link>
                             </Button>
@@ -214,24 +185,18 @@ function HeroSection() {
                 <div className="mx-auto max-w-4xl text-center">
                     <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-background/80 px-4 py-2 text-sm font-medium shadow-sm">
                         <Sparkles className="size-4 text-emerald-600" />
-
                         AI-powered recruitment platform
                     </div>
 
                     <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl lg:text-7xl">
                         Hire smarter.
                         <br />
-
-                        <span className="text-emerald-600">
-                            Build better teams.
-                        </span>
+                        <span className="text-emerald-600">Build better teams.</span>
                     </h1>
 
                     <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-8 text-muted-foreground sm:text-xl">
-                        DarmiHire brings applicant tracking,
-                        team collaboration and AI-powered
-                        candidate intelligence together in one
-                        modern hiring platform.
+                        DarmiHire brings applicant tracking, team collaboration and AI-powered
+                        candidate intelligence together in one modern hiring platform.
                     </p>
 
                     <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -240,7 +205,7 @@ function HeroSection() {
 
                             className="h-12 bg-emerald-600 px-7 text-white hover:bg-emerald-700"
                         >
-                            <Link to="/login" style={{display : 'ruby', cursor: 'pointer'}}>
+                            <Link to="/login" style={{ display: "ruby", cursor: "pointer" }}>
                                 Start hiring
                                 <ArrowRight className="size-4" />
                             </Link>
@@ -250,11 +215,9 @@ function HeroSection() {
                             size="lg"
                             variant="outline"
                             className="h-12 px-7"
-                            style={{cursor: 'pointer'}}
+                            style={{ cursor: "pointer" }}
                         >
-                            <a href="#how-it-works">
-                                See how it works
-                            </a>
+                            <a href="#how-it-works">See how it works</a>
                         </Button>
                     </div>
 
@@ -275,11 +238,7 @@ function HeroSection() {
     );
 }
 
-function HeroCheck({
-    text,
-}: {
-    text: string;
-}) {
+function HeroCheck({ text }: { text: string }) {
     return (
         <span className="flex items-center gap-1.5">
             <CheckCircle2 className="size-4 text-emerald-600" />
@@ -336,50 +295,29 @@ function DashboardPreview() {
                     <div className="flex items-center gap-2 px-2">
                         <LogoMark small />
 
-                        <span className="font-bold">
-                            DarmiHire
-                        </span>
+                        <span className="font-bold">DarmiHire</span>
                     </div>
 
                     <div className="mt-8 space-y-1">
-                        <PreviewNav
-                            icon={Gauge}
-                            label="Dashboard"
-                            active
-                        />
+                        <PreviewNav icon={Gauge} label="Dashboard" active />
 
-                        <PreviewNav
-                            icon={BriefcaseBusiness}
-                            label="Jobs"
-                        />
+                        <PreviewNav icon={BriefcaseBusiness} label="Jobs" />
 
-                        <PreviewNav
-                            icon={Users}
-                            label="Candidates"
-                        />
+                        <PreviewNav icon={Users} label="Candidates" />
 
-                        <PreviewNav
-                            icon={MessageSquareText}
-                            label="Interviews"
-                        />
+                        <PreviewNav icon={MessageSquareText} label="Interviews" />
 
-                        <PreviewNav
-                            icon={BarChart3}
-                            label="Analytics"
-                        />
+                        <PreviewNav icon={BarChart3} label="Analytics" />
                     </div>
                 </aside>
 
                 <div className="min-w-0 flex-1 bg-muted/10 p-4 sm:p-6">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <p className="text-lg font-semibold">
-                                Good morning, Hiring Team
-                            </p>
+                            <p className="text-lg font-semibold">Good morning, Hiring Team</p>
 
                             <p className="text-xs text-muted-foreground">
-                                Here&apos;s what&apos;s happening
-                                with your hiring pipeline.
+                                Here&apos;s what&apos;s happening with your hiring pipeline.
                             </p>
                         </div>
 
@@ -389,31 +327,17 @@ function DashboardPreview() {
                     </div>
 
                     <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                        <PreviewMetric
-                            title="Open jobs"
-                            value="12"
-                            change="+2 this month"
-                        />
+                        <PreviewMetric title="Open jobs" value="12" change="+2 this month" />
 
-                        <PreviewMetric
-                            title="Candidates"
-                            value="184"
-                            change="+28 this week"
-                        />
+                        <PreviewMetric title="Candidates" value="184" change="+28 this week" />
 
-                        <PreviewMetric
-                            title="Interviews"
-                            value="23"
-                            change="Next 7 days"
-                        />
+                        <PreviewMetric title="Interviews" value="23" change="Next 7 days" />
                     </div>
 
                     <div className="mt-5 rounded-xl border bg-background p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="font-semibold">
-                                    Top candidates
-                                </p>
+                                <p className="font-semibold">Top candidates</p>
 
                                 <p className="text-xs text-muted-foreground">
                                     Ranked with DarmiHire AI
@@ -425,10 +349,7 @@ function DashboardPreview() {
 
                         <div className="mt-4 divide-y">
                             {candidates.map((candidate) => (
-                                <div
-                                    key={candidate.name}
-                                    className="flex items-center gap-3 py-3"
-                                >
+                                <div key={candidate.name} className="flex items-center gap-3 py-3">
                                     <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
                                         {candidate.initials}
                                     </div>
@@ -444,9 +365,7 @@ function DashboardPreview() {
                                     </div>
 
                                     <div className="hidden text-right sm:block">
-                                        <p className="text-xs text-muted-foreground">
-                                            AI match
-                                        </p>
+                                        <p className="text-xs text-muted-foreground">AI match</p>
 
                                         <p className="text-sm font-bold text-emerald-600">
                                             {candidate.score}%
@@ -477,10 +396,9 @@ function PreviewNav({
 }) {
     return (
         <div
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${active
-                    ? "bg-emerald-50 font-medium text-emerald-700"
-                    : "text-muted-foreground"
-                }`}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
+                active ? "bg-emerald-50 font-medium text-emerald-700" : "text-muted-foreground"
+            }`}
         >
             <Icon className="size-4" />
             {label}
@@ -488,28 +406,14 @@ function PreviewNav({
     );
 }
 
-function PreviewMetric({
-    title,
-    value,
-    change,
-}: {
-    title: string;
-    value: string;
-    change: string;
-}) {
+function PreviewMetric({ title, value, change }: { title: string; value: string; change: string }) {
     return (
         <div className="rounded-xl border bg-background p-4">
-            <p className="text-xs text-muted-foreground">
-                {title}
-            </p>
+            <p className="text-xs text-muted-foreground">{title}</p>
 
-            <p className="mt-1 text-2xl font-bold">
-                {value}
-            </p>
+            <p className="mt-1 text-2xl font-bold">{value}</p>
 
-            <p className="mt-1 text-xs text-emerald-600">
-                {change}
-            </p>
+            <p className="mt-1 text-xs text-emerald-600">{change}</p>
         </div>
     );
 }
@@ -524,46 +428,24 @@ function StatsSection() {
     return (
         <section className="border-y bg-muted/20">
             <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x px-4 py-10 sm:px-6 lg:grid-cols-4 lg:px-8">
-                <Stat
-                    value="One"
-                    label="Unified hiring workspace"
-                />
+                <Stat value="One" label="Unified hiring workspace" />
 
-                <Stat
-                    value="AI"
-                    label="Candidate intelligence"
-                />
+                <Stat value="AI" label="Candidate intelligence" />
 
-                <Stat
-                    value="360°"
-                    label="Pipeline visibility"
-                />
+                <Stat value="360°" label="Pipeline visibility" />
 
-                <Stat
-                    value="24/7"
-                    label="Hiring workflow"
-                />
+                <Stat value="24/7" label="Hiring workflow" />
             </div>
         </section>
     );
 }
 
-function Stat({
-    value,
-    label,
-}: {
-    value: string;
-    label: string;
-}) {
+function Stat({ value, label }: { value: string; label: string }) {
     return (
         <div className="px-4 py-3 text-center">
-            <p className="text-2xl font-bold text-emerald-600 sm:text-3xl">
-                {value}
-            </p>
+            <p className="text-2xl font-bold text-emerald-600 sm:text-3xl">{value}</p>
 
-            <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                {label}
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{label}</p>
         </div>
     );
 }
@@ -584,8 +466,7 @@ const features = [
     {
         icon: BriefcaseBusiness,
         title: "Applicant tracking",
-        description:
-            "Manage jobs and candidates through a clear, structured recruitment pipeline.",
+        description: "Manage jobs and candidates through a clear, structured recruitment pipeline.",
     },
     {
         icon: Users,
@@ -596,8 +477,7 @@ const features = [
     {
         icon: MessageSquareText,
         title: "Interview management",
-        description:
-            "Organize interview stages, feedback and hiring decisions in one place.",
+        description: "Organize interview stages, feedback and hiring decisions in one place.",
     },
     {
         icon: BarChart3,
@@ -615,10 +495,7 @@ const features = [
 
 function FeaturesSection() {
     return (
-        <section
-            id="features"
-            className="scroll-mt-20 py-24"
-        >
+        <section id="features" className="scroll-mt-20 py-24">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <SectionHeading
                     eyebrow="Everything in one place"
@@ -639,9 +516,7 @@ function FeaturesSection() {
                                     <Icon className="size-5" />
                                 </div>
 
-                                <h3 className="mt-5 text-lg font-semibold">
-                                    {feature.title}
-                                </h3>
+                                <h3 className="mt-5 text-lg font-semibold">{feature.title}</h3>
 
                                 <p className="mt-2 leading-7 text-muted-foreground">
                                     {feature.description}
@@ -666,34 +541,27 @@ function HowItWorksSection() {
         {
             number: "01",
             title: "Create your job",
-            description:
-                "Define the role, requirements and hiring workflow.",
+            description: "Define the role, requirements and hiring workflow.",
         },
         {
             number: "02",
             title: "Collect candidates",
-            description:
-                "Keep applicants and candidate information organized in one place.",
+            description: "Keep applicants and candidate information organized in one place.",
         },
         {
             number: "03",
             title: "Analyze with AI",
-            description:
-                "Use AI-assisted insights to understand candidate-role fit.",
+            description: "Use AI-assisted insights to understand candidate-role fit.",
         },
         {
             number: "04",
             title: "Make better decisions",
-            description:
-                "Collaborate with your team and move the strongest candidates forward.",
+            description: "Collaborate with your team and move the strongest candidates forward.",
         },
     ];
 
     return (
-        <section
-            id="how-it-works"
-            className="scroll-mt-20 bg-slate-950 py-24 text-white"
-        >
+        <section id="how-it-works" className="scroll-mt-20 bg-slate-950 py-24 text-white">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <SectionHeading
                     dark
@@ -704,21 +572,14 @@ function HowItWorksSection() {
 
                 <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
                     {steps.map((step, index) => (
-                        <div
-                            key={step.number}
-                            className="relative"
-                        >
+                        <div key={step.number} className="relative">
                             <div className="text-5xl font-bold text-emerald-500/30">
                                 {step.number}
                             </div>
 
-                            <h3 className="mt-4 text-lg font-semibold">
-                                {step.title}
-                            </h3>
+                            <h3 className="mt-4 text-lg font-semibold">{step.title}</h3>
 
-                            <p className="mt-2 leading-7 text-slate-400">
-                                {step.description}
-                            </p>
+                            <p className="mt-2 leading-7 text-slate-400">{step.description}</p>
 
                             {index < steps.length - 1 && (
                                 <ArrowRight className="absolute -right-5 top-7 hidden size-5 text-slate-700 lg:block" />
@@ -739,10 +600,7 @@ function HowItWorksSection() {
 
 function AiSection() {
     return (
-        <section
-            id="ai"
-            className="scroll-mt-20 overflow-hidden py-24"
-        >
+        <section id="ai" className="scroll-mt-20 overflow-hidden py-24">
             <div className="mx-auto grid max-w-7xl items-center gap-16 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
                 <div>
                     <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
@@ -752,16 +610,12 @@ function AiSection() {
 
                     <h2 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
                         Spend less time screening.
-                        <span className="block text-emerald-600">
-                            More time hiring.
-                        </span>
+                        <span className="block text-emerald-600">More time hiring.</span>
                     </h2>
 
                     <p className="mt-5 max-w-xl text-lg leading-8 text-muted-foreground">
-                        AI-assisted candidate analysis helps
-                        your team understand skills, identify
-                        gaps and focus attention on the
-                        candidates most relevant to each role.
+                        AI-assisted candidate analysis helps your team understand skills, identify
+                        gaps and focus attention on the candidates most relevant to each role.
                     </p>
 
                     <div className="mt-8 space-y-5">
@@ -788,13 +642,7 @@ function AiSection() {
     );
 }
 
-function AiBenefit({
-    title,
-    description,
-}: {
-    title: string;
-    description: string;
-}) {
+function AiBenefit({ title, description }: { title: string; description: string }) {
     return (
         <div className="flex gap-3">
             <div className="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100">
@@ -802,13 +650,9 @@ function AiBenefit({
             </div>
 
             <div>
-                <p className="font-semibold">
-                    {title}
-                </p>
+                <p className="font-semibold">{title}</p>
 
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    {description}
-                </p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
             </div>
         </div>
     );
@@ -822,13 +666,9 @@ function AiPreview() {
             <div className="rounded-3xl border bg-background p-6 shadow-xl">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm text-muted-foreground">
-                            Candidate analysis
-                        </p>
+                        <p className="text-sm text-muted-foreground">Candidate analysis</p>
 
-                        <h3 className="mt-1 text-xl font-semibold">
-                            Senior Backend Engineer
-                        </h3>
+                        <h3 className="mt-1 text-xl font-semibold">Senior Backend Engineer</h3>
                     </div>
 
                     <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-50">
@@ -838,44 +678,32 @@ function AiPreview() {
 
                 <div className="mt-7 flex items-center gap-5 rounded-2xl bg-muted/40 p-5">
                     <div className="relative flex size-20 items-center justify-center rounded-full border-[7px] border-emerald-500">
-                        <span className="text-xl font-bold">
-                            94%
-                        </span>
+                        <span className="text-xl font-bold">94%</span>
                     </div>
 
                     <div>
-                        <p className="font-semibold">
-                            Excellent match
-                        </p>
+                        <p className="font-semibold">Excellent match</p>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Strong alignment with the
-                            role&apos;s core requirements.
+                            Strong alignment with the role&apos;s core requirements.
                         </p>
                     </div>
                 </div>
 
                 <div className="mt-6">
-                    <p className="text-sm font-semibold">
-                        Matching skills
-                    </p>
+                    <p className="text-sm font-semibold">Matching skills</p>
 
                     <div className="mt-3 flex flex-wrap gap-2">
-                        {[
-                            "Java",
-                            "Spring Boot",
-                            "PostgreSQL",
-                            "Kafka",
-                            "Kubernetes",
-                            "AWS",
-                        ].map((skill) => (
-                            <span
-                                key={skill}
-                                className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700"
-                            >
-                                {skill}
-                            </span>
-                        ))}
+                        {["Java", "Spring Boot", "PostgreSQL", "Kafka", "Kubernetes", "AWS"].map(
+                            (skill) => (
+                                <span
+                                    key={skill}
+                                    className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700"
+                                >
+                                    {skill}
+                                </span>
+                            ),
+                        )}
                     </div>
                 </div>
 
@@ -883,14 +711,11 @@ function AiPreview() {
                     <div className="flex items-center gap-2">
                         <BrainCircuit className="size-4 text-emerald-600" />
 
-                        <p className="text-sm font-semibold">
-                            AI summary
-                        </p>
+                        <p className="text-sm font-semibold">AI summary</p>
                     </div>
 
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                        Strong backend engineering profile
-                        with relevant distributed systems and
+                        Strong backend engineering profile with relevant distributed systems and
                         cloud-native experience.
                     </p>
                 </div>
@@ -910,8 +735,7 @@ function BenefitsSection() {
         {
             icon: Clock3,
             title: "Save recruiting time",
-            description:
-                "Keep hiring work structured and reduce repetitive manual steps.",
+            description: "Keep hiring work structured and reduce repetitive manual steps.",
         },
         {
             icon: Target,
@@ -934,10 +758,7 @@ function BenefitsSection() {
     ];
 
     return (
-        <section
-            id="benefits"
-            className="scroll-mt-20 bg-muted/30 py-24"
-        >
+        <section id="benefits" className="scroll-mt-20 bg-muted/30 py-24">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <SectionHeading
                     eyebrow="Built for hiring teams"
@@ -956,9 +777,7 @@ function BenefitsSection() {
                             >
                                 <Icon className="size-6 text-emerald-600" />
 
-                                <h3 className="mt-5 font-semibold">
-                                    {benefit.title}
-                                </h3>
+                                <h3 className="mt-5 font-semibold">{benefit.title}</h3>
 
                                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                                     {benefit.description}
@@ -994,17 +813,11 @@ function CtaSection() {
                         </h2>
 
                         <p className="mx-auto mt-4 max-w-xl text-emerald-50">
-                            Bring your recruiting workflow,
-                            candidates and hiring team together
-                            with DarmiHire.
+                            Bring your recruiting workflow, candidates and hiring team together with
+                            DarmiHire.
                         </p>
 
-                        <Button
-                            size="lg"
-                            variant="secondary"
-                            className="mt-8 h-12 px-7"
-
-                        >
+                        <Button size="lg" variant="secondary" className="mt-8 h-12 px-7">
                             <Link to="/login">
                                 Get started with DarmiHire
                                 <ArrowRight className="size-4" />
@@ -1029,15 +842,10 @@ function LandingFooter() {
             <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
                 <div className="flex flex-col justify-between gap-10 md:flex-row">
                     <div>
-                        <Link
-                            to="/"
-                            className="flex items-center gap-2 text-white"
-                        >
+                        <Link to="/" className="flex items-center gap-2 text-white">
                             <LogoMark />
 
-                            <span className="text-lg font-bold">
-                                DarmiHire
-                            </span>
+                            <span className="text-lg font-bold">DarmiHire</span>
                         </Link>
 
                         <p className="mt-4 max-w-sm text-sm leading-6 text-slate-400">
@@ -1045,28 +853,19 @@ function LandingFooter() {
                         </p>
 
                         <p className="mt-1 max-w-sm text-sm leading-6 text-slate-500">
-                            A modern recruitment platform by
-                            Darmi Solutions.
+                            A modern recruitment platform by Darmi Solutions.
                         </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-12 text-sm">
                         <div className="space-y-3">
-                            <p className="font-semibold text-white">
-                                Product
-                            </p>
+                            <p className="font-semibold text-white">Product</p>
 
-                            <a
-                                href="#features"
-                                className="block text-slate-400 hover:text-white"
-                            >
+                            <a href="#features" className="block text-slate-400 hover:text-white">
                                 Features
                             </a>
 
-                            <a
-                                href="#ai"
-                                className="block text-slate-400 hover:text-white"
-                            >
+                            <a href="#ai" className="block text-slate-400 hover:text-white">
                                 AI
                             </a>
 
@@ -1079,21 +878,13 @@ function LandingFooter() {
                         </div>
 
                         <div className="space-y-3">
-                            <p className="font-semibold text-white">
-                                Account
-                            </p>
+                            <p className="font-semibold text-white">Account</p>
 
-                            <Link
-                                to="/login"
-                                className="block text-slate-400 hover:text-white"
-                            >
+                            <Link to="/login" className="block text-slate-400 hover:text-white">
                                 Sign in
                             </Link>
 
-                            <Link
-                                to="/login"
-                                className="block text-slate-400 hover:text-white"
-                            >
+                            <Link to="/login" className="block text-slate-400 hover:text-white">
                                 Get started
                             </Link>
                         </div>
@@ -1101,8 +892,7 @@ function LandingFooter() {
                 </div>
 
                 <div className="mt-12 border-t border-slate-800 pt-6 text-sm text-slate-500">
-                    © {new Date().getFullYear()} Darmi
-                    Solutions. All rights reserved.
+                    © {new Date().getFullYear()} Darmi Solutions. All rights reserved.
                 </div>
             </div>
         </footer>
@@ -1115,25 +905,14 @@ function LandingFooter() {
  * ---------------------------------------------------------
  */
 
-function LogoMark({
-    small = false,
-}: {
-    small?: boolean;
-}) {
+function LogoMark({ small = false }: { small?: boolean }) {
     return (
         <div
-            className={`flex items-center justify-center rounded-lg bg-emerald-600 text-white ${small
-                    ? "size-7"
-                    : "size-9"
-                }`}
+            className={`flex items-center justify-center rounded-lg bg-emerald-600 text-white ${
+                small ? "size-7" : "size-9"
+            }`}
         >
-            <FileSearch
-                className={
-                    small
-                        ? "size-4"
-                        : "size-5"
-                }
-            />
+            <FileSearch className={small ? "size-4" : "size-5"} />
         </div>
     );
 }
@@ -1156,19 +935,17 @@ function SectionHeading({
             </p>
 
             <h2
-                className={`mt-3 text-3xl font-bold tracking-tight sm:text-4xl ${dark
-                        ? "text-white"
-                        : ""
-                    }`}
+                className={`mt-3 text-3xl font-bold tracking-tight sm:text-4xl ${
+                    dark ? "text-white" : ""
+                }`}
             >
                 {title}
             </h2>
 
             <p
-                className={`mt-4 text-lg leading-8 ${dark
-                        ? "text-slate-400"
-                        : "text-muted-foreground"
-                    }`}
+                className={`mt-4 text-lg leading-8 ${
+                    dark ? "text-slate-400" : "text-muted-foreground"
+                }`}
             >
                 {description}
             </p>

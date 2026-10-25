@@ -20,26 +20,16 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import type {
-    ApplicationStage,
-    JobApplication,
-} from "./types";
+import type { ApplicationStage, JobApplication } from "./types";
 
 type ApplicationCardProps = {
     application: JobApplication;
 
-    onStageChange: (
-        application: JobApplication,
-        stage: ApplicationStage,
-    ) => void;
+    onStageChange: (application: JobApplication, stage: ApplicationStage) => void;
 
-    onReject: (
-        application: JobApplication,
-    ) => void;
+    onReject: (application: JobApplication) => void;
 
-    onWithdraw: (
-        application: JobApplication,
-    ) => void;
+    onWithdraw: (application: JobApplication) => void;
 
     isPending?: boolean;
 };
@@ -48,27 +38,27 @@ const stages: Array<{
     value: ApplicationStage;
     label: string;
 }> = [
-        {
-            value: "APPLIED",
-            label: "Applied",
-        },
-        {
-            value: "SCREENING",
-            label: "Screening",
-        },
-        {
-            value: "INTERVIEW",
-            label: "Interview",
-        },
-        {
-            value: "OFFER",
-            label: "Offer",
-        },
-        {
-            value: "HIRED",
-            label: "Hired",
-        },
-    ];
+    {
+        value: "APPLIED",
+        label: "Applied",
+    },
+    {
+        value: "SCREENING",
+        label: "Screening",
+    },
+    {
+        value: "INTERVIEW",
+        label: "Interview",
+    },
+    {
+        value: "OFFER",
+        label: "Offer",
+    },
+    {
+        value: "HIRED",
+        label: "Hired",
+    },
+];
 
 export function ApplicationCard({
     application,
@@ -79,17 +69,9 @@ export function ApplicationCard({
 }: ApplicationCardProps) {
     const navigate = useNavigate();
 
-    const canDrag =
-        application.status === "ACTIVE" &&
-        application.stage !== "HIRED" &&
-        !isPending;
+    const canDrag = application.status === "ACTIVE" && application.stage !== "HIRED" && !isPending;
 
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        isDragging,
-    } = useDraggable({
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
         id: application.id,
 
         disabled: !canDrag,
@@ -100,8 +82,7 @@ export function ApplicationCard({
         },
     });
 
-    const isActive =
-        application.status === "ACTIVE";
+    const isActive = application.status === "ACTIVE";
 
     return (
         <div
@@ -109,12 +90,8 @@ export function ApplicationCard({
             className={[
                 "rounded-lg border bg-background p-3 shadow-sm",
                 "transition-all duration-150",
-                canDrag
-                    ? "hover:shadow-md"
-                    : "",
-                isDragging
-                    ? "opacity-30"
-                    : "opacity-100",
+                canDrag ? "hover:shadow-md" : "",
+                isDragging ? "opacity-30" : "opacity-100",
             ].join(" ")}
         >
             <div className="flex items-start justify-between gap-2">
@@ -153,11 +130,7 @@ export function ApplicationCard({
                     <div className="min-w-0 flex-1">
                         <button
                             type="button"
-                            onClick={() =>
-                                navigate(
-                                    `/candidates/${application.candidateId}`,
-                                )
-                            }
+                            onClick={() => navigate(`/candidates/${application.candidateId}`)}
                             className="
                 block
                 max-w-full
@@ -180,12 +153,7 @@ export function ApplicationCard({
                 {/* Actions */}
 
                 {isActive && (
-                    <div
-                        className="shrink-0"
-                        onPointerDown={(event) =>
-                            event.stopPropagation()
-                        }
-                    >
+                    <div className="shrink-0" onPointerDown={(event) => event.stopPropagation()}>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
@@ -200,53 +168,30 @@ export function ApplicationCard({
                                 </Button>
                             </DropdownMenuTrigger>
 
-                            <DropdownMenuContent
-                                align="end"
-                                className="w-48"
-                            >
-                                
+                            <DropdownMenuContent align="end" className="w-48">
                                 Move to
                                 <DropdownMenuSeparator />
-
                                 {stages.map((stage) => {
-                                    const currentStage =
-                                        stage.value ===
-                                        application.stage;
+                                    const currentStage = stage.value === application.stage;
 
                                     return (
                                         <DropdownMenuItem
                                             key={stage.value}
-                                            disabled={
-                                                currentStage ||
-                                                isPending
-                                            }
+                                            disabled={currentStage || isPending}
                                             onSelect={() => {
-                                                if (
-                                                    currentStage ||
-                                                    isPending
-                                                ) {
+                                                if (currentStage || isPending) {
                                                     return;
                                                 }
 
-                                                onStageChange(
-                                                    application,
-                                                    stage.value,
-                                                );
+                                                onStageChange(application, stage.value);
                                             }}
                                             onClick={() => {
-                                                if (
-                                                    currentStage ||
-                                                    isPending
-                                                ) {
+                                                if (currentStage || isPending) {
                                                     return;
                                                 }
 
-                                                onStageChange(
-                                                    application,
-                                                    stage.value,
-                                                );
+                                                onStageChange(application, stage.value);
                                             }}
-
                                         >
                                             <MoveRight className="mr-2 h-4 w-4" />
 
@@ -260,46 +205,34 @@ export function ApplicationCard({
                                         </DropdownMenuItem>
                                     );
                                 })}
-
                                 <DropdownMenuSeparator />
-
                                 <DropdownMenuItem
                                     disabled={isPending}
                                     className="text-destructive focus:text-destructive"
                                     onSelect={() => {
                                         if (!isPending) {
-                                            onReject(
-                                                application,
-                                            );
+                                            onReject(application);
                                         }
                                     }}
                                     onClick={() => {
                                         if (!isPending) {
-                                            onReject(
-                                                application,
-                                            );
+                                            onReject(application);
                                         }
                                     }}
                                 >
                                     <XCircle className="mr-2 h-4 w-4" />
-
                                     Reject
                                 </DropdownMenuItem>
-
                                 <DropdownMenuItem
                                     disabled={isPending}
                                     onSelect={() => {
                                         if (!isPending) {
-                                            onWithdraw(
-                                                application,
-                                            );
+                                            onWithdraw(application);
                                         }
                                     }}
                                     onClick={() => {
                                         if (!isPending) {
-                                            onWithdraw(
-                                                application,
-                                            );
+                                            onWithdraw(application);
                                         }
                                     }}
                                 >
@@ -318,18 +251,14 @@ export function ApplicationCard({
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <MapPin className="h-3.5 w-3.5 shrink-0" />
 
-                        <span className="truncate">
-                            {application.candidateLocation}
-                        </span>
+                        <span className="truncate">{application.candidateLocation}</span>
                     </div>
                 )}
 
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Mail className="h-3.5 w-3.5 shrink-0" />
 
-                    <span className="truncate">
-                        {application.candidateEmail}
-                    </span>
+                    <span className="truncate">{application.candidateEmail}</span>
                 </div>
             </div>
 
@@ -337,79 +266,47 @@ export function ApplicationCard({
 
             <div className="mt-3 flex items-center justify-between gap-2 border-t pt-3">
                 <span className="text-[11px] text-muted-foreground">
-                    Applied{" "}
-                    {formatRelativeDate(
-                        application.appliedAt,
-                    )}
+                    Applied {formatRelativeDate(application.appliedAt)}
                 </span>
 
-                {application.status !==
-                    "ACTIVE" && (
-                        <ApplicationStatusBadge
-                            status={
-                                application.status
-                            }
-                        />
-                    )}
+                {application.status !== "ACTIVE" && (
+                    <ApplicationStatusBadge status={application.status} />
+                )}
             </div>
         </div>
     );
 }
 
-function ApplicationStatusBadge({
-    status,
-}: {
-    status: JobApplication["status"];
-}) {
+function ApplicationStatusBadge({ status }: { status: JobApplication["status"] }) {
     switch (status) {
         case "HIRED":
             return <Badge>Hired</Badge>;
 
         case "REJECTED":
-            return (
-                <Badge variant="destructive">
-                    Rejected
-                </Badge>
-            );
+            return <Badge variant="destructive">Rejected</Badge>;
 
         case "WITHDRAWN":
-            return (
-                <Badge variant="secondary">
-                    Withdrawn
-                </Badge>
-            );
+            return <Badge variant="secondary">Withdrawn</Badge>;
 
         default:
             return null;
     }
 }
 
-function formatRelativeDate(
-    value: string,
-) {
+function formatRelativeDate(value: string) {
     const date = new Date(value);
 
-    if (
-        Number.isNaN(
-            date.getTime(),
-        )
-    ) {
+    if (Number.isNaN(date.getTime())) {
         return "";
     }
 
     const now = new Date();
 
-    const difference =
-        now.getTime() -
-        date.getTime();
+    const difference = now.getTime() - date.getTime();
 
-    const dayInMilliseconds =
-        1000 * 60 * 60 * 24;
+    const dayInMilliseconds = 1000 * 60 * 60 * 24;
 
-    const days = Math.floor(
-        difference /
-        dayInMilliseconds,
-    );
+    const days = Math.floor(difference / dayInMilliseconds);
 
     if (days <= 0) {
         return "today";
@@ -424,22 +321,14 @@ function formatRelativeDate(
     }
 
     if (days < 365) {
-        const months =
-            Math.floor(
-                days / 30,
-            );
+        const months = Math.floor(days / 30);
 
-        return months === 1
-            ? "1 month ago"
-            : `${months} months ago`;
+        return months === 1 ? "1 month ago" : `${months} months ago`;
     }
 
-    return new Intl.DateTimeFormat(
-        undefined,
-        {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-        },
-    ).format(date);
+    return new Intl.DateTimeFormat(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+    }).format(date);
 }

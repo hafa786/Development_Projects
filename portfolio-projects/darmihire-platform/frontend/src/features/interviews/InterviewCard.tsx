@@ -1,9 +1,6 @@
 import { useState } from "react";
 
-import {
-    useMutation,
-    useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
     Ban,
@@ -21,12 +18,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { InterviewFeedbackPanel } from "@/features/interview-feedback/InterviewFeedbackPanel";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
     DropdownMenu,
@@ -36,218 +28,115 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import {
-    applicationQueryKeys,
-} from "@/features/applications/queryKeys";
+import { applicationQueryKeys } from "@/features/applications/queryKeys";
 
 import { getTenantId } from "@/utils/session";
-import {
-    ApplicationEvaluationSummary,
-} from "@/features/evaluations/ApplicationEvaluationSummary";
+import { ApplicationEvaluationSummary } from "@/features/evaluations/ApplicationEvaluationSummary";
 
-import {
-    removeInterviewer,
-} from "./api";
+import { removeInterviewer } from "./api";
 
-import {
-    AssignInterviewerDialog,
-} from "./AssignInterviewerDialog";
+import { AssignInterviewerDialog } from "./AssignInterviewerDialog";
 
-import {
-    CancelInterviewDialog,
-} from "./CancelInterviewDialog";
+import { CancelInterviewDialog } from "./CancelInterviewDialog";
 
-import {
-    CompleteInterviewDialog,
-} from "./CompleteInterviewDialog";
+import { CompleteInterviewDialog } from "./CompleteInterviewDialog";
 
-import {
-    formatInterviewDateTime,
-} from "./dateTime";
+import { formatInterviewDateTime } from "./dateTime";
 
-import {
-    InterviewerList,
-} from "./InterviewerList";
+import { InterviewerList } from "./InterviewerList";
 
-import {
-    interviewQueryKeys,
-} from "./queryKeys";
+import { interviewQueryKeys } from "./queryKeys";
 
-import {
-    RescheduleInterviewDialog,
-} from "./RescheduleInterviewDialog";
+import { RescheduleInterviewDialog } from "./RescheduleInterviewDialog";
 
-import type {
-    Interview,
-    InterviewStatus,
-    InterviewType,
-} from "./types";
+import type { Interview, InterviewStatus, InterviewType } from "./types";
 
 type InterviewCardProps = {
     interview: Interview;
 };
 
-const typeLabels: Record<
-    InterviewType,
-    string
-> = {
-    PHONE_SCREEN:
-        "Phone screen",
+const typeLabels: Record<InterviewType, string> = {
+    PHONE_SCREEN: "Phone screen",
 
-    VIDEO_INTERVIEW:
-        "Video interview",
+    VIDEO_INTERVIEW: "Video interview",
 
-    TECHNICAL_INTERVIEW:
-        "Technical interview",
+    TECHNICAL_INTERVIEW: "Technical interview",
 
-    BEHAVIORAL_INTERVIEW:
-        "Behavioral interview",
+    BEHAVIORAL_INTERVIEW: "Behavioral interview",
 
-    HR_INTERVIEW:
-        "HR interview",
+    HR_INTERVIEW: "HR interview",
 
-    HIRING_MANAGER_INTERVIEW:
-        "Hiring manager interview",
+    HIRING_MANAGER_INTERVIEW: "Hiring manager interview",
 
-    PANEL_INTERVIEW:
-        "Panel interview",
+    PANEL_INTERVIEW: "Panel interview",
 
-    FINAL_INTERVIEW:
-        "Final interview",
+    FINAL_INTERVIEW: "Final interview",
 
-    OTHER:
-        "Other",
+    OTHER: "Other",
 };
 
-const statusLabels: Record<
-    InterviewStatus,
-    string
-> = {
-    SCHEDULED:
-        "Scheduled",
+const statusLabels: Record<InterviewStatus, string> = {
+    SCHEDULED: "Scheduled",
 
-    IN_PROGRESS:
-        "In progress",
+    IN_PROGRESS: "In progress",
 
-    COMPLETED:
-        "Completed",
+    COMPLETED: "Completed",
 
-    CANCELLED:
-        "Cancelled",
+    CANCELLED: "Cancelled",
 };
 
-export function InterviewCard({
-    interview,
-}: InterviewCardProps) {
+export function InterviewCard({ interview }: InterviewCardProps) {
     const tenantId = getTenantId();
 
-    const queryClient =
-        useQueryClient();
+    const queryClient = useQueryClient();
 
-    const [
-        assignDialogOpen,
-        setAssignDialogOpen,
-    ] = useState(false);
+    const [assignDialogOpen, setAssignDialogOpen] = useState(false);
 
-    const [
-        rescheduleDialogOpen,
-        setRescheduleDialogOpen,
-    ] = useState(false);
+    const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
 
-    const [
-        cancelDialogOpen,
-        setCancelDialogOpen,
-    ] = useState(false);
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
-    const [
-        completeDialogOpen,
-        setCompleteDialogOpen,
-    ] = useState(false);
+    const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
 
-    const removeMutation =
-        useMutation({
-            mutationFn: (
-                interviewerId: string,
-            ) =>
-                removeInterviewer(
-                    interview.id,
-                    interviewerId,
-                ),
+    const removeMutation = useMutation({
+        mutationFn: (interviewerId: string) => removeInterviewer(interview.id, interviewerId),
 
-            onSuccess: async () => {
-                await Promise.all([
-                    queryClient.invalidateQueries({
-                        queryKey:
-                            interviewQueryKeys.application(
-                                tenantId,
-                                interview.applicationId,
-                            ),
-                    }),
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: interviewQueryKeys.application(tenantId, interview.applicationId),
+                }),
 
-                    queryClient.invalidateQueries({
-                        queryKey:
-                            interviewQueryKeys.detail(
-                                tenantId,
-                                interview.id,
-                            ),
-                    }),
+                queryClient.invalidateQueries({
+                    queryKey: interviewQueryKeys.detail(tenantId, interview.id),
+                }),
 
-                    queryClient.invalidateQueries({
-                        queryKey:
-                            interviewQueryKeys.list(
-                                tenantId,
-                            ),
-                    }),
+                queryClient.invalidateQueries({
+                    queryKey: interviewQueryKeys.list(tenantId),
+                }),
 
-                    queryClient.invalidateQueries({
-                        queryKey:
-                            applicationQueryKeys.activities(
-                                tenantId,
-                                interview.applicationId,
-                            ),
-                    }),
-                ]);
+                queryClient.invalidateQueries({
+                    queryKey: applicationQueryKeys.activities(tenantId, interview.applicationId),
+                }),
+            ]);
 
-                toast.success(
-                    "Interviewer removed",
-                );
-            },
+            toast.success("Interviewer removed");
+        },
 
-            onError: (error) => {
-                toast.error(
-                    error instanceof Error
-                        ? error.message
-                        : "Failed to remove interviewer",
-                );
-            },
-        });
+        onError: (error) => {
+            toast.error(error instanceof Error ? error.message : "Failed to remove interviewer");
+        },
+    });
 
-    const editable =
-        interview.status !==
-        "COMPLETED" &&
-        interview.status !==
-        "CANCELLED";
+    const editable = interview.status !== "COMPLETED" && interview.status !== "CANCELLED";
 
-    const canReschedule =
-        interview.status ===
-        "SCHEDULED";
+    const canReschedule = interview.status === "SCHEDULED";
 
-    const canCancel =
-        interview.status ===
-        "SCHEDULED" ||
-        interview.status ===
-        "IN_PROGRESS";
+    const canCancel = interview.status === "SCHEDULED" || interview.status === "IN_PROGRESS";
 
-    const canComplete =
-        interview.status ===
-        "SCHEDULED" ||
-        interview.status ===
-        "IN_PROGRESS";
+    const canComplete = interview.status === "SCHEDULED" || interview.status === "IN_PROGRESS";
 
-    const hasActions =
-        canReschedule ||
-        canCancel ||
-        canComplete;
+    const hasActions = canReschedule || canCancel || canComplete;
 
     return (
         <>
@@ -255,72 +144,41 @@ export function InterviewCard({
                 <CardHeader className="pb-3">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-1">
-                            <CardTitle className="text-base">
-                                {interview.title}
-                            </CardTitle>
+                            <CardTitle className="text-base">{interview.title}</CardTitle>
 
                             <p className="text-sm text-muted-foreground">
-                                {
-                                    typeLabels[
-                                    interview
-                                        .interviewType
-                                    ]
-                                }
+                                {typeLabels[interview.interviewType]}
                             </p>
                         </div>
 
                         <div className="flex items-center gap-2">
                             <Badge
                                 variant={
-                                    interview.status ===
-                                        "CANCELLED"
+                                    interview.status === "CANCELLED"
                                         ? "destructive"
-                                        : interview.status ===
-                                            "COMPLETED"
-                                            ? "secondary"
-                                            : "default"
+                                        : interview.status === "COMPLETED"
+                                          ? "secondary"
+                                          : "default"
                                 }
                             >
-                                {
-                                    statusLabels[
-                                    interview.status
-                                    ]
-                                }
+                                {statusLabels[interview.status]}
                             </Badge>
 
                             {hasActions ? (
                                 <DropdownMenu>
-                                    <DropdownMenuTrigger
-                                        asChild
-                                    >
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                        >
+                                    <DropdownMenuTrigger asChild>
+                                        <Button type="button" variant="ghost" size="icon">
                                             <MoreHorizontal className="size-4" />
 
-                                            <span className="sr-only">
-                                                Interview actions
-                                            </span>
+                                            <span className="sr-only">Interview actions</span>
                                         </Button>
                                     </DropdownMenuTrigger>
 
-                                    <DropdownMenuContent
-                                        align="end"
-                                    >
+                                    <DropdownMenuContent align="end">
                                         {canReschedule ? (
                                             <DropdownMenuItem
-                                                onSelect={() =>
-                                                    setRescheduleDialogOpen(
-                                                        true,
-                                                    )
-                                                }
-                                                onClick={() =>
-                                                    setRescheduleDialogOpen(
-                                                        true,
-                                                    )
-                                                }
+                                                onSelect={() => setRescheduleDialogOpen(true)}
+                                                onClick={() => setRescheduleDialogOpen(true)}
                                             >
                                                 <CalendarClock className="mr-2 size-4" />
                                                 Reschedule
@@ -329,16 +187,8 @@ export function InterviewCard({
 
                                         {canComplete ? (
                                             <DropdownMenuItem
-                                                onSelect={() =>
-                                                    setCompleteDialogOpen(
-                                                        true,
-                                                    )
-                                                }
-                                                onClick={() =>
-                                                    setCompleteDialogOpen(
-                                                        true,
-                                                    )
-                                                }
+                                                onSelect={() => setCompleteDialogOpen(true)}
+                                                onClick={() => setCompleteDialogOpen(true)}
                                             >
                                                 <CheckCircle2 className="mr-2 size-4" />
                                                 Mark completed
@@ -351,16 +201,8 @@ export function InterviewCard({
 
                                                 <DropdownMenuItem
                                                     className="text-destructive focus:text-destructive"
-                                                    onSelect={() =>
-                                                        setCancelDialogOpen(
-                                                            true,
-                                                        )
-                                                    }
-                                                    onClick={() =>
-                                                        setCancelDialogOpen(
-                                                            true,
-                                                        )
-                                                    }
+                                                    onSelect={() => setCancelDialogOpen(true)}
+                                                    onClick={() => setCancelDialogOpen(true)}
                                                 >
                                                     <Ban className="mr-2 size-4" />
                                                     Cancel interview
@@ -380,10 +222,7 @@ export function InterviewCard({
                             <CalendarDays className="mt-0.5 size-4 text-muted-foreground" />
 
                             <span>
-                                {formatInterviewDateTime(
-                                    interview.startTime,
-                                    interview.timezone,
-                                )}
+                                {formatInterviewDateTime(interview.startTime, interview.timezone)}
                             </span>
                         </div>
 
@@ -392,10 +231,7 @@ export function InterviewCard({
 
                             <span>
                                 Until{" "}
-                                {formatInterviewDateTime(
-                                    interview.endTime,
-                                    interview.timezone,
-                                )}
+                                {formatInterviewDateTime(interview.endTime, interview.timezone)}
                             </span>
                         </div>
 
@@ -403,9 +239,7 @@ export function InterviewCard({
                             <div className="flex items-start gap-2 text-sm">
                                 <MapPin className="mt-0.5 size-4 text-muted-foreground" />
 
-                                <span>
-                                    {interview.location}
-                                </span>
+                                <span>{interview.location}</span>
                             </div>
                         ) : null}
 
@@ -414,9 +248,7 @@ export function InterviewCard({
                                 <Video className="mt-0.5 size-4 text-muted-foreground" />
 
                                 <a
-                                    href={
-                                        interview.meetingUrl
-                                    }
+                                    href={interview.meetingUrl}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="break-all text-primary underline-offset-4 hover:underline"
@@ -427,50 +259,27 @@ export function InterviewCard({
                         ) : null}
                     </div>
 
-                    {interview.status ===
-                        "CANCELLED" &&
-                        interview.cancellationReason ? (
+                    {interview.status === "CANCELLED" && interview.cancellationReason ? (
                         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-                            <p className="text-sm font-medium">
-                                Cancellation reason
-                            </p>
+                            <p className="text-sm font-medium">Cancellation reason</p>
 
                             <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
-                                {
-                                    interview.cancellationReason
-                                }
+                                {interview.cancellationReason}
                             </p>
                         </div>
                     ) : null}
 
                     <div className="border-t pt-4">
                         <InterviewerList
-                            interviewers={
-                                interview.interviewers
-                            }
-                            disabled={
-                                !editable ||
-                                removeMutation.isPending
-                            }
-                            onAdd={() =>
-                                setAssignDialogOpen(
-                                    true,
-                                )
-                            }
-                            onRemove={(
-                                interviewerId,
-                            ) =>
-                                removeMutation.mutate(
-                                    interviewerId,
-                                )
-                            }
+                            interviewers={interview.interviewers}
+                            disabled={!editable || removeMutation.isPending}
+                            onAdd={() => setAssignDialogOpen(true)}
+                            onRemove={(interviewerId) => removeMutation.mutate(interviewerId)}
                         />
                     </div>
                     {interview.notes ? (
                         <div className="border-t pt-4">
-                            <p className="text-sm font-medium">
-                                Notes
-                            </p>
+                            <p className="text-sm font-medium">Notes</p>
 
                             <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
                                 {interview.notes}
@@ -502,39 +311,25 @@ export function InterviewCard({
             <AssignInterviewerDialog
                 interview={interview}
                 open={assignDialogOpen}
-                onOpenChange={
-                    setAssignDialogOpen
-                }
+                onOpenChange={setAssignDialogOpen}
             />
 
             <RescheduleInterviewDialog
                 interview={interview}
-                open={
-                    rescheduleDialogOpen
-                }
-                onOpenChange={
-                    setRescheduleDialogOpen
-                }
+                open={rescheduleDialogOpen}
+                onOpenChange={setRescheduleDialogOpen}
             />
 
             <CancelInterviewDialog
                 interview={interview}
-                open={
-                    cancelDialogOpen
-                }
-                onOpenChange={
-                    setCancelDialogOpen
-                }
+                open={cancelDialogOpen}
+                onOpenChange={setCancelDialogOpen}
             />
 
             <CompleteInterviewDialog
                 interview={interview}
-                open={
-                    completeDialogOpen
-                }
-                onOpenChange={
-                    setCompleteDialogOpen
-                }
+                open={completeDialogOpen}
+                onOpenChange={setCompleteDialogOpen}
             />
         </>
     );
