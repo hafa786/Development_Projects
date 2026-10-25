@@ -15,14 +15,6 @@ import com.darmisolutions.darmihire.tenant.TenantUserRepository;
 import com.darmisolutions.darmihire.tenant.context.TenantContext;
 import com.darmisolutions.darmihire.user.User;
 import com.darmisolutions.darmihire.user.UserRepository;
-
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -33,631 +25,419 @@ import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class InvitationService {
 
-    private static final int EXPIRATION_DAYS = 7;
+  private static final int EXPIRATION_DAYS = 7;
 
-    private final InvitationRepository invitationRepository;
+  private final InvitationRepository invitationRepository;
 
-    private final TenantRepository tenantRepository;
+  private final TenantRepository tenantRepository;
 
-    private final TenantUserRepository tenantUserRepository;
+  private final TenantUserRepository tenantUserRepository;
 
-    private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
-    private final TenantContext tenantContext;
+  private final TenantContext tenantContext;
 
-    private final AuthorizationService authorizationService;
+  private final AuthorizationService authorizationService;
 
-    private final SecureRandom secureRandom =
-            new SecureRandom();
+  private final SecureRandom secureRandom = new SecureRandom();
+
+  /*
+   * ---------------------------------------------------------
+   * FIND ALL INVITATIONS
+   * ---------------------------------------------------------
+   */
+
+  @Transactional(readOnly = true)
+  public List<InvitationResponse> findAll() {
+
+    authorizationService.require(Permission.MANAGE_USERS);
+
+    UUID tenantId = requireTenantId();
+
+    return invitationRepository.findAllByTenantIdOrderByCreatedAtDesc(tenantId).stream()
+        .map(this::toResponse)
+        .toList();
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * CREATE INVITATION
+   * ---------------------------------------------------------
+   */
+
+  @Transactional
+  public CreatedInvitation create(CreateInvitationRequest request) {
+
+    authorizationService.require(Permission.MANAGE_USERS);
+
+    UUID tenantId = requireTenantId();
+
+    User currentUser = requireCurrentUser();
+
+    String email = normalizeEmail(request.email());
 
     /*
-     * ---------------------------------------------------------
-     * FIND ALL INVITATIONS
-     * ---------------------------------------------------------
+     * -----------------------------------------------------
+     * CHECK EXISTING WORKSPACE MEMBER
+     * -----------------------------------------------------
      */
 
-    @Transactional(readOnly = true)
-    public List<InvitationResponse> findAll() {
+    User existingUser = userRepository.findByEmailIgnoreCase(email).orElse(null);
 
-        authorizationService.require(
-                Permission.MANAGE_USERS
-        );
+    if (existingUser != null
+        && tenantUserRepository.existsByTenantIdAndUserId(tenantId, existingUser.getId())) {
 
-        UUID tenantId = requireTenantId();
-
-        return invitationRepository
-                .findAllByTenantIdOrderByCreatedAtDesc(
-                        tenantId
-                )
-                .stream()
-                .map(this::toResponse)
-                .toList();
+      throw new ConflictException("This user is already a workspace member");
     }
 
     /*
-     * ---------------------------------------------------------
+     * -----------------------------------------------------
+     * CHECK EXISTING PENDING INVITATION
+     * -----------------------------------------------------
+     */
+
+    boolean pendingInvitationExists =
+        invitationRepository.existsByTenantIdAndEmailIgnoreCaseAndStatus(
+            tenantId, email, InvitationStatus.PENDING);
+
+    if (pendingInvitationExists) {
+
+      throw new ConflictException("A pending invitation already exists for this email");
+    }
+
+    /*
+     * -----------------------------------------------------
+     * FIND TENANT
+     * -----------------------------------------------------
+     */
+
+    Tenant tenant =
+        tenantRepository
+            .findById(tenantId)
+            .orElseThrow(() -> new ResourceNotFoundException("Tenant not found"));
+
+    /*
+     * -----------------------------------------------------
+     * GENERATE TOKEN
+     * -----------------------------------------------------
+     */
+
+    String rawToken = generateToken();
+
+    /*
+     * -----------------------------------------------------
      * CREATE INVITATION
-     * ---------------------------------------------------------
+     * -----------------------------------------------------
      */
 
-    @Transactional
-    public CreatedInvitation create(
-            CreateInvitationRequest request) {
+    Invitation invitation = new Invitation();
 
-        authorizationService.require(
-                Permission.MANAGE_USERS
-        );
+    invitation.setTenant(tenant);
 
-        UUID tenantId = requireTenantId();
+    invitation.setEmail(email);
 
-        User currentUser =
-                requireCurrentUser();
+    invitation.setRole(request.role());
 
-        String email =
-                normalizeEmail(
-                        request.email()
-                );
+    invitation.setTokenHash(hashToken(rawToken));
 
-        /*
-         * -----------------------------------------------------
-         * CHECK EXISTING WORKSPACE MEMBER
-         * -----------------------------------------------------
-         */
+    invitation.setStatus(InvitationStatus.PENDING);
 
-        User existingUser =
-                userRepository
-                        .findByEmailIgnoreCase(
-                                email
-                        )
-                        .orElse(null);
+    invitation.setInvitedBy(currentUser);
 
-        if (existingUser != null &&
-                tenantUserRepository
-                        .existsByTenantIdAndUserId(
-                                tenantId,
-                                existingUser.getId()
-                        )) {
+    invitation.setExpiresAt(Instant.now().plus(EXPIRATION_DAYS, ChronoUnit.DAYS));
 
-            throw new ConflictException(
-                    "This user is already a workspace member"
-            );
-        }
+    Invitation savedInvitation = invitationRepository.save(invitation);
 
-        /*
-         * -----------------------------------------------------
-         * CHECK EXISTING PENDING INVITATION
-         * -----------------------------------------------------
-         */
+    /*
+     * The raw token is returned only once.
+     *
+     * When email delivery is implemented,
+     * the backend should email this token
+     * and stop returning it to the client.
+     */
 
-        boolean pendingInvitationExists =
-                invitationRepository
-                        .existsByTenantIdAndEmailIgnoreCaseAndStatus(
-                                tenantId,
-                                email,
-                                InvitationStatus.PENDING
-                        );
+    return new CreatedInvitation(toResponse(savedInvitation), rawToken);
+  }
 
-        if (pendingInvitationExists) {
+  /*
+   * ---------------------------------------------------------
+   * GET INVITATION DETAILS BY TOKEN
+   * ---------------------------------------------------------
+   */
 
-            throw new ConflictException(
-                    "A pending invitation already exists for this email"
-            );
-        }
+  @Transactional
+  public InvitationDetailsResponse findByToken(String rawToken) {
 
-        /*
-         * -----------------------------------------------------
-         * FIND TENANT
-         * -----------------------------------------------------
-         */
+    Invitation invitation = findPendingInvitation(rawToken);
 
-        Tenant tenant =
-                tenantRepository
-                        .findById(
-                                tenantId
-                        )
-                        .orElseThrow(
-                                () ->
-                                        new ResourceNotFoundException(
-                                                "Tenant not found"
-                                        )
-                        );
+    return new InvitationDetailsResponse(
+        invitation.getEmail(),
+        invitation.getTenant().getName(),
+        invitation.getRole(),
+        invitation.getExpiresAt());
+  }
 
-        /*
-         * -----------------------------------------------------
-         * GENERATE TOKEN
-         * -----------------------------------------------------
-         */
+  /*
+   * ---------------------------------------------------------
+   * ACCEPT INVITATION
+   * ---------------------------------------------------------
+   */
 
-        String rawToken =
-                generateToken();
+  @Transactional
+  public void accept(String rawToken) {
 
-        /*
-         * -----------------------------------------------------
-         * CREATE INVITATION
-         * -----------------------------------------------------
-         */
+    Invitation invitation = findPendingInvitation(rawToken);
 
-        Invitation invitation =
-                new Invitation();
+    User currentUser = requireCurrentUser();
 
-        invitation.setTenant(
-                tenant
-        );
+    /*
+     * An invitation can only be accepted by
+     * the account whose email was invited.
+     */
 
-        invitation.setEmail(
-                email
-        );
+    if (!currentUser.getEmail().equalsIgnoreCase(invitation.getEmail())) {
 
-        invitation.setRole(
-                request.role()
-        );
+      throw new AccessDeniedException("This invitation belongs to another email address");
+    }
 
-        invitation.setTokenHash(
-                hashToken(
-                        rawToken
-                )
-        );
+    UUID tenantId = invitation.getTenant().getId();
 
-        invitation.setStatus(
-                InvitationStatus.PENDING
-        );
+    /*
+     * Prevent duplicate tenant membership.
+     */
 
-        invitation.setInvitedBy(
-                currentUser
-        );
+    if (tenantUserRepository.existsByTenantIdAndUserId(tenantId, currentUser.getId())) {
 
-        invitation.setExpiresAt(
-                Instant.now()
-                        .plus(
-                                EXPIRATION_DAYS,
-                                ChronoUnit.DAYS
-                        )
-        );
-
-        Invitation savedInvitation =
-                invitationRepository.save(
-                        invitation
-                );
-
-        /*
-         * The raw token is returned only once.
-         *
-         * When email delivery is implemented,
-         * the backend should email this token
-         * and stop returning it to the client.
-         */
-
-        return new CreatedInvitation(
-                toResponse(
-                        savedInvitation
-                ),
-                rawToken
-        );
+      throw new ConflictException("You are already a member of this workspace");
     }
 
     /*
-     * ---------------------------------------------------------
-     * GET INVITATION DETAILS BY TOKEN
-     * ---------------------------------------------------------
+     * -----------------------------------------------------
+     * CREATE ACTIVE TENANT MEMBERSHIP
+     * -----------------------------------------------------
      */
 
-    @Transactional
-    public InvitationDetailsResponse findByToken(
-            String rawToken) {
+    TenantUser membership = new TenantUser();
 
-        Invitation invitation =
-                findPendingInvitation(
-                        rawToken
-                );
+    membership.setTenant(invitation.getTenant());
 
-        return new InvitationDetailsResponse(
-                invitation.getEmail(),
-                invitation
-                        .getTenant()
-                        .getName(),
-                invitation.getRole(),
-                invitation.getExpiresAt()
-        );
+    membership.setUser(currentUser);
+
+    membership.setRole(invitation.getRole());
+
+    membership.setStatus(MembershipStatus.ACTIVE);
+
+    membership.setJoinedAt(Instant.now());
+
+    tenantUserRepository.save(membership);
+
+    /*
+     * -----------------------------------------------------
+     * MARK INVITATION ACCEPTED
+     * -----------------------------------------------------
+     */
+
+    invitation.setStatus(InvitationStatus.ACCEPTED);
+
+    invitation.setAcceptedAt(Instant.now());
+
+    invitationRepository.save(invitation);
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * CANCEL INVITATION
+   * ---------------------------------------------------------
+   */
+
+  @Transactional
+  public void cancel(UUID invitationId) {
+
+    authorizationService.require(Permission.MANAGE_USERS);
+
+    UUID tenantId = requireTenantId();
+
+    Invitation invitation =
+        invitationRepository
+            .findByIdAndTenantId(invitationId, tenantId)
+            .orElseThrow(() -> new ResourceNotFoundException("Invitation not found"));
+
+    if (invitation.getStatus() != InvitationStatus.PENDING) {
+
+      throw new ConflictException("Only pending invitations can be cancelled");
+    }
+
+    invitation.setStatus(InvitationStatus.CANCELLED);
+
+    invitationRepository.save(invitation);
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * FIND PENDING INVITATION
+   * ---------------------------------------------------------
+   */
+
+  private Invitation findPendingInvitation(String rawToken) {
+
+    if (rawToken == null || rawToken.isBlank()) {
+
+      throw new ResourceNotFoundException("Invitation not found");
+    }
+
+    Invitation invitation =
+        invitationRepository
+            .findByTokenHash(hashToken(rawToken))
+            .orElseThrow(() -> new ResourceNotFoundException("Invitation not found"));
+
+    if (invitation.getStatus() != InvitationStatus.PENDING) {
+
+      throw new ConflictException("This invitation is no longer active");
     }
 
     /*
-     * ---------------------------------------------------------
-     * ACCEPT INVITATION
-     * ---------------------------------------------------------
+     * Mark an expired invitation as EXPIRED
+     * when it is accessed.
      */
 
-    @Transactional
-    public void accept(
-            String rawToken) {
+    if (invitation.getExpiresAt().isBefore(Instant.now())) {
 
-        Invitation invitation =
-                findPendingInvitation(
-                        rawToken
-                );
+      invitation.setStatus(InvitationStatus.EXPIRED);
 
-        User currentUser =
-                requireCurrentUser();
+      invitationRepository.save(invitation);
 
-        /*
-         * An invitation can only be accepted by
-         * the account whose email was invited.
-         */
-
-        if (!currentUser
-                .getEmail()
-                .equalsIgnoreCase(
-                        invitation.getEmail()
-                )) {
-
-            throw new AccessDeniedException(
-                    "This invitation belongs to another email address"
-            );
-        }
-
-        UUID tenantId =
-                invitation
-                        .getTenant()
-                        .getId();
-
-        /*
-         * Prevent duplicate tenant membership.
-         */
-
-        if (tenantUserRepository
-                .existsByTenantIdAndUserId(
-                        tenantId,
-                        currentUser.getId()
-                )) {
-
-            throw new ConflictException(
-                    "You are already a member of this workspace"
-            );
-        }
-
-        /*
-         * -----------------------------------------------------
-         * CREATE ACTIVE TENANT MEMBERSHIP
-         * -----------------------------------------------------
-         */
-
-        TenantUser membership =
-                new TenantUser();
-
-        membership.setTenant(
-                invitation.getTenant()
-        );
-
-        membership.setUser(
-                currentUser
-        );
-
-        membership.setRole(
-                invitation.getRole()
-        );
-
-        membership.setStatus(
-                MembershipStatus.ACTIVE
-        );
-
-        membership.setJoinedAt(
-                Instant.now()
-        );
-
-        tenantUserRepository.save(
-                membership
-        );
-
-        /*
-         * -----------------------------------------------------
-         * MARK INVITATION ACCEPTED
-         * -----------------------------------------------------
-         */
-
-        invitation.setStatus(
-                InvitationStatus.ACCEPTED
-        );
-
-        invitation.setAcceptedAt(
-                Instant.now()
-        );
-
-        invitationRepository.save(
-                invitation
-        );
+      throw new ConflictException("This invitation has expired");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * CANCEL INVITATION
-     * ---------------------------------------------------------
-     */
+    return invitation;
+  }
 
-    @Transactional
-    public void cancel(
-            UUID invitationId) {
+  /*
+   * ---------------------------------------------------------
+   * REQUIRE CURRENT TENANT
+   * ---------------------------------------------------------
+   */
 
-        authorizationService.require(
-                Permission.MANAGE_USERS
-        );
+  private UUID requireTenantId() {
 
-        UUID tenantId =
-                requireTenantId();
+    UUID tenantId = tenantContext.getTenantId();
 
-        Invitation invitation =
-                invitationRepository
-                        .findByIdAndTenantId(
-                                invitationId,
-                                tenantId
-                        )
-                        .orElseThrow(
-                                () ->
-                                        new ResourceNotFoundException(
-                                                "Invitation not found"
-                                        )
-                        );
+    if (tenantId == null) {
 
-        if (invitation.getStatus()
-                != InvitationStatus.PENDING) {
-
-            throw new ConflictException(
-                    "Only pending invitations can be cancelled"
-            );
-        }
-
-        invitation.setStatus(
-                InvitationStatus.CANCELLED
-        );
-
-        invitationRepository.save(
-                invitation
-        );
+      throw new IllegalStateException("Tenant context is required");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * FIND PENDING INVITATION
-     * ---------------------------------------------------------
-     */
+    return tenantId;
+  }
 
-    private Invitation findPendingInvitation(
-            String rawToken) {
+  /*
+   * ---------------------------------------------------------
+   * REQUIRE CURRENT USER
+   * ---------------------------------------------------------
+   */
 
-        if (rawToken == null ||
-                rawToken.isBlank()) {
+  private User requireCurrentUser() {
 
-            throw new ResourceNotFoundException(
-                    "Invitation not found"
-            );
-        }
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        Invitation invitation =
-                invitationRepository
-                        .findByTokenHash(
-                                hashToken(
-                                        rawToken
-                                )
-                        )
-                        .orElseThrow(
-                                () ->
-                                        new ResourceNotFoundException(
-                                                "Invitation not found"
-                                        )
-                        );
+    if (authentication == null || !authentication.isAuthenticated()) {
 
-        if (invitation.getStatus()
-                != InvitationStatus.PENDING) {
-
-            throw new ConflictException(
-                    "This invitation is no longer active"
-            );
-        }
-
-        /*
-         * Mark an expired invitation as EXPIRED
-         * when it is accessed.
-         */
-
-        if (invitation
-                .getExpiresAt()
-                .isBefore(
-                        Instant.now()
-                )) {
-
-            invitation.setStatus(
-                    InvitationStatus.EXPIRED
-            );
-
-            invitationRepository.save(
-                    invitation
-            );
-
-            throw new ConflictException(
-                    "This invitation has expired"
-            );
-        }
-
-        return invitation;
+      throw new AccessDeniedException("Authentication is required");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * REQUIRE CURRENT TENANT
-     * ---------------------------------------------------------
-     */
+    String email = authentication.getName();
 
-    private UUID requireTenantId() {
+    if (email == null || email.isBlank()) {
 
-        UUID tenantId =
-                tenantContext.getTenantId();
-
-        if (tenantId == null) {
-
-            throw new IllegalStateException(
-                    "Tenant context is required"
-            );
-        }
-
-        return tenantId;
+      throw new AccessDeniedException("Authenticated user is unavailable");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * REQUIRE CURRENT USER
-     * ---------------------------------------------------------
-     */
+    return userRepository
+        .findByEmailIgnoreCase(email)
+        .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found"));
+  }
 
-    private User requireCurrentUser() {
+  /*
+   * ---------------------------------------------------------
+   * NORMALIZE EMAIL
+   * ---------------------------------------------------------
+   */
 
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
+  private String normalizeEmail(String email) {
 
-        if (authentication == null ||
-                !authentication.isAuthenticated()) {
+    return email.trim().toLowerCase();
+  }
 
-            throw new AccessDeniedException(
-                    "Authentication is required"
-            );
-        }
+  /*
+   * ---------------------------------------------------------
+   * GENERATE INVITATION TOKEN
+   * ---------------------------------------------------------
+   */
 
-        String email =
-                authentication.getName();
+  private String generateToken() {
 
-        if (email == null ||
-                email.isBlank()) {
+    byte[] bytes = new byte[32];
 
-            throw new AccessDeniedException(
-                    "Authenticated user is unavailable"
-            );
-        }
+    secureRandom.nextBytes(bytes);
 
-        return userRepository
-                .findByEmailIgnoreCase(
-                        email
-                )
-                .orElseThrow(
-                        () ->
-                                new ResourceNotFoundException(
-                                        "Authenticated user not found"
-                                )
-                );
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * HASH INVITATION TOKEN
+   * ---------------------------------------------------------
+   */
+
+  private String hashToken(String rawToken) {
+
+    try {
+
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+      byte[] hash = digest.digest(rawToken.getBytes(StandardCharsets.UTF_8));
+
+      return HexFormat.of().formatHex(hash);
+
+    } catch (NoSuchAlgorithmException exception) {
+
+      throw new IllegalStateException("SHA-256 is not available", exception);
     }
+  }
 
-    /*
-     * ---------------------------------------------------------
-     * NORMALIZE EMAIL
-     * ---------------------------------------------------------
-     */
+  /*
+   * ---------------------------------------------------------
+   * INVITATION RESPONSE
+   * ---------------------------------------------------------
+   */
 
-    private String normalizeEmail(
-            String email) {
+  private InvitationResponse toResponse(Invitation invitation) {
 
-        return email
-                .trim()
-                .toLowerCase();
-    }
+    return new InvitationResponse(
+        invitation.getId(),
+        invitation.getEmail(),
+        invitation.getRole(),
+        invitation.getStatus(),
+        invitation.getExpiresAt(),
+        invitation.getCreatedAt());
+  }
 
-    /*
-     * ---------------------------------------------------------
-     * GENERATE INVITATION TOKEN
-     * ---------------------------------------------------------
-     */
+  /*
+   * ---------------------------------------------------------
+   * INTERNAL CREATE RESULT
+   * ---------------------------------------------------------
+   */
 
-    private String generateToken() {
-
-        byte[] bytes =
-                new byte[32];
-
-        secureRandom.nextBytes(
-                bytes
-        );
-
-        return Base64
-                .getUrlEncoder()
-                .withoutPadding()
-                .encodeToString(
-                        bytes
-                );
-    }
-
-    /*
-     * ---------------------------------------------------------
-     * HASH INVITATION TOKEN
-     * ---------------------------------------------------------
-     */
-
-    private String hashToken(
-            String rawToken) {
-
-        try {
-
-            MessageDigest digest =
-                    MessageDigest
-                            .getInstance(
-                                    "SHA-256"
-                            );
-
-            byte[] hash =
-                    digest.digest(
-                            rawToken.getBytes(
-                                    StandardCharsets.UTF_8
-                            )
-                    );
-
-            return HexFormat
-                    .of()
-                    .formatHex(
-                            hash
-                    );
-
-        } catch (
-                NoSuchAlgorithmException exception
-        ) {
-
-            throw new IllegalStateException(
-                    "SHA-256 is not available",
-                    exception
-            );
-        }
-    }
-
-    /*
-     * ---------------------------------------------------------
-     * INVITATION RESPONSE
-     * ---------------------------------------------------------
-     */
-
-    private InvitationResponse toResponse(
-            Invitation invitation) {
-
-        return new InvitationResponse(
-                invitation.getId(),
-                invitation.getEmail(),
-                invitation.getRole(),
-                invitation.getStatus(),
-                invitation.getExpiresAt(),
-                invitation.getCreatedAt()
-        );
-    }
-
-    /*
-     * ---------------------------------------------------------
-     * INTERNAL CREATE RESULT
-     * ---------------------------------------------------------
-     */
-
-    public record CreatedInvitation(
-
-            InvitationResponse invitation,
-
-            String token
-
-    ) {
-    }
+  public record CreatedInvitation(InvitationResponse invitation, String token) {}
 }

@@ -6,152 +6,133 @@ import com.darmisolutions.darmihire.team.dto.TeamMemberResponse;
 import com.darmisolutions.darmihire.team.dto.TeamResponse;
 import com.darmisolutions.darmihire.team.dto.UpdateTeamRequest;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/teams")
 @RequiredArgsConstructor
 public class TeamController {
 
-    private final TeamService teamService;
+  private final TeamService teamService;
 
-    /*
-     * ---------------------------------------------------------
-     * GET ALL TEAMS
-     * ---------------------------------------------------------
-     *
-     * GET /api/v1/teams
-     */
+  /*
+   * ---------------------------------------------------------
+   * GET ALL TEAMS
+   * ---------------------------------------------------------
+   *
+   * GET /api/v1/teams
+   */
 
-    @GetMapping
-    public List<TeamResponse> findAll() {
+  @GetMapping
+  public List<TeamResponse> findAll() {
 
-        return teamService.findAll();
-    }
+    return teamService.findAll();
+  }
 
-    /*
-     * ---------------------------------------------------------
-     * GET TEAM
-     * ---------------------------------------------------------
-     *
-     * GET /api/v1/teams/{id}
-     */
+  /*
+   * ---------------------------------------------------------
+   * GET TEAM
+   * ---------------------------------------------------------
+   *
+   * GET /api/v1/teams/{id}
+   */
 
-    @GetMapping("/{id}")
-    public TeamResponse findById(
-            @PathVariable UUID id) {
+  @GetMapping("/{id}")
+  public TeamResponse findById(@PathVariable UUID id) {
 
-        return teamService.findById(id);
-    }
+    return teamService.findById(id);
+  }
 
-    /*
-     * ---------------------------------------------------------
-     * CREATE TEAM
-     * ---------------------------------------------------------
-     *
-     * POST /api/v1/teams
-     */
+  /*
+   * ---------------------------------------------------------
+   * CREATE TEAM
+   * ---------------------------------------------------------
+   *
+   * POST /api/v1/teams
+   */
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public TeamResponse create(
-            @Valid @RequestBody CreateTeamRequest request) {
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  public TeamResponse create(@Valid @RequestBody CreateTeamRequest request) {
 
-        return teamService.create(request);
-    }
+    return teamService.create(request);
+  }
 
-    /*
-     * ---------------------------------------------------------
-     * UPDATE TEAM
-     * ---------------------------------------------------------
-     *
-     * PATCH /api/v1/teams/{id}
-     */
+  /*
+   * ---------------------------------------------------------
+   * UPDATE TEAM
+   * ---------------------------------------------------------
+   *
+   * PATCH /api/v1/teams/{id}
+   */
 
-    @PatchMapping("/{id}")
-    public TeamResponse update(
-            @PathVariable UUID id,
+  @PatchMapping("/{id}")
+  public TeamResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateTeamRequest request) {
 
-            @Valid @RequestBody UpdateTeamRequest request) {
+    return teamService.update(id, request);
+  }
 
-        return teamService.update(
-                id,
-                request);
-    }
+  /*
+   * ---------------------------------------------------------
+   * DELETE TEAM
+   * ---------------------------------------------------------
+   *
+   * DELETE /api/v1/teams/{id}
+   */
 
-    /*
-     * ---------------------------------------------------------
-     * DELETE TEAM
-     * ---------------------------------------------------------
-     *
-     * DELETE /api/v1/teams/{id}
-     */
+  @DeleteMapping("/{id}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void delete(@PathVariable UUID id) {
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(
-            @PathVariable UUID id) {
+    teamService.delete(id);
+  }
 
-        teamService.delete(id);
-    }
+  /*
+   * ---------------------------------------------------------
+   * GET TEAM MEMBERS
+   * ---------------------------------------------------------
+   *
+   * GET /api/v1/teams/{teamId}/members
+   */
 
-    /*
-     * ---------------------------------------------------------
-     * GET TEAM MEMBERS
-     * ---------------------------------------------------------
-     *
-     * GET /api/v1/teams/{teamId}/members
-     */
+  @GetMapping("/{teamId}/members")
+  public List<TeamMemberResponse> findMembers(@PathVariable UUID teamId) {
 
-    @GetMapping("/{teamId}/members")
-    public List<TeamMemberResponse> findMembers(
-            @PathVariable UUID teamId) {
+    return teamService.findMembers(teamId);
+  }
 
-        return teamService.findMembers(
-                teamId);
-    }
+  /*
+   * ---------------------------------------------------------
+   * ADD TEAM MEMBER
+   * ---------------------------------------------------------
+   *
+   * POST /api/v1/teams/{teamId}/members
+   */
 
-    /*
-     * ---------------------------------------------------------
-     * ADD TEAM MEMBER
-     * ---------------------------------------------------------
-     *
-     * POST /api/v1/teams/{teamId}/members
-     */
+  @PostMapping("/{teamId}/members")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void addMember(
+      @PathVariable UUID teamId, @Valid @RequestBody AddTeamMemberRequest request) {
 
-    @PostMapping("/{teamId}/members")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void addMember(
-            @PathVariable UUID teamId,
+    teamService.addMember(teamId, request);
+  }
 
-            @Valid @RequestBody AddTeamMemberRequest request) {
+  /*
+   * ---------------------------------------------------------
+   * REMOVE TEAM MEMBER
+   * ---------------------------------------------------------
+   *
+   * DELETE /api/v1/teams/{teamId}/members/{tenantUserId}
+   */
 
-        teamService.addMember(
-                teamId,
-                request);
-    }
+  @DeleteMapping("/{teamId}/members/{tenantUserId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void removeMember(@PathVariable UUID teamId, @PathVariable UUID tenantUserId) {
 
-    /*
-     * ---------------------------------------------------------
-     * REMOVE TEAM MEMBER
-     * ---------------------------------------------------------
-     *
-     * DELETE /api/v1/teams/{teamId}/members/{tenantUserId}
-     */
-
-    @DeleteMapping("/{teamId}/members/{tenantUserId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeMember(
-            @PathVariable UUID teamId,
-            @PathVariable UUID tenantUserId) {
-
-        teamService.removeMember(
-                teamId,
-                tenantUserId);
-    }
+    teamService.removeMember(teamId, tenantUserId);
+  }
 }

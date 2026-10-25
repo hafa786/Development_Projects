@@ -4,92 +4,73 @@ import com.darmisolutions.darmihire.tenant.dto.CreateTenantRequest;
 import com.darmisolutions.darmihire.tenant.dto.TenantResponse;
 import com.darmisolutions.darmihire.tenant.dto.UserTenantResponse;
 import com.darmisolutions.darmihire.user.User;
-
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class TenantService {
 
-        private final TenantRepository tenantRepository;
-        private final TenantUserRepository tenantUserRepository;
+  private final TenantRepository tenantRepository;
+  private final TenantUserRepository tenantUserRepository;
 
-        @Transactional
-        public TenantResponse create(
-                        CreateTenantRequest request,
-                        User user) {
+  @Transactional
+  public TenantResponse create(CreateTenantRequest request, User user) {
 
-                String slug = request.slug()
-                                .trim()
-                                .toLowerCase();
+    String slug = request.slug().trim().toLowerCase();
 
-                if (tenantRepository.existsBySlug(slug)) {
-                        throw new IllegalArgumentException(
-                                        "Workspace slug already exists");
-                }
+    if (tenantRepository.existsBySlug(slug)) {
+      throw new IllegalArgumentException("Workspace slug already exists");
+    }
 
-                Tenant tenant = new Tenant();
+    Tenant tenant = new Tenant();
 
-                tenant.setName(request.name().trim());
-                tenant.setSlug(slug);
-                tenant.setActive(true);
+    tenant.setName(request.name().trim());
+    tenant.setSlug(slug);
+    tenant.setActive(true);
 
-                tenantRepository.save(tenant);
+    tenantRepository.save(tenant);
 
-                TenantUser membership = new TenantUser();
+    TenantUser membership = new TenantUser();
 
-                membership.setTenant(tenant);
-                membership.setUser(user);
-                membership.setRole(Role.COMPANY_ADMIN);
-                membership.setStatus(MembershipStatus.ACTIVE);
-                membership.setJoinedAt(Instant.now());
+    membership.setTenant(tenant);
+    membership.setUser(user);
+    membership.setRole(Role.COMPANY_ADMIN);
+    membership.setStatus(MembershipStatus.ACTIVE);
+    membership.setJoinedAt(Instant.now());
 
-                tenantUserRepository.save(membership);
+    tenantUserRepository.save(membership);
 
-                return toResponse(tenant);
-        }
+    return toResponse(tenant);
+  }
 
-        @Transactional(readOnly = true)
-        public List<TenantResponse> findAll() {
+  @Transactional(readOnly = true)
+  public List<TenantResponse> findAll() {
 
-                return tenantRepository
-                                .findAll()
-                                .stream()
-                                .map(this::toResponse)
-                                .toList();
-        }
+    return tenantRepository.findAll().stream().map(this::toResponse).toList();
+  }
 
-        private TenantResponse toResponse(
-                        Tenant tenant) {
+  private TenantResponse toResponse(Tenant tenant) {
 
-                return new TenantResponse(
-                                tenant.getId(),
-                                tenant.getName(),
-                                tenant.getSlug(),
-                                tenant.getLogoUrl(),
-                                tenant.isActive());
-        }
+    return new TenantResponse(
+        tenant.getId(), tenant.getName(), tenant.getSlug(), tenant.getLogoUrl(), tenant.isActive());
+  }
 
-        @Transactional(readOnly = true)
-        public List<UserTenantResponse> findForUser(
-                        UUID userId) {
+  @Transactional(readOnly = true)
+  public List<UserTenantResponse> findForUser(UUID userId) {
 
-                return tenantUserRepository
-                                .findAllByUserIdAndStatus(
-                                                userId,
-                                                MembershipStatus.ACTIVE)
-                                .stream()
-                                .map(membership -> new UserTenantResponse(
-                                                membership.getTenant().getId(),
-                                                membership.getTenant().getName(),
-                                                membership.getTenant().getSlug(),
-                                                membership.getRole()))
-                                .toList();
-        }
+    return tenantUserRepository.findAllByUserIdAndStatus(userId, MembershipStatus.ACTIVE).stream()
+        .map(
+            membership ->
+                new UserTenantResponse(
+                    membership.getTenant().getId(),
+                    membership.getTenant().getName(),
+                    membership.getTenant().getSlug(),
+                    membership.getRole()))
+        .toList();
+  }
 }

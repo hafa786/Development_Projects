@@ -1,12 +1,11 @@
 package com.darmisolutions.darmihire.interview;
 
 public enum InterviewStatus {
+  SCHEDULED,
 
-    SCHEDULED,
+  IN_PROGRESS,
 
-    IN_PROGRESS,
+  COMPLETED,
 
-    COMPLETED,
-
-    CANCELLED
+  CANCELLED
 }

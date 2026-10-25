@@ -1,10 +1,9 @@
 package com.darmisolutions.darmihire.offer;
 
 public enum SalaryPeriod {
+  HOURLY,
 
-    HOURLY,
+  MONTHLY,
 
-    MONTHLY,
-
-    ANNUAL
+  ANNUAL
 }

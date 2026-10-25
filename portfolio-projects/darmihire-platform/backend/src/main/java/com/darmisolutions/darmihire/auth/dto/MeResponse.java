@@ -2,10 +2,4 @@ package com.darmisolutions.darmihire.auth.dto;
 
 import java.util.UUID;
 
-public record MeResponse(
-        UUID id,
-        String firstName,
-        String lastName,
-        String email
-) {
-}
+public record MeResponse(UUID id, String firstName, String lastName, String email) {}

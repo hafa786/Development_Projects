@@ -8,77 +8,65 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.UUID;
-
 @Component
 @RequiredArgsConstructor
 public class TenantContextFilter extends OncePerRequestFilter {
 
-	private final TenantUserRepository tenantUserRepository;
-	private final TenantContext tenantContext;
+  private final TenantUserRepository tenantUserRepository;
+  private final TenantContext tenantContext;
 
-	@Override
-	protected void doFilterInternal(
-			HttpServletRequest request,
-			HttpServletResponse response,
-			FilterChain filterChain) throws ServletException, IOException {
+  @Override
+  protected void doFilterInternal(
+      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      throws ServletException, IOException {
 
-		String tenantHeader = request.getHeader("X-Tenant-ID");
+    String tenantHeader = request.getHeader("X-Tenant-ID");
 
-		if (tenantHeader == null || tenantHeader.isBlank()) {
-			filterChain.doFilter(request, response);
-			return;
-		}
+    if (tenantHeader == null || tenantHeader.isBlank()) {
+      filterChain.doFilter(request, response);
+      return;
+    }
 
-		Authentication authentication = SecurityContextHolder
-				.getContext()
-				.getAuthentication();
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		if (authentication == null
-				|| !authentication.isAuthenticated()
-				|| !(authentication.getPrincipal() instanceof User user)) {
+    if (authentication == null
+        || !authentication.isAuthenticated()
+        || !(authentication.getPrincipal() instanceof User user)) {
 
-			filterChain.doFilter(request, response);
-			return;
-		}
+      filterChain.doFilter(request, response);
+      return;
+    }
 
-		UUID tenantId;
+    UUID tenantId;
 
-		try {
-			tenantId = UUID.fromString(tenantHeader.trim());
-		} catch (IllegalArgumentException exception) {
-			response.sendError(
-					HttpServletResponse.SC_BAD_REQUEST,
-					"Invalid X-Tenant-ID");
-			return;
-		}
+    try {
+      tenantId = UUID.fromString(tenantHeader.trim());
+    } catch (IllegalArgumentException exception) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid X-Tenant-ID");
+      return;
+    }
 
-		TenantUser membership = tenantUserRepository
-				.findByTenantIdAndUserId(
-						tenantId,
-						user.getId())
-				.orElse(null);
+    TenantUser membership =
+        tenantUserRepository.findByTenantIdAndUserId(tenantId, user.getId()).orElse(null);
 
-		if (membership == null
-				|| membership.getStatus() != MembershipStatus.ACTIVE) {
+    if (membership == null || membership.getStatus() != MembershipStatus.ACTIVE) {
 
-			response.sendError(
-					HttpServletResponse.SC_FORBIDDEN,
-					"Tenant access denied");
-			return;
-		}
+      response.sendError(HttpServletResponse.SC_FORBIDDEN, "Tenant access denied");
+      return;
+    }
 
-		tenantContext.setTenantId(tenantId);
-		tenantContext.setUserId(user.getId());
-		tenantContext.setRole(membership.getRole());
+    tenantContext.setTenantId(tenantId);
+    tenantContext.setUserId(user.getId());
+    tenantContext.setRole(membership.getRole());
 
-		filterChain.doFilter(request, response);
-	}
+    filterChain.doFilter(request, response);
+  }
 }

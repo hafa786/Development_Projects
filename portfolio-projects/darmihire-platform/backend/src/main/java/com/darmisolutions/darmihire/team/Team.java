@@ -12,12 +12,12 @@ import lombok.Setter;
 @Setter
 public class Team extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", nullable = false)
-    private Tenant tenant;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "tenant_id", nullable = false)
+  private Tenant tenant;
 
-    @Column(nullable = false)
-    private String name;
+  @Column(nullable = false)
+  private String name;
 
-    private String description;
+  private String description;
 }

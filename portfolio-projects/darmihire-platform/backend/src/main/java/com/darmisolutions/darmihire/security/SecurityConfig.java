@@ -14,81 +14,58 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final TenantContextFilter tenantContextFilter;
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final TenantContextFilter tenantContextFilter;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http
-    ) throws Exception {
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable())
+    http.csrf(csrf -> csrf.disable())
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(
+            auth ->
+                auth.requestMatchers(
+                        "/api/v1/auth/**",
+                        "/actuator/health",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/api/public/careers/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterAfter(tenantContextFilter, JwtAuthenticationFilter.class);
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
-                )
+    return http.build();
+  }
 
-                .authorizeHttpRequests(auth ->
-                        auth
-                                .requestMatchers(
-                                        "/api/v1/auth/**",
-                                        "/actuator/health",
-                                        "/swagger-ui/**",
-                                        "/v3/api-docs/**",
-                                        "/api/public/careers/**"
-                                )
-                                .permitAll()
-                                .anyRequest()
-                                .authenticated()
-                )
+  /*
+   * Prevent Spring Boot from registering the JWT filter
+   * separately as a servlet filter.
+   */
+  @Bean
+  public FilterRegistrationBean<JwtAuthenticationFilter> jwtAuthenticationFilterRegistration(
+      JwtAuthenticationFilter filter) {
+    FilterRegistrationBean<JwtAuthenticationFilter> registration =
+        new FilterRegistrationBean<>(filter);
 
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                )
+    registration.setEnabled(false);
 
-                .addFilterAfter(
-                        tenantContextFilter,
-                        JwtAuthenticationFilter.class
-                );
+    return registration;
+  }
 
-        return http.build();
-    }
+  /*
+   * Prevent Spring Boot from registering the tenant filter
+   * separately as a servlet filter.
+   */
+  @Bean
+  public FilterRegistrationBean<TenantContextFilter> tenantContextFilterRegistration(
+      TenantContextFilter filter) {
+    FilterRegistrationBean<TenantContextFilter> registration = new FilterRegistrationBean<>(filter);
 
-    /*
-     * Prevent Spring Boot from registering the JWT filter
-     * separately as a servlet filter.
-     */
-    @Bean
-    public FilterRegistrationBean<JwtAuthenticationFilter>
-    jwtAuthenticationFilterRegistration(
-            JwtAuthenticationFilter filter
-    ) {
-        FilterRegistrationBean<JwtAuthenticationFilter> registration =
-                new FilterRegistrationBean<>(filter);
+    registration.setEnabled(false);
 
-        registration.setEnabled(false);
-
-        return registration;
-    }
-
-    /*
-     * Prevent Spring Boot from registering the tenant filter
-     * separately as a servlet filter.
-     */
-    @Bean
-    public FilterRegistrationBean<TenantContextFilter>
-    tenantContextFilterRegistration(
-            TenantContextFilter filter
-    ) {
-        FilterRegistrationBean<TenantContextFilter> registration =
-                new FilterRegistrationBean<>(filter);
-
-        registration.setEnabled(false);
-
-        return registration;
-    }
+    return registration;
+  }
 }

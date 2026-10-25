@@ -1,12 +1,11 @@
 package com.darmisolutions.darmihire.invitation;
 
 public enum InvitationStatus {
+  PENDING,
 
-    PENDING,
+  ACCEPTED,
 
-    ACCEPTED,
+  CANCELLED,
 
-    CANCELLED,
-
-    EXPIRED
+  EXPIRED
 }

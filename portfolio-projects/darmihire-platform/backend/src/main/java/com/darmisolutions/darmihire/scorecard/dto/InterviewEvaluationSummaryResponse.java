@@ -4,10 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 public record InterviewEvaluationSummaryResponse(
-        UUID interviewId,
-        String interviewTitle,
-        double weightedScore,
-        int submittedFeedbackCount,
-        List<InterviewerEvaluationResponse> interviewers
-) {
-}
+    UUID interviewId,
+    String interviewTitle,
+    double weightedScore,
+    int submittedFeedbackCount,
+    List<InterviewerEvaluationResponse> interviewers) {}

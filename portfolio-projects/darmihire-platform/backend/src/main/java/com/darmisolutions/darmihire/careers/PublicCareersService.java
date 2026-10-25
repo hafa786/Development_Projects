@@ -24,609 +24,469 @@ import com.darmisolutions.darmihire.storage.ResumeStorageService;
 import com.darmisolutions.darmihire.storage.ResumeStorageService.StoredResume;
 import com.darmisolutions.darmihire.tenant.Tenant;
 import com.darmisolutions.darmihire.tenant.TenantRepository;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.RequiredArgsConstructor;
-
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
 public class PublicCareersService {
 
-    private final TenantRepository tenantRepository;
-    private final JobRepository jobRepository;
+  private final TenantRepository tenantRepository;
+  private final JobRepository jobRepository;
 
-    private final CandidateRepository candidateRepository;
-    private final JobApplicationRepository applicationRepository;
+  private final CandidateRepository candidateRepository;
+  private final JobApplicationRepository applicationRepository;
 
-    private final ApplicationActivityService activityService;
-    private final AuditService auditService;
-    private final ResumeStorageService resumeStorageService;
+  private final ApplicationActivityService activityService;
+  private final AuditService auditService;
+  private final ResumeStorageService resumeStorageService;
+
+  /*
+   * ---------------------------------------------------------
+   * GET PUBLIC CAREERS SITE
+   * ---------------------------------------------------------
+   */
+
+  @Transactional(readOnly = true)
+  public PublicCareerResponse getCareer(String companySlug) {
+
+    Tenant tenant = findTenant(companySlug);
+
+    return new PublicCareerResponse(tenant.getName(), tenant.getSlug());
+  }
+
+  @Transactional
+  public PublicJobApplicationResponse apply(
+      String companySlug,
+      String jobSlug,
+      PublicJobApplicationRequest request,
+      MultipartFile resume) {
     /*
      * ---------------------------------------------------------
-     * GET PUBLIC CAREERS SITE
+     * RESOLVE TENANT
      * ---------------------------------------------------------
      */
 
-    @Transactional(readOnly = true)
-    public PublicCareerResponse getCareer(
-            String companySlug) {
+    Tenant tenant =
+        tenantRepository
+            .findBySlugIgnoreCase(companySlug.trim())
+            .orElseThrow(() -> new ResourceNotFoundException("Company careers page not found"));
 
-        Tenant tenant = findTenant(companySlug);
+    UUID tenantId = tenant.getId();
 
-        return new PublicCareerResponse(
-                tenant.getName(),
-                tenant.getSlug());
-    }
+    /*
+     * ---------------------------------------------------------
+     * RESOLVE PUBLIC JOB
+     * ---------------------------------------------------------
+     */
 
-    @Transactional
-    public PublicJobApplicationResponse apply(
-            String companySlug,
-            String jobSlug,
-            PublicJobApplicationRequest request,
-            MultipartFile resume) {
-        /*
-         * ---------------------------------------------------------
-         * RESOLVE TENANT
-         * ---------------------------------------------------------
-         */
+    Job job =
+        jobRepository
+            .findByTenantIdAndPublicSlugAndPublishedTrueAndStatus(
+                tenantId, jobSlug.trim(), JobStatus.OPEN)
+            .orElseThrow(() -> new ResourceNotFoundException("Job not found"));
 
-        Tenant tenant = tenantRepository
-                .findBySlugIgnoreCase(companySlug.trim())
-                .orElseThrow(
-                        () -> new ResourceNotFoundException(
-                                "Company careers page not found"));
+    /*
+     * ---------------------------------------------------------
+     * APPLICATION DEADLINE
+     * ---------------------------------------------------------
+     */
 
-        UUID tenantId = tenant.getId();
-
-        /*
-         * ---------------------------------------------------------
-         * RESOLVE PUBLIC JOB
-         * ---------------------------------------------------------
-         */
-
-        Job job = jobRepository
-                .findByTenantIdAndPublicSlugAndPublishedTrueAndStatus(
-                        tenantId,
-                        jobSlug.trim(),
-                        JobStatus.OPEN)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException(
-                                "Job not found"));
-
-        /*
-         * ---------------------------------------------------------
-         * APPLICATION DEADLINE
-         * ---------------------------------------------------------
-         */
-
-        if (job.getApplicationDeadline() != null
-                && job.getApplicationDeadline()
-                        .isBefore(LocalDate.now())) {
-            throw new ConflictException(
-                    "Applications for this position are closed.");
-        }
-
-        /*
-         * ---------------------------------------------------------
-         * NORMALIZE EMAIL
-         * ---------------------------------------------------------
-         */
-
-        String email = normalizeEmail(request.email());
-
-        /*
-         * ---------------------------------------------------------
-         * FIND OR CREATE CANDIDATE
-         * ---------------------------------------------------------
-         */
-
-        Candidate candidate = candidateRepository
-                .findByTenantIdAndEmailIgnoreCase(
-                        tenantId,
-                        email)
-                .orElse(null);
-
-        if (candidate == null) {
-
-            candidate = new Candidate();
-
-            candidate.setTenant(tenant);
-
-            candidate.setFirstName(
-                    normalizeRequired(
-                            request.firstName()));
-
-            candidate.setLastName(
-                    normalizeRequired(
-                            request.lastName()));
-
-            candidate.setEmail(email);
-
-            candidate.setPhone(
-                    normalizeOptional(
-                            request.phone()));
-
-            candidate.setLocation(
-                    normalizeOptional(
-                            request.location()));
-
-            candidate.setLinkedinUrl(
-                    normalizeOptional(
-                            request.linkedinUrl()));
-
-            candidate.setPortfolioUrl(
-                    normalizeOptional(
-                            request.portfolioUrl()));
-
-            candidate.setSource(
-                    CandidateSource.CAREERS_PAGE);
-
-            candidate = candidateRepository.saveAndFlush(
-                    candidate);
-
-        } else {
-
-            /*
-             * Existing candidate:
-             * update useful profile information from
-             * the newest application.
-             */
-
-            candidate.setFirstName(
-                    normalizeRequired(
-                            request.firstName()));
-
-            candidate.setLastName(
-                    normalizeRequired(
-                            request.lastName()));
-
-            candidate.setPhone(
-                    normalizeOptional(
-                            request.phone()));
-
-            candidate.setLocation(
-                    normalizeOptional(
-                            request.location()));
-
-            candidate.setLinkedinUrl(
-                    normalizeOptional(
-                            request.linkedinUrl()));
-
-            candidate.setPortfolioUrl(
-                    normalizeOptional(
-                            request.portfolioUrl()));
-
-            candidate = candidateRepository.save(candidate);
-        }
-
-        /*
-         * ---------------------------------------------------------
-         * PREVENT DUPLICATE APPLICATION
-         * ---------------------------------------------------------
-         *
-         * IMPORTANT:
-         * Do this BEFORE storing the new resume.
-         */
-
-        boolean alreadyApplied = applicationRepository
-                .existsByTenantIdAndJobIdAndCandidateId(
-                        tenantId,
-                        job.getId(),
-                        candidate.getId());
-
-        if (alreadyApplied) {
-            throw new ConflictException(
-                    "You have already applied for this position.");
-        }
-
-        /*
-         * ---------------------------------------------------------
-         * STORE RESUME
-         * ---------------------------------------------------------
-         */
-
-        if (resume != null
-                && !resume.isEmpty()) {
-
-            StoredResume storedResume = resumeStorageService.store(
-                    tenantId,
-                    candidate.getId(),
-                    resume);
-
-            candidate.setResumeFileName(
-                    storedResume.originalFileName());
-
-            candidate.setResumeUrl(
-                    storedResume.storageKey());
-
-            candidate = candidateRepository.save(candidate);
-        }
-
-        /*
-         * ---------------------------------------------------------
-         * CREATE APPLICATION
-         * ---------------------------------------------------------
-         */
-
-        JobApplication application = new JobApplication();
-
-        application.setTenant(tenant);
-        application.setJob(job);
-        application.setCandidate(candidate);
-
-        application.setStage(
-                ApplicationStage.APPLIED);
-
-        application.setStatus(
-                ApplicationStatus.ACTIVE);
-
-        application.setAppliedAt(
-                Instant.now());
-
-        /*
-         * ---------------------------------------------------------
-         * DATABASE-SAFE DUPLICATE PROTECTION
-         * ---------------------------------------------------------
-         */
-
-        JobApplication savedApplication;
-
-        try {
-
-            savedApplication = applicationRepository
-                    .saveAndFlush(application);
-
-        } catch (DataIntegrityViolationException exception) {
-
-            throw new ConflictException(
-                    "You have already applied for this position.");
-        }
-
-        /*
-         * ---------------------------------------------------------
-         * ACTIVITY
-         * ---------------------------------------------------------
-         */
-
-        activityService.recordCreated(
-                savedApplication,
-                null);
-
-        /*
-         * ---------------------------------------------------------
-         * RESPONSE
-         * ---------------------------------------------------------
-         */
-
-        String candidateName = candidate.getFirstName()
-                + " "
-                + candidate.getLastName();
-
-        return new PublicJobApplicationResponse(
-                savedApplication.getId(),
-                job.getTitle(),
-                candidateName,
-                savedApplication.getAppliedAt(),
-                "Application submitted successfully.");
+    if (job.getApplicationDeadline() != null
+        && job.getApplicationDeadline().isBefore(LocalDate.now())) {
+      throw new ConflictException("Applications for this position are closed.");
     }
 
     /*
      * ---------------------------------------------------------
-     * GET PUBLIC JOBS
+     * NORMALIZE EMAIL
      * ---------------------------------------------------------
      */
 
-    private String normalizeRequired(
-            String value) {
-        return value.trim();
-    }
+    String email = normalizeEmail(request.email());
 
-    private String normalizeOptional(
-            String value) {
-        if (value == null) {
-            return null;
-        }
+    /*
+     * ---------------------------------------------------------
+     * FIND OR CREATE CANDIDATE
+     * ---------------------------------------------------------
+     */
 
-        String normalized = value.trim();
+    Candidate candidate =
+        candidateRepository.findByTenantIdAndEmailIgnoreCase(tenantId, email).orElse(null);
 
-        return normalized.isEmpty()
-                ? null
-                : normalized;
-    }
+    if (candidate == null) {
 
-    private String normalizeEmail(
-            String value) {
-        return value
-                .trim()
-                .toLowerCase(Locale.ROOT);
-    }
+      candidate = new Candidate();
 
-    @Transactional(readOnly = true)
-    public List<PublicJobSummaryResponse> getJobs(
-            String companySlug) {
+      candidate.setTenant(tenant);
 
-        Tenant tenant = findTenant(companySlug);
+      candidate.setFirstName(normalizeRequired(request.firstName()));
 
-        return jobRepository
-                .findAllByTenantIdAndPublishedTrueAndStatusOrderByCreatedAtDesc(
-                        tenant.getId(),
-                        JobStatus.OPEN)
-                .stream()
-                .filter(this::isDeadlineValid)
-                .map(this::toSummaryResponse)
-                .toList();
+      candidate.setLastName(normalizeRequired(request.lastName()));
+
+      candidate.setEmail(email);
+
+      candidate.setPhone(normalizeOptional(request.phone()));
+
+      candidate.setLocation(normalizeOptional(request.location()));
+
+      candidate.setLinkedinUrl(normalizeOptional(request.linkedinUrl()));
+
+      candidate.setPortfolioUrl(normalizeOptional(request.portfolioUrl()));
+
+      candidate.setSource(CandidateSource.CAREERS_PAGE);
+
+      candidate = candidateRepository.saveAndFlush(candidate);
+
+    } else {
+
+      /*
+       * Existing candidate:
+       * update useful profile information from
+       * the newest application.
+       */
+
+      candidate.setFirstName(normalizeRequired(request.firstName()));
+
+      candidate.setLastName(normalizeRequired(request.lastName()));
+
+      candidate.setPhone(normalizeOptional(request.phone()));
+
+      candidate.setLocation(normalizeOptional(request.location()));
+
+      candidate.setLinkedinUrl(normalizeOptional(request.linkedinUrl()));
+
+      candidate.setPortfolioUrl(normalizeOptional(request.portfolioUrl()));
+
+      candidate = candidateRepository.save(candidate);
     }
 
     /*
      * ---------------------------------------------------------
-     * GET PUBLIC JOB
+     * PREVENT DUPLICATE APPLICATION
      * ---------------------------------------------------------
+     *
+     * IMPORTANT:
+     * Do this BEFORE storing the new resume.
      */
 
-    @Transactional(readOnly = true)
-    public PublicJobResponse getJob(
-            String companySlug,
-            String jobSlug) {
+    boolean alreadyApplied =
+        applicationRepository.existsByTenantIdAndJobIdAndCandidateId(
+            tenantId, job.getId(), candidate.getId());
 
-        Tenant tenant = findTenant(companySlug);
-
-        Job job = findPublicJob(
-                tenant,
-                jobSlug);
-
-        return toJobResponse(job);
-    }
-    /*
-     * ---------------------------------------------------------
-     * CREATE PUBLIC CANDIDATE
-     * ---------------------------------------------------------
-     */
-
-    private Candidate createPublicCandidate(
-            Tenant tenant,
-            String firstName,
-            String lastName,
-            String email,
-            PublicJobApplicationRequest request) {
-
-        Candidate candidate = new Candidate();
-
-        candidate.setTenant(tenant);
-
-        candidate.setFirstName(
-                firstName);
-
-        candidate.setLastName(
-                lastName);
-
-        candidate.setEmail(
-                email);
-
-        candidate.setPhone(
-                normalizeOptional(
-                        request.phone()));
-
-        candidate.setLocation(
-                normalizeOptional(
-                        request.location()));
-
-        candidate.setLinkedinUrl(
-                normalizeOptional(
-                        request.linkedinUrl()));
-
-        candidate.setPortfolioUrl(
-                normalizeOptional(
-                        request.portfolioUrl()));
-
-        candidate.setSource(
-                CandidateSource.CAREERS_PAGE);
-
-        /*
-         * Resume support is Step 21.6.
-         */
-        candidate.setResumeFileName(null);
-        candidate.setResumeUrl(null);
-
-        /*
-         * Anonymous applicants cannot set internal notes.
-         */
-        candidate.setNotes(null);
-
-        Candidate savedCandidate = candidateRepository.save(
-                candidate);
-
-        auditService.log(
-                AuditAction.CANDIDATE_CREATED,
-                "Candidate",
-                savedCandidate.getId());
-
-        return savedCandidate;
+    if (alreadyApplied) {
+      throw new ConflictException("You have already applied for this position.");
     }
 
     /*
      * ---------------------------------------------------------
-     * FIND PUBLIC JOB
+     * STORE RESUME
      * ---------------------------------------------------------
      */
 
-    private Job findPublicJob(
-            Tenant tenant,
-            String jobSlug) {
+    if (resume != null && !resume.isEmpty()) {
 
-        Job job = jobRepository
-                .findByTenantIdAndPublicSlugAndPublishedTrueAndStatus(
-                        tenant.getId(),
-                        normalizeSlug(jobSlug),
-                        JobStatus.OPEN)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException(
-                                "Job not found"));
+      StoredResume storedResume = resumeStorageService.store(tenantId, candidate.getId(), resume);
 
-        if (!isDeadlineValid(job)) {
+      candidate.setResumeFileName(storedResume.originalFileName());
 
-            throw new ResourceNotFoundException(
-                    "Job not found");
-        }
+      candidate.setResumeUrl(storedResume.storageKey());
 
-        return job;
+      candidate = candidateRepository.save(candidate);
     }
 
     /*
      * ---------------------------------------------------------
-     * FIND PUBLIC TENANT
+     * CREATE APPLICATION
      * ---------------------------------------------------------
      */
 
-    private Tenant findTenant(
-            String companySlug) {
+    JobApplication application = new JobApplication();
 
-        String slug = normalizeSlug(companySlug);
+    application.setTenant(tenant);
+    application.setJob(job);
+    application.setCandidate(candidate);
 
-        return tenantRepository
-                .findBySlugIgnoreCase(slug)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException(
-                                "Careers page not found"));
+    application.setStage(ApplicationStage.APPLIED);
+
+    application.setStatus(ApplicationStatus.ACTIVE);
+
+    application.setAppliedAt(Instant.now());
+
+    /*
+     * ---------------------------------------------------------
+     * DATABASE-SAFE DUPLICATE PROTECTION
+     * ---------------------------------------------------------
+     */
+
+    JobApplication savedApplication;
+
+    try {
+
+      savedApplication = applicationRepository.saveAndFlush(application);
+
+    } catch (DataIntegrityViolationException exception) {
+
+      throw new ConflictException("You have already applied for this position.");
     }
 
     /*
      * ---------------------------------------------------------
-     * DEADLINE VALIDATION
+     * ACTIVITY
      * ---------------------------------------------------------
      */
 
-    private boolean isDeadlineValid(
-            Job job) {
-
-        LocalDate deadline = job.getApplicationDeadline();
-
-        return deadline == null
-                || !deadline.isBefore(
-                        LocalDate.now());
-    }
+    activityService.recordCreated(savedApplication, null);
 
     /*
      * ---------------------------------------------------------
-     * NORMALIZE REQUIRED VALUE
+     * RESPONSE
      * ---------------------------------------------------------
      */
 
-    private String normalizeRequired(
-            String value,
-            String errorMessage) {
+    String candidateName = candidate.getFirstName() + " " + candidate.getLastName();
 
-        if (value == null
-                || value.isBlank()) {
+    return new PublicJobApplicationResponse(
+        savedApplication.getId(),
+        job.getTitle(),
+        candidateName,
+        savedApplication.getAppliedAt(),
+        "Application submitted successfully.");
+  }
 
-            throw new IllegalArgumentException(
-                    errorMessage);
-        }
+  /*
+   * ---------------------------------------------------------
+   * GET PUBLIC JOBS
+   * ---------------------------------------------------------
+   */
 
-        return value.trim();
+  private String normalizeRequired(String value) {
+    return value.trim();
+  }
+
+  private String normalizeOptional(String value) {
+    if (value == null) {
+      return null;
     }
+
+    String normalized = value.trim();
+
+    return normalized.isEmpty() ? null : normalized;
+  }
+
+  private String normalizeEmail(String value) {
+    return value.trim().toLowerCase(Locale.ROOT);
+  }
+
+  @Transactional(readOnly = true)
+  public List<PublicJobSummaryResponse> getJobs(String companySlug) {
+
+    Tenant tenant = findTenant(companySlug);
+
+    return jobRepository
+        .findAllByTenantIdAndPublishedTrueAndStatusOrderByCreatedAtDesc(
+            tenant.getId(), JobStatus.OPEN)
+        .stream()
+        .filter(this::isDeadlineValid)
+        .map(this::toSummaryResponse)
+        .toList();
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * GET PUBLIC JOB
+   * ---------------------------------------------------------
+   */
+
+  @Transactional(readOnly = true)
+  public PublicJobResponse getJob(String companySlug, String jobSlug) {
+
+    Tenant tenant = findTenant(companySlug);
+
+    Job job = findPublicJob(tenant, jobSlug);
+
+    return toJobResponse(job);
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * CREATE PUBLIC CANDIDATE
+   * ---------------------------------------------------------
+   */
+
+  private Candidate createPublicCandidate(
+      Tenant tenant,
+      String firstName,
+      String lastName,
+      String email,
+      PublicJobApplicationRequest request) {
+
+    Candidate candidate = new Candidate();
+
+    candidate.setTenant(tenant);
+
+    candidate.setFirstName(firstName);
+
+    candidate.setLastName(lastName);
+
+    candidate.setEmail(email);
+
+    candidate.setPhone(normalizeOptional(request.phone()));
+
+    candidate.setLocation(normalizeOptional(request.location()));
+
+    candidate.setLinkedinUrl(normalizeOptional(request.linkedinUrl()));
+
+    candidate.setPortfolioUrl(normalizeOptional(request.portfolioUrl()));
+
+    candidate.setSource(CandidateSource.CAREERS_PAGE);
 
     /*
-     * ---------------------------------------------------------
-     * NORMALIZE SLUG
-     * ---------------------------------------------------------
+     * Resume support is Step 21.6.
      */
-
-    private String normalizeSlug(
-            String value) {
-
-        if (value == null
-                || value.isBlank()) {
-
-            throw new ResourceNotFoundException(
-                    "Resource not found");
-        }
-
-        return value
-                .trim()
-                .toLowerCase(Locale.ROOT);
-    }
+    candidate.setResumeFileName(null);
+    candidate.setResumeUrl(null);
 
     /*
-     * ---------------------------------------------------------
-     * JOB -> PUBLIC SUMMARY
-     * ---------------------------------------------------------
+     * Anonymous applicants cannot set internal notes.
      */
+    candidate.setNotes(null);
 
-    private PublicJobSummaryResponse toSummaryResponse(
-            Job job) {
+    Candidate savedCandidate = candidateRepository.save(candidate);
 
-        return new PublicJobSummaryResponse(
-                job.getTitle(),
+    auditService.log(AuditAction.CANDIDATE_CREATED, "Candidate", savedCandidate.getId());
 
-                job.getPublicSlug(),
+    return savedCandidate;
+  }
 
-                job.getDepartment() != null
-                        ? job.getDepartment().getName()
-                        : null,
+  /*
+   * ---------------------------------------------------------
+   * FIND PUBLIC JOB
+   * ---------------------------------------------------------
+   */
 
-                job.getTeam() != null
-                        ? job.getTeam().getName()
-                        : null,
+  private Job findPublicJob(Tenant tenant, String jobSlug) {
 
-                job.getLocation() != null
-                        ? job.getLocation().getName()
-                        : null,
+    Job job =
+        jobRepository
+            .findByTenantIdAndPublicSlugAndPublishedTrueAndStatus(
+                tenant.getId(), normalizeSlug(jobSlug), JobStatus.OPEN)
+            .orElseThrow(() -> new ResourceNotFoundException("Job not found"));
 
-                job.getEmploymentType(),
+    if (!isDeadlineValid(job)) {
 
-                job.getWorkplaceType(),
-
-                job.getOpenings(),
-
-                job.getApplicationDeadline());
+      throw new ResourceNotFoundException("Job not found");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * JOB -> PUBLIC DETAILS
-     * ---------------------------------------------------------
-     */
+    return job;
+  }
 
-    private PublicJobResponse toJobResponse(
-            Job job) {
+  /*
+   * ---------------------------------------------------------
+   * FIND PUBLIC TENANT
+   * ---------------------------------------------------------
+   */
 
-        return new PublicJobResponse(
-                job.getTitle(),
+  private Tenant findTenant(String companySlug) {
 
-                job.getPublicSlug(),
+    String slug = normalizeSlug(companySlug);
 
-                job.getDescription(),
+    return tenantRepository
+        .findBySlugIgnoreCase(slug)
+        .orElseThrow(() -> new ResourceNotFoundException("Careers page not found"));
+  }
 
-                job.getDepartment() != null
-                        ? job.getDepartment().getName()
-                        : null,
+  /*
+   * ---------------------------------------------------------
+   * DEADLINE VALIDATION
+   * ---------------------------------------------------------
+   */
 
-                job.getTeam() != null
-                        ? job.getTeam().getName()
-                        : null,
+  private boolean isDeadlineValid(Job job) {
 
-                job.getLocation() != null
-                        ? job.getLocation().getName()
-                        : null,
+    LocalDate deadline = job.getApplicationDeadline();
 
-                job.getEmploymentType(),
+    return deadline == null || !deadline.isBefore(LocalDate.now());
+  }
 
-                job.getWorkplaceType(),
+  /*
+   * ---------------------------------------------------------
+   * NORMALIZE REQUIRED VALUE
+   * ---------------------------------------------------------
+   */
 
-                job.getOpenings(),
+  private String normalizeRequired(String value, String errorMessage) {
 
-                job.getApplicationDeadline());
+    if (value == null || value.isBlank()) {
+
+      throw new IllegalArgumentException(errorMessage);
     }
+
+    return value.trim();
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * NORMALIZE SLUG
+   * ---------------------------------------------------------
+   */
+
+  private String normalizeSlug(String value) {
+
+    if (value == null || value.isBlank()) {
+
+      throw new ResourceNotFoundException("Resource not found");
+    }
+
+    return value.trim().toLowerCase(Locale.ROOT);
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * JOB -> PUBLIC SUMMARY
+   * ---------------------------------------------------------
+   */
+
+  private PublicJobSummaryResponse toSummaryResponse(Job job) {
+
+    return new PublicJobSummaryResponse(
+        job.getTitle(),
+        job.getPublicSlug(),
+        job.getDepartment() != null ? job.getDepartment().getName() : null,
+        job.getTeam() != null ? job.getTeam().getName() : null,
+        job.getLocation() != null ? job.getLocation().getName() : null,
+        job.getEmploymentType(),
+        job.getWorkplaceType(),
+        job.getOpenings(),
+        job.getApplicationDeadline());
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * JOB -> PUBLIC DETAILS
+   * ---------------------------------------------------------
+   */
+
+  private PublicJobResponse toJobResponse(Job job) {
+
+    return new PublicJobResponse(
+        job.getTitle(),
+        job.getPublicSlug(),
+        job.getDescription(),
+        job.getDepartment() != null ? job.getDepartment().getName() : null,
+        job.getTeam() != null ? job.getTeam().getName() : null,
+        job.getLocation() != null ? job.getLocation().getName() : null,
+        job.getEmploymentType(),
+        job.getWorkplaceType(),
+        job.getOpenings(),
+        job.getApplicationDeadline());
+  }
 }

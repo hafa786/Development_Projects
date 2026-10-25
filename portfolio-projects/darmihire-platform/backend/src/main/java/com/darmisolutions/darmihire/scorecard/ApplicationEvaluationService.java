@@ -2,440 +2,269 @@ package com.darmisolutions.darmihire.scorecard;
 
 import com.darmisolutions.darmihire.application.JobApplication;
 import com.darmisolutions.darmihire.application.JobApplicationRepository;
-
 import com.darmisolutions.darmihire.scorecard.dto.*;
-
 import com.darmisolutions.darmihire.tenant.context.TenantContext;
-
+import java.util.*;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class ApplicationEvaluationService {
 
-    private final TenantContext tenantContext;
+  private final TenantContext tenantContext;
 
-    private final JobApplicationRepository
-            applicationRepository;
+  private final JobApplicationRepository applicationRepository;
 
-    private final InterviewFeedbackRepository
-            feedbackRepository;
+  private final InterviewFeedbackRepository feedbackRepository;
 
-    private final InterviewFeedbackRatingRepository
-            ratingRepository;
+  private final InterviewFeedbackRatingRepository ratingRepository;
 
-    @Transactional(readOnly = true)
-    public ApplicationEvaluationSummaryResponse
-    getApplicationSummary(
-            UUID applicationId
-    ) {
-        UUID tenantId = requireTenantId();
+  @Transactional(readOnly = true)
+  public ApplicationEvaluationSummaryResponse getApplicationSummary(UUID applicationId) {
+    UUID tenantId = requireTenantId();
 
-        JobApplication application =
-                applicationRepository
-                        .findByIdAndTenantId(
-                                applicationId,
-                                tenantId
-                        )
-                        .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "Application not found"
-                                )
-                        );
+    JobApplication application =
+        applicationRepository
+            .findByIdAndTenantId(applicationId, tenantId)
+            .orElseThrow(() -> new IllegalArgumentException("Application not found"));
 
-        List<InterviewFeedback> feedbacks =
-                feedbackRepository
-                        .findAllByTenantIdAndInterviewApplicationIdAndSubmittedAtIsNotNullOrderBySubmittedAtAsc(
-                                tenantId,
-                                applicationId
-                        );
+    List<InterviewFeedback> feedbacks =
+        feedbackRepository
+            .findAllByTenantIdAndInterviewApplicationIdAndSubmittedAtIsNotNullOrderBySubmittedAtAsc(
+                tenantId, applicationId);
 
-        List<FeedbackData> feedbackData =
-                feedbacks.stream()
-                        .map(feedback ->
-                                loadFeedbackData(
-                                        tenantId,
-                                        feedback
-                                )
-                        )
-                        .toList();
+    List<FeedbackData> feedbackData =
+        feedbacks.stream().map(feedback -> loadFeedbackData(tenantId, feedback)).toList();
 
-        double weightedScore =
-                calculateOverallScore(
-                        feedbackData
-                );
+    double weightedScore = calculateOverallScore(feedbackData);
 
-        RecommendationDistributionResponse
-                recommendations =
-                buildRecommendationDistribution(
-                        feedbacks
-                );
+    RecommendationDistributionResponse recommendations = buildRecommendationDistribution(feedbacks);
 
-        List<CriterionEvaluationSummaryResponse>
-                criteria =
-                buildCriterionSummary(
-                        feedbackData
-                );
+    List<CriterionEvaluationSummaryResponse> criteria = buildCriterionSummary(feedbackData);
 
-        List<InterviewEvaluationSummaryResponse>
-                interviews =
-                buildInterviewSummary(
-                        feedbackData
-                );
+    List<InterviewEvaluationSummaryResponse> interviews = buildInterviewSummary(feedbackData);
 
-        return new ApplicationEvaluationSummaryResponse(
-                application.getId(),
-                weightedScore,
-                feedbacks.size(),
-                recommendations,
-                criteria,
-                interviews
-        );
+    return new ApplicationEvaluationSummaryResponse(
+        application.getId(),
+        weightedScore,
+        feedbacks.size(),
+        recommendations,
+        criteria,
+        interviews);
+  }
+
+  private FeedbackData loadFeedbackData(UUID tenantId, InterviewFeedback feedback) {
+    List<InterviewFeedbackRating> ratings =
+        ratingRepository.findAllByTenantIdAndFeedbackIdOrderByCriterionSortOrderAsc(
+            tenantId, feedback.getId());
+
+    return new FeedbackData(feedback, ratings, calculateFeedbackScore(ratings));
+  }
+
+  /*
+   * Σ(rating × weight) / Σ(weight)
+   */
+  private double calculateFeedbackScore(List<InterviewFeedbackRating> ratings) {
+    if (ratings.isEmpty()) {
+      return 0.0;
     }
 
-    private FeedbackData loadFeedbackData(
-            UUID tenantId,
-            InterviewFeedback feedback
-    ) {
-        List<InterviewFeedbackRating> ratings =
-                ratingRepository
-                        .findAllByTenantIdAndFeedbackIdOrderByCriterionSortOrderAsc(
-                                tenantId,
-                                feedback.getId()
-                        );
+    double weightedTotal = 0;
+    int totalWeight = 0;
 
-        return new FeedbackData(
-                feedback,
-                ratings,
-                calculateFeedbackScore(ratings)
-        );
+    for (InterviewFeedbackRating rating : ratings) {
+
+      int weight = rating.getCriterion().getWeight();
+
+      weightedTotal += rating.getRating() * weight;
+
+      totalWeight += weight;
+    }
+
+    if (totalWeight == 0) {
+      return 0.0;
+    }
+
+    return round(weightedTotal / totalWeight);
+  }
+
+  private double calculateOverallScore(List<FeedbackData> feedbackData) {
+    if (feedbackData.isEmpty()) {
+      return 0.0;
     }
 
     /*
-     * Σ(rating × weight) / Σ(weight)
+     * Every submitted interviewer evaluation
+     * contributes equally to the application
+     * score.
      */
-    private double calculateFeedbackScore(
-            List<InterviewFeedbackRating> ratings
-    ) {
-        if (ratings.isEmpty()) {
-            return 0.0;
-        }
+    double average =
+        feedbackData.stream().mapToDouble(FeedbackData::weightedScore).average().orElse(0.0);
 
-        double weightedTotal = 0;
-        int totalWeight = 0;
+    return round(average);
+  }
 
-        for (InterviewFeedbackRating rating : ratings) {
+  private RecommendationDistributionResponse buildRecommendationDistribution(
+      List<InterviewFeedback> feedbacks) {
+    int strongNo = 0;
+    int no = 0;
+    int neutral = 0;
+    int yes = 0;
+    int strongYes = 0;
 
-            int weight =
-                    rating.getCriterion()
-                            .getWeight();
+    for (InterviewFeedback feedback : feedbacks) {
 
-            weightedTotal +=
-                    rating.getRating()
-                            * weight;
+      if (feedback.getRecommendation() == null) {
+        continue;
+      }
 
-            totalWeight += weight;
-        }
+      switch (feedback.getRecommendation()) {
+        case STRONG_NO -> strongNo++;
 
-        if (totalWeight == 0) {
-            return 0.0;
-        }
+        case NO -> no++;
 
-        return round(
-                weightedTotal /
-                        totalWeight
-        );
+        case NEUTRAL -> neutral++;
+
+        case YES -> yes++;
+
+        case STRONG_YES -> strongYes++;
+      }
     }
 
-    private double calculateOverallScore(
-            List<FeedbackData> feedbackData
-    ) {
-        if (feedbackData.isEmpty()) {
-            return 0.0;
-        }
+    return new RecommendationDistributionResponse(strongNo, no, neutral, yes, strongYes);
+  }
 
-        /*
-         * Every submitted interviewer evaluation
-         * contributes equally to the application
-         * score.
-         */
-        double average =
-                feedbackData.stream()
-                        .mapToDouble(
-                                FeedbackData::weightedScore
-                        )
-                        .average()
-                        .orElse(0.0);
+  private List<CriterionEvaluationSummaryResponse> buildCriterionSummary(
+      List<FeedbackData> feedbackData) {
+    Map<UUID, CriterionAccumulator> accumulatorMap = new LinkedHashMap<>();
 
-        return round(average);
+    for (FeedbackData data : feedbackData) {
+
+      for (InterviewFeedbackRating rating : data.ratings()) {
+
+        ScorecardCriterion criterion = rating.getCriterion();
+
+        CriterionAccumulator accumulator =
+            accumulatorMap.computeIfAbsent(
+                criterion.getId(),
+                ignored ->
+                    new CriterionAccumulator(
+                        criterion.getId(), criterion.getName(), criterion.getWeight()));
+
+        accumulator.add(rating.getRating());
+      }
     }
 
-    private RecommendationDistributionResponse
-    buildRecommendationDistribution(
-            List<InterviewFeedback> feedbacks
-    ) {
-        int strongNo = 0;
-        int no = 0;
-        int neutral = 0;
-        int yes = 0;
-        int strongYes = 0;
+    return accumulatorMap.values().stream()
+        .map(
+            accumulator ->
+                new CriterionEvaluationSummaryResponse(
+                    accumulator.criterionId,
+                    accumulator.criterionName,
+                    round(accumulator.total / accumulator.count),
+                    accumulator.count,
+                    accumulator.weight))
+        .toList();
+  }
 
-        for (InterviewFeedback feedback : feedbacks) {
+  private List<InterviewEvaluationSummaryResponse> buildInterviewSummary(
+      List<FeedbackData> feedbackData) {
+    Map<UUID, List<FeedbackData>> byInterview = new LinkedHashMap<>();
 
-            if (feedback.getRecommendation() == null) {
-                continue;
-            }
+    for (FeedbackData data : feedbackData) {
 
-            switch (feedback.getRecommendation()) {
+      UUID interviewId = data.feedback().getInterview().getId();
 
-                case STRONG_NO ->
-                        strongNo++;
-
-                case NO ->
-                        no++;
-
-                case NEUTRAL ->
-                        neutral++;
-
-                case YES ->
-                        yes++;
-
-                case STRONG_YES ->
-                        strongYes++;
-            }
-        }
-
-        return new RecommendationDistributionResponse(
-                strongNo,
-                no,
-                neutral,
-                yes,
-                strongYes
-        );
+      byInterview.computeIfAbsent(interviewId, ignored -> new ArrayList<>()).add(data);
     }
 
-    private List<CriterionEvaluationSummaryResponse>
-    buildCriterionSummary(
-            List<FeedbackData> feedbackData
-    ) {
-        Map<UUID, CriterionAccumulator>
-                accumulatorMap =
-                new LinkedHashMap<>();
+    List<InterviewEvaluationSummaryResponse> result = new ArrayList<>();
 
-        for (FeedbackData data : feedbackData) {
+    for (List<FeedbackData> interviewFeedback : byInterview.values()) {
 
-            for (InterviewFeedbackRating rating :
-                    data.ratings()) {
+      if (interviewFeedback.isEmpty()) {
+        continue;
+      }
 
-                ScorecardCriterion criterion =
-                        rating.getCriterion();
+      InterviewFeedback first = interviewFeedback.getFirst().feedback();
 
-                CriterionAccumulator accumulator =
-                        accumulatorMap
-                                .computeIfAbsent(
-                                        criterion.getId(),
-                                        ignored ->
-                                                new CriterionAccumulator(
-                                                        criterion.getId(),
-                                                        criterion.getName(),
-                                                        criterion.getWeight()
-                                                )
-                                );
+      double interviewScore =
+          interviewFeedback.stream().mapToDouble(FeedbackData::weightedScore).average().orElse(0.0);
 
-                accumulator.add(
-                        rating.getRating()
-                );
-            }
-        }
+      List<InterviewerEvaluationResponse> interviewers =
+          interviewFeedback.stream()
+              .map(
+                  data -> {
+                    InterviewFeedback feedback = data.feedback();
 
-        return accumulatorMap
-                .values()
-                .stream()
-                .map(accumulator ->
-                        new CriterionEvaluationSummaryResponse(
-                                accumulator.criterionId,
-                                accumulator.criterionName,
-                                round(
-                                        accumulator.total /
-                                                accumulator.count
-                                ),
-                                accumulator.count,
-                                accumulator.weight
-                        )
-                )
-                .toList();
+                    return new InterviewerEvaluationResponse(
+                        feedback.getId(),
+                        feedback.getInterview().getId(),
+                        feedback.getInterviewer().getId(),
+                        interviewerName(feedback),
+                        feedback.getRecommendation(),
+                        data.weightedScore(),
+                        feedback.getSubmittedAt());
+                  })
+              .toList();
+
+      result.add(
+          new InterviewEvaluationSummaryResponse(
+              first.getInterview().getId(),
+              first.getInterview().getTitle(),
+              round(interviewScore),
+              interviewFeedback.size(),
+              interviewers));
     }
 
-    private List<InterviewEvaluationSummaryResponse>
-    buildInterviewSummary(
-            List<FeedbackData> feedbackData
-    ) {
-        Map<UUID, List<FeedbackData>>
-                byInterview =
-                new LinkedHashMap<>();
+    return result;
+  }
 
-        for (FeedbackData data : feedbackData) {
+  private String interviewerName(InterviewFeedback feedback) {
+    var user = feedback.getInterviewer().getUser();
 
-            UUID interviewId =
-                    data.feedback()
-                            .getInterview()
-                            .getId();
+    return (user.getFirstName() + " " + user.getLastName()).trim();
+  }
 
-            byInterview
-                    .computeIfAbsent(
-                            interviewId,
-                            ignored ->
-                                    new ArrayList<>()
-                    )
-                    .add(data);
-        }
+  private double round(double value) {
+    return Math.round(value * 100.0) / 100.0;
+  }
 
-        List<InterviewEvaluationSummaryResponse>
-                result =
-                new ArrayList<>();
+  private UUID requireTenantId() {
+    UUID tenantId = tenantContext.getTenantId();
 
-        for (List<FeedbackData> interviewFeedback :
-                byInterview.values()) {
-
-            if (interviewFeedback.isEmpty()) {
-                continue;
-            }
-
-            InterviewFeedback first =
-                    interviewFeedback
-                            .getFirst()
-                            .feedback();
-
-            double interviewScore =
-                    interviewFeedback
-                            .stream()
-                            .mapToDouble(
-                                    FeedbackData::weightedScore
-                            )
-                            .average()
-                            .orElse(0.0);
-
-            List<InterviewerEvaluationResponse>
-                    interviewers =
-                    interviewFeedback
-                            .stream()
-                            .map(data -> {
-
-                                InterviewFeedback feedback =
-                                        data.feedback();
-
-                                return new InterviewerEvaluationResponse(
-                                        feedback.getId(),
-                                        feedback.getInterview()
-                                                .getId(),
-                                        feedback.getInterviewer()
-                                                .getId(),
-                                        interviewerName(
-                                                feedback
-                                        ),
-                                        feedback.getRecommendation(),
-                                        data.weightedScore(),
-                                        feedback.getSubmittedAt()
-                                );
-                            })
-                            .toList();
-
-            result.add(
-                    new InterviewEvaluationSummaryResponse(
-                            first.getInterview()
-                                    .getId(),
-
-                            first.getInterview()
-                                    .getTitle(),
-
-                            round(interviewScore),
-
-                            interviewFeedback.size(),
-
-                            interviewers
-                    )
-            );
-        }
-
-        return result;
+    if (tenantId == null) {
+      throw new IllegalStateException("Tenant context is required");
     }
 
-    private String interviewerName(
-            InterviewFeedback feedback
-    ) {
-        var user =
-                feedback.getInterviewer()
-                        .getUser();
+    return tenantId;
+  }
 
-        return (
-                user.getFirstName()
-                        + " "
-                        + user.getLastName()
-        ).trim();
+  private record FeedbackData(
+      InterviewFeedback feedback, List<InterviewFeedbackRating> ratings, double weightedScore) {}
+
+  private static class CriterionAccumulator {
+
+    private final UUID criterionId;
+    private final String criterionName;
+    private final int weight;
+
+    private double total;
+    private int count;
+
+    private CriterionAccumulator(UUID criterionId, String criterionName, int weight) {
+      this.criterionId = criterionId;
+
+      this.criterionName = criterionName;
+
+      this.weight = weight;
     }
 
-    private double round(
-            double value
-    ) {
-        return Math.round(
-                value * 100.0
-        ) / 100.0;
+    private void add(int rating) {
+      total += rating;
+      count++;
     }
-
-    private UUID requireTenantId() {
-        UUID tenantId =
-                tenantContext.getTenantId();
-
-        if (tenantId == null) {
-            throw new IllegalStateException(
-                    "Tenant context is required"
-            );
-        }
-
-        return tenantId;
-    }
-
-    private record FeedbackData(
-            InterviewFeedback feedback,
-            List<InterviewFeedbackRating> ratings,
-            double weightedScore
-    ) {
-    }
-
-    private static class CriterionAccumulator {
-
-        private final UUID criterionId;
-        private final String criterionName;
-        private final int weight;
-
-        private double total;
-        private int count;
-
-        private CriterionAccumulator(
-                UUID criterionId,
-                String criterionName,
-                int weight
-        ) {
-            this.criterionId =
-                    criterionId;
-
-            this.criterionName =
-                    criterionName;
-
-            this.weight =
-                    weight;
-        }
-
-        private void add(
-                int rating
-        ) {
-            total += rating;
-            count++;
-        }
-    }
+  }
 }

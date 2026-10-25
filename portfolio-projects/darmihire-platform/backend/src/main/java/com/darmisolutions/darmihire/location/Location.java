@@ -12,19 +12,19 @@ import lombok.Setter;
 @Setter
 public class Location extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", nullable = false)
-    private Tenant tenant;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "tenant_id", nullable = false)
+  private Tenant tenant;
 
-    @Column(nullable = false)
-    private String name;
+  @Column(nullable = false)
+  private String name;
 
-    private String city;
+  private String city;
 
-    private String country;
+  private String country;
 
-    private String timezone;
+  private String timezone;
 
-    @Column(nullable = false)
-    private boolean remote;
+  @Column(nullable = false)
+  private boolean remote;
 }

@@ -1,7 +1,6 @@
 package com.darmisolutions.darmihire.candidate.dto;
 
 import com.darmisolutions.darmihire.candidate.CandidateSource;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -20,5 +19,4 @@ public record CandidateResponse(
     String resumeUrl,
     String notes,
     Instant createdAt,
-    Instant updatedAt
-) {}
+    Instant updatedAt) {}

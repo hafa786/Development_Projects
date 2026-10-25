@@ -1,14 +1,13 @@
 package com.darmisolutions.darmihire.tenant;
 
 public enum Role {
+  COMPANY_ADMIN,
 
-    COMPANY_ADMIN,
+  RECRUITER,
 
-    RECRUITER,
+  HIRING_MANAGER,
 
-    HIRING_MANAGER,
+  INTERVIEWER,
 
-    INTERVIEWER,
-
-    VIEWER
+  VIEWER
 }

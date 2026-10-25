@@ -5,117 +5,88 @@ import com.darmisolutions.darmihire.careers.dto.PublicJobApplicationRequest;
 import com.darmisolutions.darmihire.careers.dto.PublicJobApplicationResponse;
 import com.darmisolutions.darmihire.careers.dto.PublicJobResponse;
 import com.darmisolutions.darmihire.careers.dto.PublicJobSummaryResponse;
-
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.MediaType;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/public/careers")
 @RequiredArgsConstructor
 public class PublicCareersController {
 
-    private final PublicCareersService publicCareersService;
+  private final PublicCareersService publicCareersService;
 
-    /*
-     * ---------------------------------------------------------
-     * CAREERS SITE
-     * ---------------------------------------------------------
-     */
+  /*
+   * ---------------------------------------------------------
+   * CAREERS SITE
+   * ---------------------------------------------------------
+   */
 
-    @GetMapping("/{companySlug}")
-    public ResponseEntity<PublicCareerResponse> getCareer(
-            @PathVariable String companySlug) {
+  @GetMapping("/{companySlug}")
+  public ResponseEntity<PublicCareerResponse> getCareer(@PathVariable String companySlug) {
 
-        PublicCareerResponse response = publicCareersService
-                .getCareer(companySlug);
+    PublicCareerResponse response = publicCareersService.getCareer(companySlug);
 
-        return ResponseEntity
-                .ok()
-                .cacheControl(
-                        CacheControl.maxAge(
-                                5,
-                                TimeUnit.MINUTES))
-                .body(response);
-    }
+    return ResponseEntity.ok()
+        .cacheControl(CacheControl.maxAge(5, TimeUnit.MINUTES))
+        .body(response);
+  }
 
-    /*
-     * ---------------------------------------------------------
-     * PUBLIC JOB LIST
-     * ---------------------------------------------------------
-     */
+  /*
+   * ---------------------------------------------------------
+   * PUBLIC JOB LIST
+   * ---------------------------------------------------------
+   */
 
-    @GetMapping("/{companySlug}/jobs")
-    public ResponseEntity<List<PublicJobSummaryResponse>> getJobs(
-            @PathVariable String companySlug) {
+  @GetMapping("/{companySlug}/jobs")
+  public ResponseEntity<List<PublicJobSummaryResponse>> getJobs(@PathVariable String companySlug) {
 
-        List<PublicJobSummaryResponse> response = publicCareersService
-                .getJobs(companySlug);
+    List<PublicJobSummaryResponse> response = publicCareersService.getJobs(companySlug);
 
-        return ResponseEntity
-                .ok()
-                .cacheControl(
-                        CacheControl.maxAge(
-                                1,
-                                TimeUnit.MINUTES))
-                .body(response);
-    }
+    return ResponseEntity.ok()
+        .cacheControl(CacheControl.maxAge(1, TimeUnit.MINUTES))
+        .body(response);
+  }
 
-    /*
-     * ---------------------------------------------------------
-     * PUBLIC JOB DETAILS
-     * ---------------------------------------------------------
-     */
+  /*
+   * ---------------------------------------------------------
+   * PUBLIC JOB DETAILS
+   * ---------------------------------------------------------
+   */
 
-    @GetMapping("/{companySlug}/jobs/{jobSlug}")
-    public ResponseEntity<PublicJobResponse> getJob(
-            @PathVariable String companySlug,
+  @GetMapping("/{companySlug}/jobs/{jobSlug}")
+  public ResponseEntity<PublicJobResponse> getJob(
+      @PathVariable String companySlug, @PathVariable String jobSlug) {
 
-            @PathVariable String jobSlug) {
+    PublicJobResponse response = publicCareersService.getJob(companySlug, jobSlug);
 
-        PublicJobResponse response = publicCareersService
-                .getJob(
-                        companySlug,
-                        jobSlug);
+    return ResponseEntity.ok()
+        .cacheControl(CacheControl.maxAge(1, TimeUnit.MINUTES))
+        .body(response);
+  }
 
-        return ResponseEntity
-                .ok()
-                .cacheControl(
-                        CacheControl.maxAge(
-                                1,
-                                TimeUnit.MINUTES))
-                .body(response);
-    }
-
-    @PostMapping(value = "/{companySlug}/jobs/{jobSlug}/applications", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ResponseStatus(HttpStatus.CREATED)
-    public PublicJobApplicationResponse apply(
-            @PathVariable String companySlug,
-            @PathVariable String jobSlug,
-
-            @Valid @RequestPart("application") PublicJobApplicationRequest request,
-
-            @RequestPart(value = "resume", required = false) MultipartFile resume) {
-        return publicCareersService.apply(
-                companySlug,
-                jobSlug,
-                request,
-                resume);
-    }
+  @PostMapping(
+      value = "/{companySlug}/jobs/{jobSlug}/applications",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @ResponseStatus(HttpStatus.CREATED)
+  public PublicJobApplicationResponse apply(
+      @PathVariable String companySlug,
+      @PathVariable String jobSlug,
+      @Valid @RequestPart("application") PublicJobApplicationRequest request,
+      @RequestPart(value = "resume", required = false) MultipartFile resume) {
+    return publicCareersService.apply(companySlug, jobSlug, request, resume);
+  }
 }

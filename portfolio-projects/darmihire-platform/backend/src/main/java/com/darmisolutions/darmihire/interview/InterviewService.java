@@ -3,947 +3,534 @@ package com.darmisolutions.darmihire.interview;
 import com.darmisolutions.darmihire.application.ApplicationActivityService;
 import com.darmisolutions.darmihire.application.JobApplication;
 import com.darmisolutions.darmihire.application.JobApplicationRepository;
-
 import com.darmisolutions.darmihire.audit.AuditAction;
 import com.darmisolutions.darmihire.audit.AuditService;
 import com.darmisolutions.darmihire.exception.ConflictException;
 import com.darmisolutions.darmihire.exception.ResourceNotFoundException;
 import com.darmisolutions.darmihire.interview.dto.*;
-
 import com.darmisolutions.darmihire.security.AuthorizationService;
 import com.darmisolutions.darmihire.security.Permission;
-
 import com.darmisolutions.darmihire.tenant.Tenant;
-import com.darmisolutions.darmihire.tenant.context.*;
 import com.darmisolutions.darmihire.tenant.TenantRepository;
 import com.darmisolutions.darmihire.tenant.TenantUser;
 import com.darmisolutions.darmihire.tenant.TenantUserRepository;
-
-import lombok.RequiredArgsConstructor;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.darmisolutions.darmihire.tenant.context.*;
 import java.time.Instant;
 import java.time.ZoneId;
-
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class InterviewService {
 
-    private final InterviewRepository interviewRepository;
+  private final InterviewRepository interviewRepository;
 
-    private final InterviewInterviewerRepository
-            interviewInterviewerRepository;
+  private final InterviewInterviewerRepository interviewInterviewerRepository;
 
-    private final JobApplicationRepository
-            jobApplicationRepository;
+  private final JobApplicationRepository jobApplicationRepository;
 
-    private final TenantRepository tenantRepository;
+  private final TenantRepository tenantRepository;
 
-    private final TenantUserRepository
-            tenantUserRepository;
+  private final TenantUserRepository tenantUserRepository;
 
-    private final TenantContext tenantContext;
+  private final TenantContext tenantContext;
 
-    private final AuthorizationService
-            authorizationService;
+  private final AuthorizationService authorizationService;
 
-    private final AuditService auditService;
+  private final AuditService auditService;
 
-    private final ApplicationActivityService
-            applicationActivityService;
+  private final ApplicationActivityService applicationActivityService;
+
+  /*
+   * ---------------------------------------------------------
+   * READ
+   * ---------------------------------------------------------
+   */
+
+  @Transactional(readOnly = true)
+  public List<InterviewResponse> findAll() {
+    authorizationService.require(Permission.MANAGE_INTERVIEWS);
+
+    UUID tenantId = requireTenantId();
+
+    return interviewRepository.findAllByTenantIdOrderByStartTimeDesc(tenantId).stream()
+        .map(this::toResponse)
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public InterviewResponse findById(UUID interviewId) {
+    authorizationService.require(Permission.MANAGE_INTERVIEWS);
+
+    return toResponse(requireInterview(interviewId));
+  }
+
+  @Transactional(readOnly = true)
+  public List<InterviewResponse> findByApplication(UUID applicationId) {
+    authorizationService.require(Permission.MANAGE_INTERVIEWS);
+
+    UUID tenantId = requireTenantId();
+
+    return interviewRepository
+        .findAllByTenantIdAndApplicationIdOrderByStartTimeAsc(tenantId, applicationId)
+        .stream()
+        .map(this::toResponse)
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<InterviewResponse> findUpcoming(Instant from, Instant to) {
+    authorizationService.require(Permission.MANAGE_INTERVIEWS);
+
+    UUID tenantId = requireTenantId();
+
+    Instant effectiveFrom = from != null ? from : Instant.now();
+
+    Instant effectiveTo = to != null ? to : effectiveFrom.plusSeconds(30L * 24 * 60 * 60);
+
+    if (!effectiveTo.isAfter(effectiveFrom)) {
+      throw new IllegalArgumentException("End date must be after start date");
+    }
+
+    return interviewRepository
+        .findAllByTenantIdAndStartTimeBetweenOrderByStartTimeAsc(
+            tenantId, effectiveFrom, effectiveTo)
+        .stream()
+        .map(this::toResponse)
+        .toList();
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * CREATE
+   * ---------------------------------------------------------
+   */
+
+  @Transactional
+  public InterviewResponse create(CreateInterviewRequest request) {
+    authorizationService.require(Permission.MANAGE_INTERVIEWS);
+
+    UUID tenantId = requireTenantId();
+
+    validateSchedule(request.startTime(), request.endTime(), request.timezone());
+
+    Tenant tenant =
+        tenantRepository
+            .findById(tenantId)
+            .orElseThrow(() -> new ResourceNotFoundException("Tenant not found"));
+
+    JobApplication application =
+        jobApplicationRepository
+            .findByIdAndTenantId(request.applicationId(), tenantId)
+            .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+
+    Interview interview = new Interview();
+
+    interview.setTenant(tenant);
+    interview.setApplication(application);
+
+    interview.setTitle(request.title().trim());
+
+    interview.setInterviewType(request.interviewType());
+
+    interview.setStatus(InterviewStatus.SCHEDULED);
+
+    interview.setStartTime(request.startTime());
+
+    interview.setEndTime(request.endTime());
+
+    interview.setTimezone(request.timezone().trim());
+
+    interview.setLocation(trimToNull(request.location()));
+
+    interview.setMeetingUrl(trimToNull(request.meetingUrl()));
+
+    interview.setNotes(trimToNull(request.notes()));
+
+    Interview saved = interviewRepository.save(interview);
 
     /*
-     * ---------------------------------------------------------
-     * READ
-     * ---------------------------------------------------------
+     * Recruiter-visible timeline event.
      */
-
-    @Transactional(readOnly = true)
-    public List<InterviewResponse> findAll() {
-        authorizationService.require(
-                Permission.MANAGE_INTERVIEWS
-        );
-
-        UUID tenantId = requireTenantId();
-
-        return interviewRepository
-                .findAllByTenantIdOrderByStartTimeDesc(
-                        tenantId
-                )
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public InterviewResponse findById(
-            UUID interviewId
-    ) {
-        authorizationService.require(
-                Permission.MANAGE_INTERVIEWS
-        );
-
-        return toResponse(
-                requireInterview(
-                        interviewId
-                )
-        );
-    }
-
-    @Transactional(readOnly = true)
-    public List<InterviewResponse> findByApplication(
-            UUID applicationId
-    ) {
-        authorizationService.require(
-                Permission.MANAGE_INTERVIEWS
-        );
-
-        UUID tenantId = requireTenantId();
-
-        return interviewRepository
-                .findAllByTenantIdAndApplicationIdOrderByStartTimeAsc(
-                        tenantId,
-                        applicationId
-                )
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<InterviewResponse> findUpcoming(
-            Instant from,
-            Instant to
-    ) {
-        authorizationService.require(
-                Permission.MANAGE_INTERVIEWS
-        );
-
-        UUID tenantId = requireTenantId();
-
-        Instant effectiveFrom =
-                from != null
-                        ? from
-                        : Instant.now();
-
-        Instant effectiveTo =
-                to != null
-                        ? to
-                        : effectiveFrom.plusSeconds(
-                                30L * 24 * 60 * 60
-                        );
-
-        if (!effectiveTo.isAfter(effectiveFrom)) {
-            throw new IllegalArgumentException(
-                    "End date must be after start date"
-            );
-        }
-
-        return interviewRepository
-                .findAllByTenantIdAndStartTimeBetweenOrderByStartTimeAsc(
-                        tenantId,
-                        effectiveFrom,
-                        effectiveTo
-                )
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
+    applicationActivityService.recordInterviewScheduled(application, saved.getTitle(), null);
 
     /*
-     * ---------------------------------------------------------
-     * CREATE
-     * ---------------------------------------------------------
+     * Optional interviewer assignments supplied
+     * when the interview is first created.
      */
-
-    @Transactional
-    public InterviewResponse create(
-            CreateInterviewRequest request
-    ) {
-        authorizationService.require(
-                Permission.MANAGE_INTERVIEWS
-        );
-
-        UUID tenantId = requireTenantId();
-
-        validateSchedule(
-                request.startTime(),
-                request.endTime(),
-                request.timezone()
-        );
-
-        Tenant tenant =
-                tenantRepository
-                        .findById(tenantId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Tenant not found"
-                                )
-                        );
-
-        JobApplication application =
-                jobApplicationRepository
-                        .findByIdAndTenantId(
-                                request.applicationId(),
-                                tenantId
-                        )
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Application not found"
-                                )
-                        );
-
-        Interview interview =
-                new Interview();
-
-        interview.setTenant(tenant);
-        interview.setApplication(application);
-
-        interview.setTitle(
-                request.title().trim()
-        );
-
-        interview.setInterviewType(
-                request.interviewType()
-        );
-
-        interview.setStatus(
-                InterviewStatus.SCHEDULED
-        );
-
-        interview.setStartTime(
-                request.startTime()
-        );
-
-        interview.setEndTime(
-                request.endTime()
-        );
-
-        interview.setTimezone(
-                request.timezone().trim()
-        );
-
-        interview.setLocation(
-                trimToNull(
-                        request.location()
-                )
-        );
-
-        interview.setMeetingUrl(
-                trimToNull(
-                        request.meetingUrl()
-                )
-        );
-
-        interview.setNotes(
-                trimToNull(
-                        request.notes()
-                )
-        );
-
-        Interview saved =
-                interviewRepository.save(
-                        interview
-                );
-
-        /*
-         * Recruiter-visible timeline event.
-         */
-        applicationActivityService
-                .recordInterviewScheduled(
-                        application,
-                        saved.getTitle(),
-                        null
-                );
-
-        /*
-         * Optional interviewer assignments supplied
-         * when the interview is first created.
-         */
-        if (request.interviewerIds() != null) {
-            for (
-                    UUID interviewerId
-                    : request.interviewerIds()
-            ) {
-                addInterviewerInternal(
-                        saved,
-                        interviewerId,
-                        false
-                );
-            }
-        }
-
-        auditService.log(
-                AuditAction.INTERVIEW_CREATED,
-                "Interview",
-                saved.getId()
-        );
-
-        return toResponse(saved);
+    if (request.interviewerIds() != null) {
+      for (UUID interviewerId : request.interviewerIds()) {
+        addInterviewerInternal(saved, interviewerId, false);
+      }
     }
 
-    /*
-     * ---------------------------------------------------------
-     * UPDATE METADATA
-     * ---------------------------------------------------------
-     */
+    auditService.log(AuditAction.INTERVIEW_CREATED, "Interview", saved.getId());
 
-    @Transactional
-    public InterviewResponse update(
-            UUID interviewId,
-            UpdateInterviewRequest request
-    ) {
-        authorizationService.require(
-                Permission.MANAGE_INTERVIEWS
-        );
+    return toResponse(saved);
+  }
 
-        Interview interview =
-                requireInterview(
-                        interviewId
-                );
+  /*
+   * ---------------------------------------------------------
+   * UPDATE METADATA
+   * ---------------------------------------------------------
+   */
 
-        requireEditable(interview);
+  @Transactional
+  public InterviewResponse update(UUID interviewId, UpdateInterviewRequest request) {
+    authorizationService.require(Permission.MANAGE_INTERVIEWS);
 
-        interview.setTitle(
-                request.title().trim()
-        );
+    Interview interview = requireInterview(interviewId);
 
-        interview.setInterviewType(
-                request.interviewType()
-        );
+    requireEditable(interview);
 
-        interview.setTimezone(
-                request.timezone().trim()
-        );
+    interview.setTitle(request.title().trim());
 
-        validateTimezone(
-                request.timezone()
-        );
+    interview.setInterviewType(request.interviewType());
 
-        interview.setLocation(
-                trimToNull(
-                        request.location()
-                )
-        );
+    interview.setTimezone(request.timezone().trim());
 
-        interview.setMeetingUrl(
-                trimToNull(
-                        request.meetingUrl()
-                )
-        );
+    validateTimezone(request.timezone());
 
-        interview.setNotes(
-                trimToNull(
-                        request.notes()
-                )
-        );
+    interview.setLocation(trimToNull(request.location()));
 
-        Interview saved =
-                interviewRepository.save(
-                        interview
-                );
+    interview.setMeetingUrl(trimToNull(request.meetingUrl()));
 
-        auditService.log(
-                AuditAction.INTERVIEW_UPDATED,
-                "Interview",
-                saved.getId()
-        );
+    interview.setNotes(trimToNull(request.notes()));
 
-        return toResponse(saved);
+    Interview saved = interviewRepository.save(interview);
+
+    auditService.log(AuditAction.INTERVIEW_UPDATED, "Interview", saved.getId());
+
+    return toResponse(saved);
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * RESCHEDULE
+   * ---------------------------------------------------------
+   */
+
+  @Transactional
+  public InterviewResponse reschedule(UUID interviewId, RescheduleInterviewRequest request) {
+    authorizationService.require(Permission.MANAGE_INTERVIEWS);
+
+    Interview interview = requireInterview(interviewId);
+
+    requireEditable(interview);
+
+    validateSchedule(request.startTime(), request.endTime(), request.timezone());
+
+    interview.setStartTime(request.startTime());
+
+    interview.setEndTime(request.endTime());
+
+    interview.setTimezone(request.timezone().trim());
+
+    Interview saved = interviewRepository.save(interview);
+
+    applicationActivityService.recordInterviewRescheduled(
+        saved.getApplication(), saved.getTitle(), null);
+
+    auditService.log(AuditAction.INTERVIEW_RESCHEDULED, "Interview", saved.getId());
+
+    return toResponse(saved);
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * CANCEL
+   * ---------------------------------------------------------
+   */
+
+  @Transactional
+  public InterviewResponse cancel(UUID interviewId, CancelInterviewRequest request) {
+    authorizationService.require(Permission.MANAGE_INTERVIEWS);
+
+    Interview interview = requireInterview(interviewId);
+
+    if (interview.getStatus() == InterviewStatus.COMPLETED) {
+      throw new ConflictException("Completed interview cannot be cancelled");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * RESCHEDULE
-     * ---------------------------------------------------------
-     */
-
-    @Transactional
-    public InterviewResponse reschedule(
-            UUID interviewId,
-            RescheduleInterviewRequest request
-    ) {
-        authorizationService.require(
-                Permission.MANAGE_INTERVIEWS
-        );
-
-        Interview interview =
-                requireInterview(
-                        interviewId
-                );
-
-        requireEditable(interview);
-
-        validateSchedule(
-                request.startTime(),
-                request.endTime(),
-                request.timezone()
-        );
-
-        interview.setStartTime(
-                request.startTime()
-        );
-
-        interview.setEndTime(
-                request.endTime()
-        );
-
-        interview.setTimezone(
-                request.timezone().trim()
-        );
-
-        Interview saved =
-                interviewRepository.save(
-                        interview
-                );
-
-        applicationActivityService
-                .recordInterviewRescheduled(
-                        saved.getApplication(),
-                        saved.getTitle(),
-                        null
-                );
-
-        auditService.log(
-                AuditAction.INTERVIEW_RESCHEDULED,
-                "Interview",
-                saved.getId()
-        );
-
-        return toResponse(saved);
+    if (interview.getStatus() == InterviewStatus.CANCELLED) {
+      throw new ConflictException("Interview is already cancelled");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * CANCEL
-     * ---------------------------------------------------------
-     */
+    interview.setStatus(InterviewStatus.CANCELLED);
 
-    @Transactional
-    public InterviewResponse cancel(
-            UUID interviewId,
-            CancelInterviewRequest request
-    ) {
-        authorizationService.require(
-                Permission.MANAGE_INTERVIEWS
-        );
+    interview.setCancellationReason(trimToNull(request.reason()));
 
-        Interview interview =
-                requireInterview(
-                        interviewId
-                );
+    interview.setCancelledAt(Instant.now());
 
-        if (
-                interview.getStatus()
-                        == InterviewStatus.COMPLETED
-        ) {
-            throw new ConflictException(
-                    "Completed interview cannot be cancelled"
-            );
-        }
+    Interview saved = interviewRepository.save(interview);
 
-        if (
-                interview.getStatus()
-                        == InterviewStatus.CANCELLED
-        ) {
-            throw new ConflictException(
-                    "Interview is already cancelled"
-            );
-        }
+    applicationActivityService.recordInterviewCancelled(
+        saved.getApplication(), saved.getTitle(), null);
 
-        interview.setStatus(
-                InterviewStatus.CANCELLED
-        );
+    auditService.log(AuditAction.INTERVIEW_CANCELLED, "Interview", saved.getId());
 
-        interview.setCancellationReason(
-                trimToNull(
-                        request.reason()
-                )
-        );
+    return toResponse(saved);
+  }
 
-        interview.setCancelledAt(
-                Instant.now()
-        );
+  /*
+   * ---------------------------------------------------------
+   * COMPLETE
+   * ---------------------------------------------------------
+   */
 
-        Interview saved =
-                interviewRepository.save(
-                        interview
-                );
+  @Transactional
+  public InterviewResponse complete(UUID interviewId) {
+    authorizationService.require(Permission.MANAGE_INTERVIEWS);
 
-        applicationActivityService
-                .recordInterviewCancelled(
-                        saved.getApplication(),
-                        saved.getTitle(),
-                        null
-                );
+    Interview interview = requireInterview(interviewId);
 
-        auditService.log(
-                AuditAction.INTERVIEW_CANCELLED,
-                "Interview",
-                saved.getId()
-        );
-
-        return toResponse(saved);
+    if (interview.getStatus() == InterviewStatus.CANCELLED) {
+      throw new ConflictException("Cancelled interview cannot be completed");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * COMPLETE
-     * ---------------------------------------------------------
-     */
-
-    @Transactional
-    public InterviewResponse complete(
-            UUID interviewId
-    ) {
-        authorizationService.require(
-                Permission.MANAGE_INTERVIEWS
-        );
-
-        Interview interview =
-                requireInterview(
-                        interviewId
-                );
-
-        if (
-                interview.getStatus()
-                        == InterviewStatus.CANCELLED
-        ) {
-            throw new ConflictException(
-                    "Cancelled interview cannot be completed"
-            );
-        }
-
-        if (
-                interview.getStatus()
-                        == InterviewStatus.COMPLETED
-        ) {
-            throw new ConflictException(
-                    "Interview is already completed"
-            );
-        }
-
-        interview.setStatus(
-                InterviewStatus.COMPLETED
-        );
-
-        interview.setCompletedAt(
-                Instant.now()
-        );
-
-        Interview saved =
-                interviewRepository.save(
-                        interview
-                );
-
-        applicationActivityService
-                .recordInterviewCompleted(
-                        saved.getApplication(),
-                        saved.getTitle(),
-                        null
-                );
-
-        auditService.log(
-                AuditAction.INTERVIEW_COMPLETED,
-                "Interview",
-                saved.getId()
-        );
-
-        return toResponse(saved);
+    if (interview.getStatus() == InterviewStatus.COMPLETED) {
+      throw new ConflictException("Interview is already completed");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * ADD INTERVIEWER
-     * ---------------------------------------------------------
-     */
+    interview.setStatus(InterviewStatus.COMPLETED);
 
-    @Transactional
-    public InterviewResponse addInterviewer(
-            UUID interviewId,
-            AddInterviewerRequest request
-    ) {
-        authorizationService.require(
-                Permission.MANAGE_INTERVIEWS
-        );
+    interview.setCompletedAt(Instant.now());
 
-        Interview interview =
-                requireInterview(
-                        interviewId
-                );
+    Interview saved = interviewRepository.save(interview);
 
-        requireEditable(interview);
+    applicationActivityService.recordInterviewCompleted(
+        saved.getApplication(), saved.getTitle(), null);
 
-        addInterviewerInternal(
-                interview,
-                request.interviewerId(),
-                true
-        );
+    auditService.log(AuditAction.INTERVIEW_COMPLETED, "Interview", saved.getId());
 
-        return toResponse(interview);
+    return toResponse(saved);
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * ADD INTERVIEWER
+   * ---------------------------------------------------------
+   */
+
+  @Transactional
+  public InterviewResponse addInterviewer(UUID interviewId, AddInterviewerRequest request) {
+    authorizationService.require(Permission.MANAGE_INTERVIEWS);
+
+    Interview interview = requireInterview(interviewId);
+
+    requireEditable(interview);
+
+    addInterviewerInternal(interview, request.interviewerId(), true);
+
+    return toResponse(interview);
+  }
+
+  private void addInterviewerInternal(Interview interview, UUID interviewerId, boolean audit) {
+    UUID tenantId = requireTenantId();
+
+    if (interviewInterviewerRepository.existsByTenantIdAndInterviewIdAndInterviewerId(
+        tenantId, interview.getId(), interviewerId)) {
+      throw new ConflictException("Interviewer is already assigned");
     }
 
-    private void addInterviewerInternal(
-            Interview interview,
-            UUID interviewerId,
-            boolean audit
-    ) {
-        UUID tenantId =
-                requireTenantId();
+    TenantUser interviewer =
+        tenantUserRepository
+            .findByIdAndTenantId(interviewerId, tenantId)
+            .orElseThrow(() -> new ResourceNotFoundException("Workspace member not found"));
 
-        if (
-                interviewInterviewerRepository
-                        .existsByTenantIdAndInterviewIdAndInterviewerId(
-                                tenantId,
-                                interview.getId(),
-                                interviewerId
-                        )
-        ) {
-            throw new ConflictException(
-                    "Interviewer is already assigned"
-            );
-        }
+    InterviewInterviewer assignment = new InterviewInterviewer();
 
-        TenantUser interviewer =
-                tenantUserRepository
-                        .findByIdAndTenantId(
-                                interviewerId,
-                                tenantId
-                        )
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Workspace member not found"
-                                )
-                        );
+    assignment.setTenant(interview.getTenant());
 
-        InterviewInterviewer assignment =
-                new InterviewInterviewer();
+    assignment.setInterview(interview);
 
-        assignment.setTenant(
-                interview.getTenant()
-        );
+    assignment.setInterviewer(interviewer);
 
-        assignment.setInterview(
-                interview
-        );
+    interviewInterviewerRepository.save(assignment);
 
-        assignment.setInterviewer(
-                interviewer
-        );
+    applicationActivityService.recordInterviewerAdded(
+        interview.getApplication(),
+        interview.getTitle(),
+        getInterviewerDisplayName(interviewer),
+        null);
 
-        interviewInterviewerRepository.save(
-                assignment
-        );
+    if (audit) {
+      auditService.log(AuditAction.INTERVIEW_INTERVIEWER_ADDED, "Interview", interview.getId());
+    }
+  }
 
-        applicationActivityService
-                .recordInterviewerAdded(
-                        interview.getApplication(),
-                        interview.getTitle(),
-                        getInterviewerDisplayName(
-                                interviewer
-                        ),
-                        null
-                );
+  /*
+   * ---------------------------------------------------------
+   * REMOVE INTERVIEWER
+   * ---------------------------------------------------------
+   */
 
-        if (audit) {
-            auditService.log(
-                    AuditAction.INTERVIEW_INTERVIEWER_ADDED,
-                    "Interview",
-                    interview.getId()
-            );
-        }
+  @Transactional
+  public InterviewResponse removeInterviewer(UUID interviewId, UUID interviewerId) {
+    authorizationService.require(Permission.MANAGE_INTERVIEWS);
+
+    UUID tenantId = requireTenantId();
+
+    Interview interview = requireInterview(interviewId);
+
+    requireEditable(interview);
+
+    InterviewInterviewer assignment =
+        interviewInterviewerRepository
+            .findByTenantIdAndInterviewIdAndInterviewerId(tenantId, interviewId, interviewerId)
+            .orElseThrow(() -> new ResourceNotFoundException("Interview interviewer not found"));
+
+    String interviewerName = getInterviewerDisplayName(assignment.getInterviewer());
+
+    interviewInterviewerRepository.delete(assignment);
+
+    applicationActivityService.recordInterviewerRemoved(
+        interview.getApplication(), interview.getTitle(), interviewerName, null);
+
+    auditService.log(AuditAction.INTERVIEW_INTERVIEWER_REMOVED, "Interview", interview.getId());
+
+    return toResponse(interview);
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * VALIDATION
+   * ---------------------------------------------------------
+   */
+
+  private void validateSchedule(Instant startTime, Instant endTime, String timezone) {
+    if (startTime == null || endTime == null) {
+      throw new IllegalArgumentException("Interview start and end time are required");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * REMOVE INTERVIEWER
-     * ---------------------------------------------------------
-     */
-
-    @Transactional
-    public InterviewResponse removeInterviewer(
-            UUID interviewId,
-            UUID interviewerId
-    ) {
-        authorizationService.require(
-                Permission.MANAGE_INTERVIEWS
-        );
-
-        UUID tenantId =
-                requireTenantId();
-
-        Interview interview =
-                requireInterview(
-                        interviewId
-                );
-
-        requireEditable(interview);
-
-        InterviewInterviewer assignment =
-                interviewInterviewerRepository
-                        .findByTenantIdAndInterviewIdAndInterviewerId(
-                                tenantId,
-                                interviewId,
-                                interviewerId
-                        )
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Interview interviewer not found"
-                                )
-                        );
-
-        String interviewerName =
-                getInterviewerDisplayName(
-                        assignment.getInterviewer()
-                );
-
-        interviewInterviewerRepository.delete(
-                assignment
-        );
-
-        applicationActivityService
-                .recordInterviewerRemoved(
-                        interview.getApplication(),
-                        interview.getTitle(),
-                        interviewerName,
-                        null
-                );
-
-        auditService.log(
-                AuditAction.INTERVIEW_INTERVIEWER_REMOVED,
-                "Interview",
-                interview.getId()
-        );
-
-        return toResponse(interview);
+    if (!endTime.isAfter(startTime)) {
+      throw new IllegalArgumentException("Interview end time must be after start time");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * VALIDATION
-     * ---------------------------------------------------------
-     */
+    validateTimezone(timezone);
+  }
 
-    private void validateSchedule(
-            Instant startTime,
-            Instant endTime,
-            String timezone
-    ) {
-        if (
-                startTime == null ||
-                endTime == null
-        ) {
-            throw new IllegalArgumentException(
-                    "Interview start and end time are required"
-            );
-        }
-
-        if (!endTime.isAfter(startTime)) {
-            throw new IllegalArgumentException(
-                    "Interview end time must be after start time"
-            );
-        }
-
-        validateTimezone(timezone);
+  private void validateTimezone(String timezone) {
+    if (timezone == null || timezone.isBlank()) {
+      throw new IllegalArgumentException("Timezone is required");
     }
 
-    private void validateTimezone(
-            String timezone
-    ) {
-        if (
-                timezone == null ||
-                timezone.isBlank()
-        ) {
-            throw new IllegalArgumentException(
-                    "Timezone is required"
-            );
-        }
+    try {
+      ZoneId.of(timezone.trim());
+    } catch (Exception exception) {
+      throw new IllegalArgumentException("Invalid timezone: " + timezone);
+    }
+  }
 
-        try {
-            ZoneId.of(
-                    timezone.trim()
-            );
-        } catch (Exception exception) {
-            throw new IllegalArgumentException(
-                    "Invalid timezone: "
-                            + timezone
-            );
-        }
+  private void requireEditable(Interview interview) {
+    if (interview.getStatus() == InterviewStatus.COMPLETED) {
+      throw new ConflictException("Completed interview cannot be modified");
     }
 
-    private void requireEditable(
-            Interview interview
-    ) {
-        if (
-                interview.getStatus()
-                        == InterviewStatus.COMPLETED
-        ) {
-            throw new ConflictException(
-                    "Completed interview cannot be modified"
-            );
-        }
+    if (interview.getStatus() == InterviewStatus.CANCELLED) {
+      throw new ConflictException("Cancelled interview cannot be modified");
+    }
+  }
 
-        if (
-                interview.getStatus()
-                        == InterviewStatus.CANCELLED
-        ) {
-            throw new ConflictException(
-                    "Cancelled interview cannot be modified"
-            );
-        }
+  private Interview requireInterview(UUID interviewId) {
+    UUID tenantId = requireTenantId();
+
+    return interviewRepository
+        .findByIdAndTenantId(interviewId, tenantId)
+        .orElseThrow(() -> new ResourceNotFoundException("Interview not found"));
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * RESPONSE
+   * ---------------------------------------------------------
+   */
+
+  private InterviewResponse toResponse(Interview interview) {
+    List<InterviewInterviewerResponse> interviewers =
+        interviewInterviewerRepository
+            .findAllByTenantIdAndInterviewIdOrderByCreatedAtAsc(
+                requireTenantId(), interview.getId())
+            .stream()
+            .map(this::toInterviewerResponse)
+            .toList();
+
+    JobApplication application = interview.getApplication();
+
+    return new InterviewResponse(
+        interview.getId(),
+        application.getId(),
+        application.getJob().getId(),
+        application.getJob().getTitle(),
+        application.getCandidate().getId(),
+        application.getCandidate().getFirstName(),
+        application.getCandidate().getEmail(),
+        interview.getTitle(),
+        interview.getInterviewType(),
+        interview.getStatus(),
+        interview.getStartTime(),
+        interview.getEndTime(),
+        interview.getTimezone(),
+        interview.getLocation(),
+        interview.getMeetingUrl(),
+        interview.getNotes(),
+        interview.getCancellationReason(),
+        interview.getCancelledAt(),
+        interview.getCompletedAt(),
+        interviewers,
+        interview.getCreatedAt(),
+        interview.getUpdatedAt());
+  }
+
+  private InterviewInterviewerResponse toInterviewerResponse(InterviewInterviewer assignment) {
+    TenantUser interviewer = assignment.getInterviewer();
+
+    return new InterviewInterviewerResponse(
+        assignment.getId(),
+        interviewer.getId(),
+        getInterviewerDisplayName(interviewer),
+        getInterviewerEmail(interviewer));
+  }
+
+  /*
+   * Adapt these two methods to your actual
+   * TenantUser/User model if necessary.
+   */
+  private String getInterviewerDisplayName(TenantUser interviewer) {
+    String name = interviewer.getName();
+
+    if (name == null || name.isBlank()) {
+      return "Interviewer";
     }
 
-    private Interview requireInterview(
-            UUID interviewId
-    ) {
-        UUID tenantId =
-                requireTenantId();
+    return name.trim();
+  }
 
-        return interviewRepository
-                .findByIdAndTenantId(
-                        interviewId,
-                        tenantId
-                )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Interview not found"
-                        )
-                );
+  private String getInterviewerEmail(TenantUser interviewer) {
+    return interviewer.getEmail();
+  }
+
+  private String trimToNull(String value) {
+    if (value == null) {
+      return null;
     }
 
-    /*
-     * ---------------------------------------------------------
-     * RESPONSE
-     * ---------------------------------------------------------
-     */
+    String trimmed = value.trim();
 
-    private InterviewResponse toResponse(
-            Interview interview
-    ) {
-        List<InterviewInterviewerResponse>
-                interviewers =
-                interviewInterviewerRepository
-                        .findAllByTenantIdAndInterviewIdOrderByCreatedAtAsc(
-                                requireTenantId(),
-                                interview.getId()
-                        )
-                        .stream()
-                        .map(this::toInterviewerResponse)
-                        .toList();
+    return trimmed.isEmpty() ? null : trimmed;
+  }
 
-        JobApplication application =
-                interview.getApplication();
+  private UUID requireTenantId() {
+    UUID tenantId = tenantContext.getTenantId();
 
-        return new InterviewResponse(
-                interview.getId(),
-
-                application.getId(),
-
-                application.getJob().getId(),
-                application.getJob().getTitle(),
-
-                application.getCandidate().getId(),
-                application.getCandidate().getFirstName(),
-                application.getCandidate().getEmail(),
-
-                interview.getTitle(),
-                interview.getInterviewType(),
-                interview.getStatus(),
-
-                interview.getStartTime(),
-                interview.getEndTime(),
-                interview.getTimezone(),
-
-                interview.getLocation(),
-                interview.getMeetingUrl(),
-                interview.getNotes(),
-
-                interview.getCancellationReason(),
-                interview.getCancelledAt(),
-                interview.getCompletedAt(),
-
-                interviewers,
-
-                interview.getCreatedAt(),
-                interview.getUpdatedAt()
-        );
+    if (tenantId == null) {
+      throw new IllegalStateException("Tenant context is required");
     }
 
-    private InterviewInterviewerResponse
-    toInterviewerResponse(
-            InterviewInterviewer assignment
-    ) {
-        TenantUser interviewer =
-                assignment.getInterviewer();
-
-        return new InterviewInterviewerResponse(
-                assignment.getId(),
-                interviewer.getId(),
-                getInterviewerDisplayName(
-                        interviewer
-                ),
-                getInterviewerEmail(
-                        interviewer
-                )
-        );
-    }
-
-    /*
-     * Adapt these two methods to your actual
-     * TenantUser/User model if necessary.
-     */
-    private String getInterviewerDisplayName(
-            TenantUser interviewer
-    ) {
-        String name =
-                interviewer.getName();
-
-        if (
-                name == null ||
-                name.isBlank()
-        ) {
-            return "Interviewer";
-        }
-
-        return name.trim();
-    }
-
-    private String getInterviewerEmail(
-            TenantUser interviewer
-    ) {
-        return interviewer.getEmail();
-    }
-
-    private String trimToNull(
-            String value
-    ) {
-        if (value == null) {
-            return null;
-        }
-
-        String trimmed =
-                value.trim();
-
-        return trimmed.isEmpty()
-                ? null
-                : trimmed;
-    }
-
-    private UUID requireTenantId() {
-        UUID tenantId =
-                tenantContext.getTenantId();
-
-        if (tenantId == null) {
-            throw new IllegalStateException(
-                    "Tenant context is required"
-            );
-        }
-
-        return tenantId;
-    }
+    return tenantId;
+  }
 }

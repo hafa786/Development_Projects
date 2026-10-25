@@ -14,330 +14,252 @@ import com.darmisolutions.darmihire.storage.ResumeStorageService.StoredResumeRes
 import com.darmisolutions.darmihire.tenant.Tenant;
 import com.darmisolutions.darmihire.tenant.TenantRepository;
 import com.darmisolutions.darmihire.tenant.context.TenantContext;
-import lombok.RequiredArgsConstructor;
-
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.MediaType;
-import org.springframework.core.io.Resource;
-
-
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class CandidateService {
 
-    private final CandidateRepository candidateRepository;
-    private final TenantRepository tenantRepository;
-    private final TenantContext tenantContext;
-    private final AuthorizationService authorizationService;
-    private final AuditService auditService;
-    private final ResumeStorageService resumeStorageService;
+  private final CandidateRepository candidateRepository;
+  private final TenantRepository tenantRepository;
+  private final TenantContext tenantContext;
+  private final AuthorizationService authorizationService;
+  private final AuditService auditService;
+  private final ResumeStorageService resumeStorageService;
 
-    @Transactional(readOnly = true)
-    public List<CandidateResponse> findAll() {
-        UUID tenantId = requireTenantId();
+  @Transactional(readOnly = true)
+  public List<CandidateResponse> findAll() {
+    UUID tenantId = requireTenantId();
 
-        return candidateRepository
-                .findAllByTenantIdOrderByCreatedAtDesc(tenantId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    return candidateRepository.findAllByTenantIdOrderByCreatedAtDesc(tenantId).stream()
+        .map(this::toResponse)
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public CandidateResponse findById(UUID id) {
+    UUID tenantId = requireTenantId();
+
+    return toResponse(findCandidate(id, tenantId));
+  }
+
+  @Transactional
+  public CandidateResponse create(CreateCandidateRequest request) {
+    authorizationService.require(Permission.MANAGE_CANDIDATES);
+
+    UUID tenantId = requireTenantId();
+
+    String firstName = normalizeRequired(request.firstName());
+    String lastName = normalizeRequired(request.lastName());
+    String email = normalizeEmail(request.email());
+
+    if (candidateRepository.existsByTenantIdAndEmailIgnoreCase(tenantId, email)) {
+      throw new ConflictException("A candidate with this email already exists");
     }
 
-    @Transactional(readOnly = true)
-    public CandidateResponse findById(UUID id) {
-        UUID tenantId = requireTenantId();
+    Tenant tenant =
+        tenantRepository
+            .findById(tenantId)
+            .orElseThrow(() -> new ResourceNotFoundException("Tenant not found"));
 
-        return toResponse(findCandidate(id, tenantId));
+    Candidate candidate = new Candidate();
+
+    candidate.setTenant(tenant);
+    candidate.setFirstName(firstName);
+    candidate.setLastName(lastName);
+    candidate.setEmail(email);
+    candidate.setPhone(normalizeOptional(request.phone()));
+    candidate.setLocation(normalizeOptional(request.location()));
+    candidate.setLinkedinUrl(normalizeOptional(request.linkedinUrl()));
+    candidate.setPortfolioUrl(normalizeOptional(request.portfolioUrl()));
+
+    candidate.setSource(request.source() != null ? request.source() : CandidateSource.MANUAL);
+
+    candidate.setResumeFileName(normalizeOptional(request.resumeFileName()));
+
+    candidate.setResumeUrl(normalizeOptional(request.resumeUrl()));
+
+    candidate.setNotes(normalizeOptional(request.notes()));
+
+    Candidate savedCandidate = candidateRepository.save(candidate);
+
+    auditService.log(AuditAction.CANDIDATE_CREATED, "Candidate", savedCandidate.getId());
+
+    return toResponse(savedCandidate);
+  }
+
+  @Transactional
+  public CandidateResponse update(UUID id, UpdateCandidateRequest request) {
+    authorizationService.require(Permission.MANAGE_CANDIDATES);
+
+    UUID tenantId = requireTenantId();
+
+    Candidate candidate = findCandidate(id, tenantId);
+
+    String email = normalizeEmail(request.email());
+
+    if (candidateRepository.existsByTenantIdAndEmailIgnoreCaseAndIdNot(tenantId, email, id)) {
+      throw new ConflictException("A candidate with this email already exists");
     }
 
-    @Transactional
-    public CandidateResponse create(CreateCandidateRequest request) {
-        authorizationService.require(Permission.MANAGE_CANDIDATES);
+    candidate.setFirstName(normalizeRequired(request.firstName()));
 
-        UUID tenantId = requireTenantId();
+    candidate.setLastName(normalizeRequired(request.lastName()));
 
-        String firstName = normalizeRequired(request.firstName());
-        String lastName = normalizeRequired(request.lastName());
-        String email = normalizeEmail(request.email());
+    candidate.setEmail(email);
 
-        if (candidateRepository.existsByTenantIdAndEmailIgnoreCase(
-                tenantId,
-                email)) {
-            throw new ConflictException(
-                    "A candidate with this email already exists");
-        }
+    candidate.setPhone(normalizeOptional(request.phone()));
 
-        Tenant tenant = tenantRepository
-                .findById(tenantId)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("Tenant not found"));
+    candidate.setLocation(normalizeOptional(request.location()));
 
-        Candidate candidate = new Candidate();
+    candidate.setLinkedinUrl(normalizeOptional(request.linkedinUrl()));
 
-        candidate.setTenant(tenant);
-        candidate.setFirstName(firstName);
-        candidate.setLastName(lastName);
-        candidate.setEmail(email);
-        candidate.setPhone(normalizeOptional(request.phone()));
-        candidate.setLocation(normalizeOptional(request.location()));
-        candidate.setLinkedinUrl(normalizeOptional(request.linkedinUrl()));
-        candidate.setPortfolioUrl(normalizeOptional(request.portfolioUrl()));
+    candidate.setPortfolioUrl(normalizeOptional(request.portfolioUrl()));
 
-        candidate.setSource(
-                request.source() != null
-                        ? request.source()
-                        : CandidateSource.MANUAL);
+    candidate.setSource(request.source() != null ? request.source() : CandidateSource.MANUAL);
 
-        candidate.setResumeFileName(
-                normalizeOptional(request.resumeFileName()));
+    candidate.setResumeFileName(normalizeOptional(request.resumeFileName()));
 
-        candidate.setResumeUrl(
-                normalizeOptional(request.resumeUrl()));
+    candidate.setResumeUrl(normalizeOptional(request.resumeUrl()));
 
-        candidate.setNotes(
-                normalizeOptional(request.notes()));
+    candidate.setNotes(normalizeOptional(request.notes()));
 
-        Candidate savedCandidate = candidateRepository.save(candidate);
+    Candidate savedCandidate = candidateRepository.save(candidate);
 
-        auditService.log(
-                AuditAction.CANDIDATE_CREATED,
-                "Candidate",
-                savedCandidate.getId());
+    auditService.log(AuditAction.CANDIDATE_UPDATED, "Candidate", savedCandidate.getId());
 
-        return toResponse(savedCandidate);
+    return toResponse(savedCandidate);
+  }
+
+  @Transactional
+  public void delete(UUID id) {
+    authorizationService.require(Permission.MANAGE_CANDIDATES);
+
+    UUID tenantId = requireTenantId();
+
+    Candidate candidate = findCandidate(id, tenantId);
+
+    candidateRepository.delete(candidate);
+
+    auditService.log(AuditAction.CANDIDATE_DELETED, "Candidate", candidate.getId());
+  }
+
+  private Candidate findCandidate(UUID candidateId, UUID tenantId) {
+    return candidateRepository
+        .findByIdAndTenantId(candidateId, tenantId)
+        .orElseThrow(() -> new ResourceNotFoundException("Candidate not found"));
+  }
+
+  private UUID requireTenantId() {
+    UUID tenantId = tenantContext.getTenantId();
+
+    if (tenantId == null) {
+      throw new IllegalStateException("Tenant context is required");
     }
 
-    @Transactional
-    public CandidateResponse update(
-            UUID id,
-            UpdateCandidateRequest request) {
-        authorizationService.require(Permission.MANAGE_CANDIDATES);
+    return tenantId;
+  }
 
-        UUID tenantId = requireTenantId();
+  private String normalizeRequired(String value) {
+    return value.trim();
+  }
 
-        Candidate candidate = findCandidate(id, tenantId);
-
-        String email = normalizeEmail(request.email());
-
-        if (candidateRepository
-                .existsByTenantIdAndEmailIgnoreCaseAndIdNot(
-                        tenantId,
-                        email,
-                        id)) {
-            throw new ConflictException(
-                    "A candidate with this email already exists");
-        }
-
-        candidate.setFirstName(
-                normalizeRequired(request.firstName()));
-
-        candidate.setLastName(
-                normalizeRequired(request.lastName()));
-
-        candidate.setEmail(email);
-
-        candidate.setPhone(
-                normalizeOptional(request.phone()));
-
-        candidate.setLocation(
-                normalizeOptional(request.location()));
-
-        candidate.setLinkedinUrl(
-                normalizeOptional(request.linkedinUrl()));
-
-        candidate.setPortfolioUrl(
-                normalizeOptional(request.portfolioUrl()));
-
-        candidate.setSource(
-                request.source() != null
-                        ? request.source()
-                        : CandidateSource.MANUAL);
-
-        candidate.setResumeFileName(
-                normalizeOptional(request.resumeFileName()));
-
-        candidate.setResumeUrl(
-                normalizeOptional(request.resumeUrl()));
-
-        candidate.setNotes(
-                normalizeOptional(request.notes()));
-
-        Candidate savedCandidate = candidateRepository.save(candidate);
-
-        auditService.log(
-                AuditAction.CANDIDATE_UPDATED,
-                "Candidate",
-                savedCandidate.getId());
-
-        return toResponse(savedCandidate);
+  private String normalizeOptional(String value) {
+    if (value == null) {
+      return null;
     }
 
-    @Transactional
-    public void delete(UUID id) {
-        authorizationService.require(Permission.MANAGE_CANDIDATES);
+    String normalized = value.trim();
 
-        UUID tenantId = requireTenantId();
+    return normalized.isEmpty() ? null : normalized;
+  }
 
-        Candidate candidate = findCandidate(id, tenantId);
+  private String normalizeEmail(String email) {
+    return email.trim().toLowerCase(Locale.ROOT);
+  }
 
-        candidateRepository.delete(candidate);
+  private CandidateResponse toResponse(Candidate candidate) {
+    String fullName = candidate.getFirstName() + " " + candidate.getLastName();
 
-        auditService.log(
-                AuditAction.CANDIDATE_DELETED,
-                "Candidate",
-                candidate.getId());
+    return new CandidateResponse(
+        candidate.getId(),
+        candidate.getFirstName(),
+        candidate.getLastName(),
+        fullName,
+        candidate.getEmail(),
+        candidate.getPhone(),
+        candidate.getLocation(),
+        candidate.getLinkedinUrl(),
+        candidate.getPortfolioUrl(),
+        candidate.getSource(),
+        candidate.getResumeFileName(),
+        candidate.getResumeUrl(),
+        candidate.getNotes(),
+        candidate.getCreatedAt(),
+        candidate.getUpdatedAt());
+  }
+
+  @Transactional(readOnly = true)
+  public ResponseEntity<Resource> downloadResume(UUID candidateId) {
+    authorizationService.require(Permission.MANAGE_CANDIDATES);
+
+    UUID tenantId = requireTenantId();
+
+    Candidate candidate = findCandidate(candidateId, tenantId);
+
+    String storageKey = candidate.getResumeUrl();
+
+    if (storageKey == null || storageKey.isBlank()) {
+
+      throw new ResourceNotFoundException("Candidate resume not found");
     }
 
-    private Candidate findCandidate(
-            UUID candidateId,
-            UUID tenantId) {
-        return candidateRepository
-                .findByIdAndTenantId(candidateId, tenantId)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException(
-                                "Candidate not found"));
+    /*
+     * Extra defense-in-depth:
+     * the stored key must belong to the active tenant and
+     * requested candidate.
+     */
+    String expectedPrefix = tenantId + "/" + candidate.getId() + "/";
+
+    if (!storageKey.startsWith(expectedPrefix)) {
+      throw new ResourceNotFoundException("Candidate resume not found");
     }
 
-    private UUID requireTenantId() {
-        UUID tenantId = tenantContext.getTenantId();
+    StoredResumeResource stored = resumeStorageService.load(storageKey);
 
-        if (tenantId == null) {
-            throw new IllegalStateException(
-                    "Tenant context is required");
-        }
+    String fileName = candidate.getResumeFileName();
 
-        return tenantId;
+    if (fileName == null || fileName.isBlank()) {
+
+      fileName = "resume";
     }
 
-    private String normalizeRequired(String value) {
-        return value.trim();
+    ContentDisposition disposition =
+        ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build();
+
+    MediaType mediaType;
+
+    try {
+      mediaType = MediaType.parseMediaType(stored.contentType());
+    } catch (Exception ignored) {
+      mediaType = MediaType.APPLICATION_OCTET_STREAM;
     }
 
-    private String normalizeOptional(String value) {
-        if (value == null) {
-            return null;
-        }
-
-        String normalized = value.trim();
-
-        return normalized.isEmpty()
-                ? null
-                : normalized;
-    }
-
-    private String normalizeEmail(String email) {
-        return email
-                .trim()
-                .toLowerCase(Locale.ROOT);
-    }
-
-    private CandidateResponse toResponse(
-            Candidate candidate) {
-        String fullName = candidate.getFirstName()
-                + " "
-                + candidate.getLastName();
-
-        return new CandidateResponse(
-                candidate.getId(),
-                candidate.getFirstName(),
-                candidate.getLastName(),
-                fullName,
-                candidate.getEmail(),
-                candidate.getPhone(),
-                candidate.getLocation(),
-                candidate.getLinkedinUrl(),
-                candidate.getPortfolioUrl(),
-                candidate.getSource(),
-                candidate.getResumeFileName(),
-                candidate.getResumeUrl(),
-                candidate.getNotes(),
-                candidate.getCreatedAt(),
-                candidate.getUpdatedAt());
-    }
-
-    @Transactional(readOnly = true)
-    public ResponseEntity<Resource> downloadResume(
-            UUID candidateId) {
-        authorizationService.require(
-                Permission.MANAGE_CANDIDATES);
-
-        UUID tenantId = requireTenantId();
-
-        Candidate candidate = findCandidate(
-                candidateId,
-                tenantId);
-
-        String storageKey = candidate.getResumeUrl();
-
-        if (storageKey == null
-                || storageKey.isBlank()) {
-
-            throw new ResourceNotFoundException(
-                    "Candidate resume not found");
-        }
-
-        /*
-         * Extra defense-in-depth:
-         * the stored key must belong to the active tenant and
-         * requested candidate.
-         */
-        String expectedPrefix = tenantId
-                + "/"
-                + candidate.getId()
-                + "/";
-
-        if (!storageKey.startsWith(
-                expectedPrefix)) {
-            throw new ResourceNotFoundException(
-                    "Candidate resume not found");
-        }
-
-        StoredResumeResource stored = resumeStorageService.load(
-                storageKey);
-
-        String fileName = candidate.getResumeFileName();
-
-        if (fileName == null
-                || fileName.isBlank()) {
-
-            fileName = "resume";
-        }
-
-        ContentDisposition disposition = ContentDisposition
-                .attachment()
-                .filename(
-                        fileName,
-                        StandardCharsets.UTF_8)
-                .build();
-
-        MediaType mediaType;
-
-        try {
-            mediaType = MediaType.parseMediaType(
-                    stored.contentType());
-        } catch (Exception ignored) {
-            mediaType = MediaType.APPLICATION_OCTET_STREAM;
-        }
-
-        return ResponseEntity
-                .ok()
-                .contentType(mediaType)
-                .contentLength(
-                        stored.size())
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        disposition.toString())
-                .body(
-                        stored.resource());
-    }
+    return ResponseEntity.ok()
+        .contentType(mediaType)
+        .contentLength(stored.size())
+        .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+        .body(stored.resource());
+  }
 }

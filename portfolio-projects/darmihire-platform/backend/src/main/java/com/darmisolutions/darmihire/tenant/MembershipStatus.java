@@ -1,10 +1,9 @@
 package com.darmisolutions.darmihire.tenant;
 
 public enum MembershipStatus {
+  ACTIVE,
 
-    ACTIVE,
+  INVITED,
 
-    INVITED,
-
-    SUSPENDED
+  SUSPENDED
 }

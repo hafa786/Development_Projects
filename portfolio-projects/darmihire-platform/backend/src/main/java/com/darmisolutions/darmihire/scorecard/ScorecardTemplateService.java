@@ -5,813 +5,464 @@ import com.darmisolutions.darmihire.audit.AuditService;
 import com.darmisolutions.darmihire.exception.ConflictException;
 import com.darmisolutions.darmihire.exception.ResourceNotFoundException;
 import com.darmisolutions.darmihire.scorecard.dto.*;
-
 import com.darmisolutions.darmihire.security.AuthorizationService;
 import com.darmisolutions.darmihire.security.Permission;
-
 import com.darmisolutions.darmihire.tenant.*;
 import com.darmisolutions.darmihire.tenant.TenantRepository;
 import com.darmisolutions.darmihire.tenant.context.TenantContext;
-
-import lombok.RequiredArgsConstructor;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class ScorecardTemplateService {
 
-    private final InterviewScorecardTemplateRepository
-            templateRepository;
+  private final InterviewScorecardTemplateRepository templateRepository;
 
-    private final ScorecardCriterionRepository
-            criterionRepository;
+  private final ScorecardCriterionRepository criterionRepository;
 
-    private final InterviewFeedbackRepository
-            feedbackRepository;
+  private final InterviewFeedbackRepository feedbackRepository;
 
-    private final TenantRepository
-            tenantRepository;
+  private final TenantRepository tenantRepository;
 
-    private final TenantContext
-            tenantContext;
+  private final TenantContext tenantContext;
 
-    private final AuthorizationService
-            authorizationService;
+  private final AuthorizationService authorizationService;
 
-    private final AuditService
-            auditService;
+  private final AuditService auditService;
 
-    /*
-     * ---------------------------------------------------------
-     * READ
-     * ---------------------------------------------------------
-     */
+  /*
+   * ---------------------------------------------------------
+   * READ
+   * ---------------------------------------------------------
+   */
 
-    @Transactional(readOnly = true)
-    public List<ScorecardTemplateResponse> findAll() {
+  @Transactional(readOnly = true)
+  public List<ScorecardTemplateResponse> findAll() {
 
-        authorizationService.require(
-                Permission.MANAGE_SCORECARDS
-        );
+    authorizationService.require(Permission.MANAGE_SCORECARDS);
 
-        UUID tenantId = requireTenantId();
+    UUID tenantId = requireTenantId();
 
-        return templateRepository
-                .findAllByTenantIdOrderByNameAsc(
-                        tenantId
-                )
-                .stream()
-                .map(template ->
-                        toResponse(
-                                template,
-                                tenantId
-                        )
-                )
-                .toList();
+    return templateRepository.findAllByTenantIdOrderByNameAsc(tenantId).stream()
+        .map(template -> toResponse(template, tenantId))
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<ScorecardTemplateResponse> findActive() {
+
+    authorizationService.require(Permission.MANAGE_SCORECARDS);
+
+    UUID tenantId = requireTenantId();
+
+    return templateRepository.findAllByTenantIdAndActiveTrueOrderByNameAsc(tenantId).stream()
+        .map(template -> toResponse(template, tenantId))
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public ScorecardTemplateResponse findById(UUID templateId) {
+
+    authorizationService.require(Permission.MANAGE_SCORECARDS);
+
+    UUID tenantId = requireTenantId();
+
+    InterviewScorecardTemplate template = requireTemplate(templateId, tenantId);
+
+    return toResponse(template, tenantId);
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * CREATE TEMPLATE
+   * ---------------------------------------------------------
+   */
+
+  @Transactional
+  public ScorecardTemplateResponse create(CreateScorecardTemplateRequest request) {
+
+    authorizationService.require(Permission.MANAGE_SCORECARDS);
+
+    UUID tenantId = requireTenantId();
+
+    String name = request.name().trim();
+
+    if (templateRepository.existsByTenantIdAndNameIgnoreCase(tenantId, name)) {
+      throw new ConflictException("A scorecard template with this name already exists");
     }
 
-    @Transactional(readOnly = true)
-    public List<ScorecardTemplateResponse> findActive() {
+    Tenant tenant =
+        tenantRepository
+            .findById(tenantId)
+            .orElseThrow(() -> new ResourceNotFoundException("Tenant not found"));
 
-        authorizationService.require(
-                Permission.MANAGE_SCORECARDS
-        );
+    InterviewScorecardTemplate template = new InterviewScorecardTemplate();
 
-        UUID tenantId = requireTenantId();
+    template.setTenant(tenant);
+    template.setName(name);
 
-        return templateRepository
-                .findAllByTenantIdAndActiveTrueOrderByNameAsc(
-                        tenantId
-                )
-                .stream()
-                .map(template ->
-                        toResponse(
-                                template,
-                                tenantId
-                        )
-                )
-                .toList();
+    template.setDescription(trimToNull(request.description()));
+
+    template.setActive(true);
+
+    InterviewScorecardTemplate saved = templateRepository.save(template);
+
+    if (request.criteria() != null) {
+
+      for (CreateScorecardCriterionRequest criterionRequest : request.criteria()) {
+        createCriterionInternal(saved, criterionRequest, false);
+      }
     }
 
-    @Transactional(readOnly = true)
-    public ScorecardTemplateResponse findById(
-            UUID templateId
-    ) {
+    auditService.log(
+        AuditAction.SCORECARD_TEMPLATE_CREATED, "InterviewScorecardTemplate", saved.getId());
 
-        authorizationService.require(
-                Permission.MANAGE_SCORECARDS
-        );
+    return toResponse(saved, tenantId);
+  }
 
-        UUID tenantId = requireTenantId();
+  /*
+   * ---------------------------------------------------------
+   * UPDATE TEMPLATE
+   * ---------------------------------------------------------
+   */
 
-        InterviewScorecardTemplate template =
-                requireTemplate(
-                        templateId,
-                        tenantId
-                );
+  @Transactional
+  public ScorecardTemplateResponse update(UUID templateId, UpdateScorecardTemplateRequest request) {
 
-        return toResponse(
-                template,
-                tenantId
-        );
+    authorizationService.require(Permission.MANAGE_SCORECARDS);
+
+    UUID tenantId = requireTenantId();
+
+    InterviewScorecardTemplate template = requireTemplate(templateId, tenantId);
+
+    requireStructurallyEditable(templateId, tenantId);
+
+    String name = request.name().trim();
+
+    if (templateRepository.existsByTenantIdAndNameIgnoreCaseAndIdNot(tenantId, name, templateId)) {
+      throw new ConflictException("A scorecard template with this name already exists");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * CREATE TEMPLATE
-     * ---------------------------------------------------------
-     */
+    template.setName(name);
 
-    @Transactional
-    public ScorecardTemplateResponse create(
-            CreateScorecardTemplateRequest request
-    ) {
+    template.setDescription(trimToNull(request.description()));
 
-        authorizationService.require(
-                Permission.MANAGE_SCORECARDS
-        );
+    InterviewScorecardTemplate saved = templateRepository.save(template);
 
-        UUID tenantId = requireTenantId();
+    auditService.log(
+        AuditAction.SCORECARD_TEMPLATE_UPDATED, "InterviewScorecardTemplate", saved.getId());
 
-        String name =
-                request.name().trim();
+    return toResponse(saved, tenantId);
+  }
 
-        if (
-                templateRepository
-                        .existsByTenantIdAndNameIgnoreCase(
-                                tenantId,
-                                name
-                        )
-        ) {
-            throw new ConflictException(
-                    "A scorecard template with this name already exists"
-            );
-        }
+  /*
+   * ---------------------------------------------------------
+   * DEACTIVATE
+   * ---------------------------------------------------------
+   */
 
-        Tenant tenant =
-                tenantRepository
-                        .findById(tenantId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Tenant not found"
-                                )
-                        );
+  @Transactional
+  public ScorecardTemplateResponse deactivate(UUID templateId) {
 
-        InterviewScorecardTemplate template =
-                new InterviewScorecardTemplate();
+    authorizationService.require(Permission.MANAGE_SCORECARDS);
 
-        template.setTenant(tenant);
-        template.setName(name);
+    UUID tenantId = requireTenantId();
 
-        template.setDescription(
-                trimToNull(
-                        request.description()
-                )
-        );
+    InterviewScorecardTemplate template = requireTemplate(templateId, tenantId);
 
-        template.setActive(true);
-
-        InterviewScorecardTemplate saved =
-                templateRepository.save(
-                        template
-                );
-
-        if (request.criteria() != null) {
-
-            for (
-                    CreateScorecardCriterionRequest criterionRequest
-                    : request.criteria()
-            ) {
-                createCriterionInternal(
-                        saved,
-                        criterionRequest,
-                        false
-                );
-            }
-        }
-
-        auditService.log(
-                AuditAction.SCORECARD_TEMPLATE_CREATED,
-                "InterviewScorecardTemplate",
-                saved.getId()
-        );
-
-        return toResponse(
-                saved,
-                tenantId
-        );
+    if (!template.isActive()) {
+      return toResponse(template, tenantId);
     }
 
-    /*
-     * ---------------------------------------------------------
-     * UPDATE TEMPLATE
-     * ---------------------------------------------------------
-     */
+    template.setActive(false);
 
-    @Transactional
-    public ScorecardTemplateResponse update(
-            UUID templateId,
-            UpdateScorecardTemplateRequest request
-    ) {
+    InterviewScorecardTemplate saved = templateRepository.save(template);
 
-        authorizationService.require(
-                Permission.MANAGE_SCORECARDS
-        );
+    auditService.log(
+        AuditAction.SCORECARD_TEMPLATE_DEACTIVATED, "InterviewScorecardTemplate", saved.getId());
 
-        UUID tenantId = requireTenantId();
+    return toResponse(saved, tenantId);
+  }
 
-        InterviewScorecardTemplate template =
-                requireTemplate(
-                        templateId,
-                        tenantId
-                );
+  /*
+   * ---------------------------------------------------------
+   * ACTIVATE
+   * ---------------------------------------------------------
+   */
 
-        requireStructurallyEditable(
-                templateId,
-                tenantId
-        );
+  @Transactional
+  public ScorecardTemplateResponse activate(UUID templateId) {
 
-        String name =
-                request.name().trim();
+    authorizationService.require(Permission.MANAGE_SCORECARDS);
 
-        if (
-                templateRepository
-                        .existsByTenantIdAndNameIgnoreCaseAndIdNot(
-                                tenantId,
-                                name,
-                                templateId
-                        )
-        ) {
-            throw new ConflictException(
-                    "A scorecard template with this name already exists"
-            );
-        }
+    UUID tenantId = requireTenantId();
 
-        template.setName(name);
+    InterviewScorecardTemplate template = requireTemplate(templateId, tenantId);
 
-        template.setDescription(
-                trimToNull(
-                        request.description()
-                )
-        );
-
-        InterviewScorecardTemplate saved =
-                templateRepository.save(
-                        template
-                );
-
-        auditService.log(
-                AuditAction.SCORECARD_TEMPLATE_UPDATED,
-                "InterviewScorecardTemplate",
-                saved.getId()
-        );
-
-        return toResponse(
-                saved,
-                tenantId
-        );
+    if (template.isActive()) {
+      return toResponse(template, tenantId);
     }
 
-    /*
-     * ---------------------------------------------------------
-     * DEACTIVATE
-     * ---------------------------------------------------------
-     */
+    template.setActive(true);
 
-    @Transactional
-    public ScorecardTemplateResponse deactivate(
-            UUID templateId
-    ) {
+    InterviewScorecardTemplate saved = templateRepository.save(template);
 
-        authorizationService.require(
-                Permission.MANAGE_SCORECARDS
-        );
+    auditService.log(
+        AuditAction.SCORECARD_TEMPLATE_UPDATED, "InterviewScorecardTemplate", saved.getId());
 
-        UUID tenantId = requireTenantId();
+    return toResponse(saved, tenantId);
+  }
 
-        InterviewScorecardTemplate template =
-                requireTemplate(
-                        templateId,
-                        tenantId
-                );
+  /*
+   * ---------------------------------------------------------
+   * CREATE CRITERION
+   * ---------------------------------------------------------
+   */
 
-        if (!template.isActive()) {
-            return toResponse(
-                    template,
-                    tenantId
-            );
-        }
+  @Transactional
+  public ScorecardTemplateResponse addCriterion(
+      UUID templateId, CreateScorecardCriterionRequest request) {
 
-        template.setActive(false);
+    authorizationService.require(Permission.MANAGE_SCORECARDS);
 
-        InterviewScorecardTemplate saved =
-                templateRepository.save(
-                        template
-                );
+    UUID tenantId = requireTenantId();
 
-        auditService.log(
-                AuditAction.SCORECARD_TEMPLATE_DEACTIVATED,
-                "InterviewScorecardTemplate",
-                saved.getId()
-        );
+    InterviewScorecardTemplate template = requireTemplate(templateId, tenantId);
 
-        return toResponse(
-                saved,
-                tenantId
-        );
+    requireStructurallyEditable(templateId, tenantId);
+
+    createCriterionInternal(template, request, true);
+
+    return toResponse(template, tenantId);
+  }
+
+  private ScorecardCriterion createCriterionInternal(
+      InterviewScorecardTemplate template, CreateScorecardCriterionRequest request, boolean audit) {
+
+    UUID tenantId = requireTenantId();
+
+    String name = request.name().trim();
+
+    if (criterionRepository.existsByTenantIdAndTemplateIdAndNameIgnoreCase(
+        tenantId, template.getId(), name)) {
+      throw new ConflictException("A criterion with this name already exists in the template");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * ACTIVATE
-     * ---------------------------------------------------------
-     */
+    ScorecardCriterion criterion = new ScorecardCriterion();
 
-    @Transactional
-    public ScorecardTemplateResponse activate(
-            UUID templateId
-    ) {
+    criterion.setTenant(template.getTenant());
 
-        authorizationService.require(
-                Permission.MANAGE_SCORECARDS
-        );
+    criterion.setTemplate(template);
 
-        UUID tenantId = requireTenantId();
+    criterion.setName(name);
 
-        InterviewScorecardTemplate template =
-                requireTemplate(
-                        templateId,
-                        tenantId
-                );
+    criterion.setDescription(trimToNull(request.description()));
 
-        if (template.isActive()) {
-            return toResponse(
-                    template,
-                    tenantId
-            );
-        }
+    criterion.setSortOrder(request.sortOrder());
 
-        template.setActive(true);
+    criterion.setRequired(request.required());
 
-        InterviewScorecardTemplate saved =
-                templateRepository.save(
-                        template
-                );
+    criterion.setWeight(request.weight());
 
-        auditService.log(
-                AuditAction.SCORECARD_TEMPLATE_UPDATED,
-                "InterviewScorecardTemplate",
-                saved.getId()
-        );
+    ScorecardCriterion saved = criterionRepository.save(criterion);
 
-        return toResponse(
-                saved,
-                tenantId
-        );
+    if (audit) {
+
+      auditService.log(
+          AuditAction.SCORECARD_CRITERION_CREATED, "ScorecardCriterion", saved.getId());
     }
 
-    /*
-     * ---------------------------------------------------------
-     * CREATE CRITERION
-     * ---------------------------------------------------------
-     */
+    return saved;
+  }
 
-    @Transactional
-    public ScorecardTemplateResponse addCriterion(
-            UUID templateId,
-            CreateScorecardCriterionRequest request
-    ) {
+  /*
+   * ---------------------------------------------------------
+   * UPDATE CRITERION
+   * ---------------------------------------------------------
+   */
 
-        authorizationService.require(
-                Permission.MANAGE_SCORECARDS
-        );
+  @Transactional
+  public ScorecardTemplateResponse updateCriterion(
+      UUID templateId, UUID criterionId, UpdateScorecardCriterionRequest request) {
 
-        UUID tenantId = requireTenantId();
+    authorizationService.require(Permission.MANAGE_SCORECARDS);
 
-        InterviewScorecardTemplate template =
-                requireTemplate(
-                        templateId,
-                        tenantId
-                );
+    UUID tenantId = requireTenantId();
 
-        requireStructurallyEditable(
-                templateId,
-                tenantId
-        );
+    InterviewScorecardTemplate template = requireTemplate(templateId, tenantId);
 
-        createCriterionInternal(
-                template,
-                request,
-                true
-        );
+    requireStructurallyEditable(templateId, tenantId);
 
-        return toResponse(
-                template,
-                tenantId
-        );
+    ScorecardCriterion criterion = requireCriterion(criterionId, tenantId);
+
+    if (!criterion.getTemplate().getId().equals(templateId)) {
+      throw new ResourceNotFoundException("Criterion not found in this template");
     }
 
-    private ScorecardCriterion createCriterionInternal(
-            InterviewScorecardTemplate template,
-            CreateScorecardCriterionRequest request,
-            boolean audit
-    ) {
+    String name = request.name().trim();
 
-        UUID tenantId = requireTenantId();
+    List<ScorecardCriterion> criteria =
+        criterionRepository.findAllByTenantIdAndTemplateIdOrderBySortOrderAsc(tenantId, templateId);
 
-        String name =
-                request.name().trim();
+    boolean duplicate =
+        criteria.stream()
+            .anyMatch(
+                existing ->
+                    !existing.getId().equals(criterionId)
+                        && existing.getName().equalsIgnoreCase(name));
 
-        if (
-                criterionRepository
-                        .existsByTenantIdAndTemplateIdAndNameIgnoreCase(
-                                tenantId,
-                                template.getId(),
-                                name
-                        )
-        ) {
-            throw new ConflictException(
-                    "A criterion with this name already exists in the template"
-            );
-        }
-
-        ScorecardCriterion criterion =
-                new ScorecardCriterion();
-
-        criterion.setTenant(
-                template.getTenant()
-        );
-
-        criterion.setTemplate(
-                template
-        );
-
-        criterion.setName(name);
-
-        criterion.setDescription(
-                trimToNull(
-                        request.description()
-                )
-        );
-
-        criterion.setSortOrder(
-                request.sortOrder()
-        );
-
-        criterion.setRequired(
-                request.required()
-        );
-
-        criterion.setWeight(
-                request.weight()
-        );
-
-        ScorecardCriterion saved =
-                criterionRepository.save(
-                        criterion
-                );
-
-        if (audit) {
-
-            auditService.log(
-                    AuditAction.SCORECARD_CRITERION_CREATED,
-                    "ScorecardCriterion",
-                    saved.getId()
-            );
-        }
-
-        return saved;
+    if (duplicate) {
+      throw new ConflictException("A criterion with this name already exists in the template");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * UPDATE CRITERION
-     * ---------------------------------------------------------
-     */
+    criterion.setName(name);
 
-    @Transactional
-    public ScorecardTemplateResponse updateCriterion(
-            UUID templateId,
-            UUID criterionId,
-            UpdateScorecardCriterionRequest request
-    ) {
+    criterion.setDescription(trimToNull(request.description()));
 
-        authorizationService.require(
-                Permission.MANAGE_SCORECARDS
-        );
+    criterion.setSortOrder(request.sortOrder());
 
-        UUID tenantId = requireTenantId();
+    criterion.setRequired(request.required());
 
-        InterviewScorecardTemplate template =
-                requireTemplate(
-                        templateId,
-                        tenantId
-                );
+    criterion.setWeight(request.weight());
 
-        requireStructurallyEditable(
-                templateId,
-                tenantId
-        );
+    ScorecardCriterion saved = criterionRepository.save(criterion);
 
-        ScorecardCriterion criterion =
-                requireCriterion(
-                        criterionId,
-                        tenantId
-                );
+    auditService.log(AuditAction.SCORECARD_CRITERION_UPDATED, "ScorecardCriterion", saved.getId());
 
-        if (
-                !criterion
-                        .getTemplate()
-                        .getId()
-                        .equals(templateId)
-        ) {
-            throw new ResourceNotFoundException(
-                    "Criterion not found in this template"
-            );
-        }
+    return toResponse(template, tenantId);
+  }
 
-        String name =
-                request.name().trim();
+  /*
+   * ---------------------------------------------------------
+   * DELETE CRITERION
+   * ---------------------------------------------------------
+   */
 
-        List<ScorecardCriterion> criteria =
-                criterionRepository
-                        .findAllByTenantIdAndTemplateIdOrderBySortOrderAsc(
-                                tenantId,
-                                templateId
-                        );
+  @Transactional
+  public ScorecardTemplateResponse deleteCriterion(UUID templateId, UUID criterionId) {
 
-        boolean duplicate =
-                criteria.stream()
-                        .anyMatch(existing ->
-                                !existing
-                                        .getId()
-                                        .equals(
-                                                criterionId
-                                        )
-                                        &&
-                                        existing
-                                                .getName()
-                                                .equalsIgnoreCase(
-                                                        name
-                                                )
-                        );
+    authorizationService.require(Permission.MANAGE_SCORECARDS);
 
-        if (duplicate) {
-            throw new ConflictException(
-                    "A criterion with this name already exists in the template"
-            );
-        }
+    UUID tenantId = requireTenantId();
 
-        criterion.setName(name);
+    InterviewScorecardTemplate template = requireTemplate(templateId, tenantId);
 
-        criterion.setDescription(
-                trimToNull(
-                        request.description()
-                )
-        );
+    requireStructurallyEditable(templateId, tenantId);
 
-        criterion.setSortOrder(
-                request.sortOrder()
-        );
+    ScorecardCriterion criterion = requireCriterion(criterionId, tenantId);
 
-        criterion.setRequired(
-                request.required()
-        );
-
-        criterion.setWeight(
-                request.weight()
-        );
-
-        ScorecardCriterion saved =
-                criterionRepository.save(
-                        criterion
-                );
-
-        auditService.log(
-                AuditAction.SCORECARD_CRITERION_UPDATED,
-                "ScorecardCriterion",
-                saved.getId()
-        );
-
-        return toResponse(
-                template,
-                tenantId
-        );
+    if (!criterion.getTemplate().getId().equals(templateId)) {
+      throw new ResourceNotFoundException("Criterion not found in this template");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * DELETE CRITERION
-     * ---------------------------------------------------------
-     */
+    criterionRepository.delete(criterion);
 
-    @Transactional
-    public ScorecardTemplateResponse deleteCriterion(
-            UUID templateId,
-            UUID criterionId
-    ) {
+    auditService.log(AuditAction.SCORECARD_CRITERION_DELETED, "ScorecardCriterion", criterionId);
 
-        authorizationService.require(
-                Permission.MANAGE_SCORECARDS
-        );
+    return toResponse(template, tenantId);
+  }
 
-        UUID tenantId = requireTenantId();
+  /*
+   * ---------------------------------------------------------
+   * HISTORICAL PROTECTION
+   * ---------------------------------------------------------
+   */
 
-        InterviewScorecardTemplate template =
-                requireTemplate(
-                        templateId,
-                        tenantId
-                );
+  private void requireStructurallyEditable(UUID templateId, UUID tenantId) {
 
-        requireStructurallyEditable(
-                templateId,
-                tenantId
-        );
+    boolean hasSubmittedFeedback =
+        feedbackRepository.existsByTenantIdAndTemplateIdAndSubmittedAtIsNotNull(
+            tenantId, templateId);
 
-        ScorecardCriterion criterion =
-                requireCriterion(
-                        criterionId,
-                        tenantId
-                );
+    if (hasSubmittedFeedback) {
 
-        if (
-                !criterion
-                        .getTemplate()
-                        .getId()
-                        .equals(templateId)
-        ) {
-            throw new ResourceNotFoundException(
-                    "Criterion not found in this template"
-            );
-        }
+      throw new ConflictException(
+          "This scorecard template has submitted interview feedback and can no longer be structurally modified. Deactivate it and create a new template instead.");
+    }
+  }
 
-        criterionRepository.delete(
-                criterion
-        );
+  /*
+   * ---------------------------------------------------------
+   * RESPONSE
+   * ---------------------------------------------------------
+   */
 
-        auditService.log(
-                AuditAction.SCORECARD_CRITERION_DELETED,
-                "ScorecardCriterion",
-                criterionId
-        );
+  private ScorecardTemplateResponse toResponse(InterviewScorecardTemplate template, UUID tenantId) {
 
-        return toResponse(
-                template,
-                tenantId
-        );
+    List<ScorecardCriterionResponse> criteria =
+        criterionRepository
+            .findAllByTenantIdAndTemplateIdOrderBySortOrderAsc(tenantId, template.getId())
+            .stream()
+            .map(this::toCriterionResponse)
+            .toList();
+
+    return new ScorecardTemplateResponse(
+        template.getId(),
+        template.getName(),
+        template.getDescription(),
+        template.isActive(),
+        criteria,
+        template.getCreatedAt(),
+        template.getUpdatedAt());
+  }
+
+  private ScorecardCriterionResponse toCriterionResponse(ScorecardCriterion criterion) {
+
+    return new ScorecardCriterionResponse(
+        criterion.getId(),
+        criterion.getName(),
+        criterion.getDescription(),
+        criterion.getSortOrder(),
+        criterion.isRequired(),
+        criterion.getWeight(),
+        criterion.getCreatedAt(),
+        criterion.getUpdatedAt());
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * LOOKUPS
+   * ---------------------------------------------------------
+   */
+
+  private InterviewScorecardTemplate requireTemplate(UUID templateId, UUID tenantId) {
+
+    return templateRepository
+        .findByIdAndTenantId(templateId, tenantId)
+        .orElseThrow(() -> new ResourceNotFoundException("Scorecard template not found"));
+  }
+
+  private ScorecardCriterion requireCriterion(UUID criterionId, UUID tenantId) {
+
+    return criterionRepository
+        .findByIdAndTenantId(criterionId, tenantId)
+        .orElseThrow(() -> new ResourceNotFoundException("Scorecard criterion not found"));
+  }
+
+  private UUID requireTenantId() {
+
+    UUID tenantId = tenantContext.getTenantId();
+
+    if (tenantId == null) {
+
+      throw new IllegalStateException("Tenant context is required");
     }
 
-    /*
-     * ---------------------------------------------------------
-     * HISTORICAL PROTECTION
-     * ---------------------------------------------------------
-     */
+    return tenantId;
+  }
 
-    private void requireStructurallyEditable(
-            UUID templateId,
-            UUID tenantId
-    ) {
+  private String trimToNull(String value) {
 
-        boolean hasSubmittedFeedback =
-                feedbackRepository
-                        .existsByTenantIdAndTemplateIdAndSubmittedAtIsNotNull(
-                                tenantId,
-                                templateId
-                        );
-
-        if (hasSubmittedFeedback) {
-
-            throw new ConflictException(
-                    "This scorecard template has submitted interview feedback and can no longer be structurally modified. Deactivate it and create a new template instead."
-            );
-        }
+    if (value == null) {
+      return null;
     }
 
-    /*
-     * ---------------------------------------------------------
-     * RESPONSE
-     * ---------------------------------------------------------
-     */
+    String trimmed = value.trim();
 
-    private ScorecardTemplateResponse toResponse(
-            InterviewScorecardTemplate template,
-            UUID tenantId
-    ) {
-
-        List<ScorecardCriterionResponse>
-                criteria =
-                criterionRepository
-                        .findAllByTenantIdAndTemplateIdOrderBySortOrderAsc(
-                                tenantId,
-                                template.getId()
-                        )
-                        .stream()
-                        .map(
-                                this::toCriterionResponse
-                        )
-                        .toList();
-
-        return new ScorecardTemplateResponse(
-                template.getId(),
-                template.getName(),
-                template.getDescription(),
-                template.isActive(),
-                criteria,
-                template.getCreatedAt(),
-                template.getUpdatedAt()
-        );
-    }
-
-    private ScorecardCriterionResponse
-    toCriterionResponse(
-            ScorecardCriterion criterion
-    ) {
-
-        return new ScorecardCriterionResponse(
-                criterion.getId(),
-                criterion.getName(),
-                criterion.getDescription(),
-                criterion.getSortOrder(),
-                criterion.isRequired(),
-                criterion.getWeight(),
-                criterion.getCreatedAt(),
-                criterion.getUpdatedAt()
-        );
-    }
-
-    /*
-     * ---------------------------------------------------------
-     * LOOKUPS
-     * ---------------------------------------------------------
-     */
-
-    private InterviewScorecardTemplate requireTemplate(
-            UUID templateId,
-            UUID tenantId
-    ) {
-
-        return templateRepository
-                .findByIdAndTenantId(
-                        templateId,
-                        tenantId
-                )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Scorecard template not found"
-                        )
-                );
-    }
-
-    private ScorecardCriterion requireCriterion(
-            UUID criterionId,
-            UUID tenantId
-    ) {
-
-        return criterionRepository
-                .findByIdAndTenantId(
-                        criterionId,
-                        tenantId
-                )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Scorecard criterion not found"
-                        )
-                );
-    }
-
-    private UUID requireTenantId() {
-
-        UUID tenantId =
-                tenantContext.getTenantId();
-
-        if (tenantId == null) {
-
-            throw new IllegalStateException(
-                    "Tenant context is required"
-            );
-        }
-
-        return tenantId;
-    }
-
-    private String trimToNull(
-            String value
-    ) {
-
-        if (value == null) {
-            return null;
-        }
-
-        String trimmed =
-                value.trim();
-
-        return trimmed.isEmpty()
-                ? null
-                : trimmed;
-    }
+    return trimmed.isEmpty() ? null : trimmed;
+  }
 }

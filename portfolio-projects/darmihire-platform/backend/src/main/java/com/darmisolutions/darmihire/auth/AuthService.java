@@ -1,7 +1,12 @@
 package com.darmisolutions.darmihire.auth;
 
+import com.darmisolutions.darmihire.auth.dto.AuthResponse;
+import com.darmisolutions.darmihire.auth.dto.LoginRequest;
+import com.darmisolutions.darmihire.auth.dto.RefreshTokenRequest;
 import com.darmisolutions.darmihire.auth.dto.RegisterRequest;
 import com.darmisolutions.darmihire.auth.dto.UserRegistrationResponse;
+import com.darmisolutions.darmihire.exception.ConflictException;
+import com.darmisolutions.darmihire.exception.UnauthorizedException;
 import com.darmisolutions.darmihire.security.JwtService;
 import com.darmisolutions.darmihire.user.User;
 import com.darmisolutions.darmihire.user.UserRepository;
@@ -9,117 +14,78 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.darmisolutions.darmihire.auth.dto.AuthResponse;
-import com.darmisolutions.darmihire.auth.dto.LoginRequest;
-import com.darmisolutions.darmihire.auth.dto.RefreshTokenRequest;
-import com.darmisolutions.darmihire.exception.ConflictException;
-import com.darmisolutions.darmihire.exception.UnauthorizedException;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-        private final UserRepository userRepository;
-        private final PasswordEncoder passwordEncoder;
-        private final JwtService jwtService;
-        private final RefreshTokenService refreshTokenService;
+  private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
+  private final JwtService jwtService;
+  private final RefreshTokenService refreshTokenService;
 
-        @Transactional
-        public UserRegistrationResponse register(RegisterRequest request) {
+  @Transactional
+  public UserRegistrationResponse register(RegisterRequest request) {
 
-                String email = request.email()
-                                .trim()
-                                .toLowerCase();
+    String email = request.email().trim().toLowerCase();
 
-                if (userRepository.existsByEmailIgnoreCase(email)) {
-                        throw new ConflictException(
-                                        "Email is already registered");
-                }
+    if (userRepository.existsByEmailIgnoreCase(email)) {
+      throw new ConflictException("Email is already registered");
+    }
 
-                User user = new User();
+    User user = new User();
 
-                user.setFirstName(request.firstName().trim());
-                user.setLastName(request.lastName().trim());
-                user.setEmail(email);
+    user.setFirstName(request.firstName().trim());
+    user.setLastName(request.lastName().trim());
+    user.setEmail(email);
 
-                user.setPasswordHash(
-                                passwordEncoder.encode(request.password()));
+    user.setPasswordHash(passwordEncoder.encode(request.password()));
 
-                user.setActive(true);
+    user.setActive(true);
 
-                User saved = userRepository.save(user);
+    User saved = userRepository.save(user);
 
-                return new UserRegistrationResponse(
-                                saved.getId(),
-                                saved.getFirstName(),
-                                saved.getLastName(),
-                                saved.getEmail());
-        }
+    return new UserRegistrationResponse(
+        saved.getId(), saved.getFirstName(), saved.getLastName(), saved.getEmail());
+  }
 
-        @Transactional(readOnly = true)
-        public AuthResponse login(LoginRequest request) {
+  @Transactional(readOnly = true)
+  public AuthResponse login(LoginRequest request) {
 
-                User user = userRepository
-                                .findByEmailIgnoreCase(
-                                                request.email().trim().toLowerCase())
-                                .orElseThrow(() -> new UnauthorizedException(
-                                                "Invalid email or password"));
+    User user =
+        userRepository
+            .findByEmailIgnoreCase(request.email().trim().toLowerCase())
+            .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
-                if (!user.isActive()) {
-                        throw new UnauthorizedException(
-                                        "User account is disabled");
-                }
+    if (!user.isActive()) {
+      throw new UnauthorizedException("User account is disabled");
+    }
 
-                if (!passwordEncoder.matches(
-                                request.password(),
-                                user.getPasswordHash())) {
-                        throw new UnauthorizedException(
-                                        "Invalid email or password");
-                }
+    if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+      throw new UnauthorizedException("Invalid email or password");
+    }
 
-                String accessToken =
-                        jwtService.generateAccessToken(user);
+    String accessToken = jwtService.generateAccessToken(user);
 
-                String refreshToken =
-                        refreshTokenService.create(user);
+    String refreshToken = refreshTokenService.create(user);
 
-                return new AuthResponse(
-                        accessToken,
-                        refreshToken,
-                        "Bearer",
-                        900
-                );
-        }
+    return new AuthResponse(accessToken, refreshToken, "Bearer", 900);
+  }
 
-        @Transactional
-        public AuthResponse refresh(
-                RefreshTokenRequest request
-        ) {
+  @Transactional
+  public AuthResponse refresh(RefreshTokenRequest request) {
 
-        RefreshToken refreshToken =
-                refreshTokenService.validate(
-                        request.refreshToken()
-                );
+    RefreshToken refreshToken = refreshTokenService.validate(request.refreshToken());
 
-        User user = refreshToken.getUser();
+    User user = refreshToken.getUser();
 
-        String accessToken =
-                jwtService.generateAccessToken(user);
+    String accessToken = jwtService.generateAccessToken(user);
 
-        return new AuthResponse(
-                accessToken,
-                request.refreshToken(),
-                "Bearer",
-                900
-        );
-        }
+    return new AuthResponse(accessToken, request.refreshToken(), "Bearer", 900);
+  }
 
-        @Transactional
-        public void logout(
-                RefreshTokenRequest request
-        ) {
-        refreshTokenService.revoke(
-                request.refreshToken()
-        );
-        }
+  @Transactional
+  public void logout(RefreshTokenRequest request) {
+    refreshTokenService.revoke(request.refreshToken());
+  }
 }

@@ -13,18 +13,18 @@ import lombok.Setter;
 @Table(name = "users")
 public class User extends BaseEntity {
 
-    @Column(nullable = false, unique = true)
-    private String email;
+  @Column(nullable = false, unique = true)
+  private String email;
 
-    @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
+  @Column(name = "password_hash", nullable = false)
+  private String passwordHash;
 
-    @Column(name = "first_name", nullable = false, length = 100)
-    private String firstName;
+  @Column(name = "first_name", nullable = false, length = 100)
+  private String firstName;
 
-    @Column(name = "last_name", nullable = false, length = 100)
-    private String lastName;
+  @Column(name = "last_name", nullable = false, length = 100)
+  private String lastName;
 
-    @Column(nullable = false)
-    private boolean active = true;
+  @Column(nullable = false)
+  private boolean active = true;
 }

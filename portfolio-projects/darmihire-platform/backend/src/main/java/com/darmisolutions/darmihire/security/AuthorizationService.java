@@ -10,50 +10,43 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthorizationService {
 
-    private final TenantContext tenantContext;
+  private final TenantContext tenantContext;
 
-    public boolean hasPermission(
-            Permission permission) {
+  public boolean hasPermission(Permission permission) {
 
-        Role role = tenantContext.getRole();
-        if (role == null) {
-            return false;
-        }
-
-        return switch (role) {
-
-            case COMPANY_ADMIN -> true;
-
-            case RECRUITER ->
-                permission == Permission.MANAGE_DEPARTMENTS
-                        || permission == Permission.MANAGE_TEAMS
-                        || permission == Permission.MANAGE_LOCATIONS
-                        || permission == Permission.MANAGE_JOBS
-                        || permission == Permission.MANAGE_APPLICATIONS
-                        || permission == Permission.MANAGE_INTERVIEWS
-                        || permission == Permission.MANAGE_SCORECARDS
-                        || permission == Permission.MANAGE_OFFERS
-                        || permission == Permission.MANAGE_DEPARTMENTS
-                        || permission == Permission.MANAGE_TEAMS
-                        || permission == Permission.MANAGE_LOCATIONS
-                        || permission == Permission.MANAGE_JOBS;
-
-            case HIRING_MANAGER ->
-                permission == Permission.APPROVE_OFFERS;
-
-            case INTERVIEWER,
-                    VIEWER ->
-                false;
-        };
+    Role role = tenantContext.getRole();
+    if (role == null) {
+      return false;
     }
 
-    public void require(
-            Permission permission) {
+    return switch (role) {
+      case COMPANY_ADMIN -> true;
 
-        if (!hasPermission(permission)) {
+      case RECRUITER ->
+          permission == Permission.MANAGE_DEPARTMENTS
+              || permission == Permission.MANAGE_TEAMS
+              || permission == Permission.MANAGE_LOCATIONS
+              || permission == Permission.MANAGE_JOBS
+              || permission == Permission.MANAGE_APPLICATIONS
+              || permission == Permission.MANAGE_INTERVIEWS
+              || permission == Permission.MANAGE_SCORECARDS
+              || permission == Permission.MANAGE_OFFERS
+              || permission == Permission.MANAGE_DEPARTMENTS
+              || permission == Permission.MANAGE_TEAMS
+              || permission == Permission.MANAGE_LOCATIONS
+              || permission == Permission.MANAGE_JOBS;
 
-            throw new ForbiddenException(
-                    "Permission denied: " + permission);
-        }
+      case HIRING_MANAGER -> permission == Permission.APPROVE_OFFERS;
+
+      case INTERVIEWER, VIEWER -> false;
+    };
+  }
+
+  public void require(Permission permission) {
+
+    if (!hasPermission(permission)) {
+
+      throw new ForbiddenException("Permission denied: " + permission);
     }
+  }
 }

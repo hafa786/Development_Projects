@@ -6,56 +6,47 @@ import com.darmisolutions.darmihire.auth.dto.MeResponse;
 import com.darmisolutions.darmihire.auth.dto.RefreshTokenRequest;
 import com.darmisolutions.darmihire.auth.dto.RegisterRequest;
 import com.darmisolutions.darmihire.auth.dto.UserRegistrationResponse;
+import com.darmisolutions.darmihire.user.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import com.darmisolutions.darmihire.user.User;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+  private final AuthService authService;
 
-    @PostMapping("/register")
-    @ResponseStatus(HttpStatus.CREATED)
-    public UserRegistrationResponse register(
-            @Valid @RequestBody RegisterRequest request) {
-        return authService.register(request);
-    }
+  @PostMapping("/register")
+  @ResponseStatus(HttpStatus.CREATED)
+  public UserRegistrationResponse register(@Valid @RequestBody RegisterRequest request) {
+    return authService.register(request);
+  }
 
-    @PostMapping("/login")
-    public AuthResponse login(
-            @Valid @RequestBody LoginRequest request) {
-        return authService.login(request);
-    }
+  @PostMapping("/login")
+  public AuthResponse login(@Valid @RequestBody LoginRequest request) {
+    return authService.login(request);
+  }
 
-    @GetMapping("/me")
-    public MeResponse me(
-            Authentication authentication) {
+  @GetMapping("/me")
+  public MeResponse me(Authentication authentication) {
 
-        User user = (User) authentication.getPrincipal();
+    User user = (User) authentication.getPrincipal();
 
-        return new MeResponse(
-                user.getId(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getEmail());
-    }
+    return new MeResponse(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail());
+  }
 
-    @PostMapping("/refresh")
-    public AuthResponse refresh(
-            @Valid @RequestBody RefreshTokenRequest request) {
-        return authService.refresh(request);
-    }
+  @PostMapping("/refresh")
+  public AuthResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
+    return authService.refresh(request);
+  }
 
-    @PostMapping("/logout")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void logout(
-            @Valid @RequestBody RefreshTokenRequest request) {
-        authService.logout(request);
-    }
+  @PostMapping("/logout")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void logout(@Valid @RequestBody RefreshTokenRequest request) {
+    authService.logout(request);
+  }
 }

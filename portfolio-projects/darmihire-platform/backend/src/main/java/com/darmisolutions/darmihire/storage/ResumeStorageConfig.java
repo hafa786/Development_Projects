@@ -5,5 +5,4 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(ResumeStorageProperties.class)
-public class ResumeStorageConfig {
-}
+public class ResumeStorageConfig {}

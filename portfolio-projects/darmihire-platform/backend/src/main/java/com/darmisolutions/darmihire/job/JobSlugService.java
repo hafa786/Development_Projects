@@ -1,94 +1,50 @@
 package com.darmisolutions.darmihire.job;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.text.Normalizer;
 import java.util.Locale;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class JobSlugService {
 
-    private final JobRepository jobRepository;
+  private final JobRepository jobRepository;
 
-    public String generate(
-            UUID tenantId,
-            String title
-    ) {
+  public String generate(UUID tenantId, String title) {
 
-        String baseSlug =
-                slugify(title);
+    String baseSlug = slugify(title);
 
-        String slug = baseSlug;
-        int suffix = 2;
+    String slug = baseSlug;
+    int suffix = 2;
 
-        while (
-                jobRepository
-                        .existsByTenantIdAndPublicSlug(
-                                tenantId,
-                                slug
-                        )
-        ) {
-            slug =
-                    baseSlug
-                            + "-"
-                            + suffix++;
-
-        }
-
-        return slug;
+    while (jobRepository.existsByTenantIdAndPublicSlug(tenantId, slug)) {
+      slug = baseSlug + "-" + suffix++;
     }
 
-    private String slugify(
-            String value
-    ) {
+    return slug;
+  }
 
-        String normalized =
-                Normalizer.normalize(
-                        value,
-                        Normalizer.Form.NFD
-                );
+  private String slugify(String value) {
 
-        normalized =
-                normalized.replaceAll(
-                        "\\p{M}",
-                        ""
-                );
+    String normalized = Normalizer.normalize(value, Normalizer.Form.NFD);
 
-        normalized =
-                normalized
-                        .toLowerCase(
-                                Locale.ROOT
-                        )
-                        .replaceAll(
-                                "[^a-z0-9]+",
-                                "-"
-                        )
-                        .replaceAll(
-                                "^-+|-+$",
-                                ""
-                        );
+    normalized = normalized.replaceAll("\\p{M}", "");
 
-        if (normalized.isBlank()) {
-            return "job";
-        }
+    normalized =
+        normalized.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
 
-        if (normalized.length() > 200) {
-            normalized =
-                    normalized.substring(
-                            0,
-                            200
-                    );
-
-            normalized =
-                    normalized.replaceAll(
-                            "-+$",
-                            ""
-                    );
-        }
-
-        return normalized;
+    if (normalized.isBlank()) {
+      return "job";
     }
+
+    if (normalized.length() > 200) {
+      normalized = normalized.substring(0, 200);
+
+      normalized = normalized.replaceAll("-+$", "");
+    }
+
+    return normalized;
+  }
 }

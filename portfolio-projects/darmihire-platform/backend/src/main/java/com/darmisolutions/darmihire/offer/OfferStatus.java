@@ -1,20 +1,19 @@
 package com.darmisolutions.darmihire.offer;
 
 public enum OfferStatus {
+  DRAFT,
 
-    DRAFT,
+  PENDING_APPROVAL,
 
-    PENDING_APPROVAL,
+  APPROVED,
 
-    APPROVED,
+  REJECTED,
 
-    REJECTED,
+  SENT,
 
-    SENT,
+  ACCEPTED,
 
-    ACCEPTED,
+  DECLINED,
 
-    DECLINED,
-
-    WITHDRAWN
+  WITHDRAWN
 }
