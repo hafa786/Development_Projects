@@ -142,4 +142,19 @@ public class TransactionalEmailService {
         relatedEntityType,
         relatedEntityId);
   }
+
+  public Notification sendApplicationRejected(
+      Tenant tenant, String recipient, String candidateName, String jobTitle, UUID applicationId) {
+
+    EmailTemplate template =
+        templateService.applicationRejected(candidateName, jobTitle, tenant.getName());
+
+    return send(
+        tenant,
+        NotificationType.APPLICATION_REJECTED,
+        recipient,
+        template,
+        "JobApplication",
+        applicationId);
+  }
 }

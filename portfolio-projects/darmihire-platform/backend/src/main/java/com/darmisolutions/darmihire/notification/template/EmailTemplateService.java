@@ -324,6 +324,61 @@ public class EmailTemplateService {
         "The offer for " + jobTitle + " at " + companyName + " has been withdrawn.");
   }
 
+  public EmailTemplate applicationRejected(
+      String candidateName, String jobTitle, String companyName) {
+
+    String subject = "Update regarding your application — " + jobTitle;
+
+    String text =
+        """
+            Hi %s,
+
+            Thank you for your interest in the %s position at %s
+            and for the time you invested in the application process.
+
+            After careful consideration, we have decided not to
+            move forward with your application for this position.
+
+            We appreciate your interest in %s and wish you all the
+            best in your job search and future opportunities.
+
+            Best regards,
+            %s
+            """
+            .formatted(candidateName, jobTitle, companyName, companyName, companyName);
+
+    String html =
+        layout(
+            companyName,
+            """
+            <h2>Update regarding your application</h2>
+
+            <p>Hi %s,</p>
+
+            <p>
+                Thank you for your interest in the
+                <strong>%s</strong> position at
+                <strong>%s</strong> and for the time you
+                invested in the application process.
+            </p>
+
+            <p>
+                After careful consideration, we have decided
+                not to move forward with your application for
+                this position.
+            </p>
+
+            <p>
+                We appreciate your interest in %s and wish you
+                all the best in your job search and future
+                opportunities.
+            </p>
+            """
+                .formatted(e(candidateName), e(jobTitle), e(companyName), e(companyName)));
+
+    return new EmailTemplate(subject, html, text);
+  }
+
   private EmailTemplate simpleTemplate(
       String subject, String companyName, String candidateName, String heading, String message) {
 
