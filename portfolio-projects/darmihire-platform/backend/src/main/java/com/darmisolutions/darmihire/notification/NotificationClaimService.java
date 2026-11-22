@@ -11,34 +11,27 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class NotificationClaimService {
 
-    private final NotificationRepository notificationRepository;
+  private final NotificationRepository notificationRepository;
 
-    @Transactional
-    public Optional<Notification> claim(UUID notificationId) {
+  @Transactional
+  public Optional<Notification> claim(UUID notificationId) {
 
-        Notification notification =
-                notificationRepository
-                        .findByIdForUpdate(notificationId)
-                        .orElse(null);
+    Notification notification =
+        notificationRepository.findByIdForUpdate(notificationId).orElse(null);
 
-        if (notification == null
-                || notification.getStatus()
-                        != NotificationStatus.PENDING) {
+    if (notification == null || notification.getStatus() != NotificationStatus.PENDING) {
 
-            return Optional.empty();
-        }
-
-        notification.setStatus(
-                NotificationStatus.PROCESSING);
-
-        notification.setAttemptCount(
-                notification.getAttemptCount() + 1);
-
-        notification.setLastAttemptAt(
-                Instant.now());
-
-        notificationRepository.save(notification);
-
-        return Optional.of(notification);
+      return Optional.empty();
     }
+
+    notification.setStatus(NotificationStatus.PROCESSING);
+
+    notification.setAttemptCount(notification.getAttemptCount() + 1);
+
+    notification.setLastAttemptAt(Instant.now());
+
+    notificationRepository.save(notification);
+
+    return Optional.of(notification);
+  }
 }

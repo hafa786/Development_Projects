@@ -74,13 +74,13 @@ public class Notification {
   private Instant updatedAt;
 
   @Column(name = "attempt_count", nullable = false)
-private int attemptCount = 0;
+  private int attemptCount = 0;
 
-@Column(name = "next_attempt_at")
-private Instant nextAttemptAt;
+  @Column(name = "next_attempt_at")
+  private Instant nextAttemptAt;
 
-@Column(name = "last_attempt_at")
-private Instant lastAttemptAt;
+  @Column(name = "last_attempt_at")
+  private Instant lastAttemptAt;
 
   @PrePersist
   void prePersist() {

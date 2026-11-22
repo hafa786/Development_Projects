@@ -11,120 +11,93 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class NotificationDeliveryResultService {
 
-    private static final int MAX_ATTEMPTS = 5;
+  private static final int MAX_ATTEMPTS = 5;
 
-    private final NotificationRepository notificationRepository;
+  private final NotificationRepository notificationRepository;
 
-    @Transactional
-    public void markSent(
-            UUID notificationId,
-            String providerMessageId) {
+  @Transactional
+  public void markSent(UUID notificationId, String providerMessageId) {
 
-        Notification notification =
-                notificationRepository
-                        .findById(notificationId)
-                        .orElseThrow();
+    Notification notification = notificationRepository.findById(notificationId).orElseThrow();
 
-        if (notification.getStatus()
-                != NotificationStatus.PROCESSING) {
-            return;
-        }
-
-        notification.setStatus(
-                NotificationStatus.SENT);
-
-        notification.setProviderMessageId(
-                normalize(providerMessageId));
-
-        notification.setSentAt(
-                Instant.now());
-
-        notification.setFailureReason(null);
-        notification.setFailedAt(null);
-        notification.setNextAttemptAt(null);
-
-        notificationRepository.save(notification);
+    if (notification.getStatus() != NotificationStatus.PROCESSING) {
+      return;
     }
 
-    @Transactional
-    public void markFailure(
-            UUID notificationId,
-            String failureReason) {
+    notification.setStatus(NotificationStatus.SENT);
 
-        Notification notification =
-                notificationRepository
-                        .findById(notificationId)
-                        .orElseThrow();
+    notification.setProviderMessageId(normalize(providerMessageId));
 
-        if (notification.getStatus()
-                != NotificationStatus.PROCESSING) {
-            return;
-        }
+    notification.setSentAt(Instant.now());
 
-        notification.setFailureReason(
-                truncate(failureReason));
+    notification.setFailureReason(null);
+    notification.setFailedAt(null);
+    notification.setNextAttemptAt(null);
 
-        if (notification.getAttemptCount()
-                >= MAX_ATTEMPTS) {
+    notificationRepository.save(notification);
+  }
 
-            notification.setStatus(
-                    NotificationStatus.FAILED);
+  @Transactional
+  public void markFailure(UUID notificationId, String failureReason) {
 
-            notification.setFailedAt(
-                    Instant.now());
+    Notification notification = notificationRepository.findById(notificationId).orElseThrow();
 
-            notification.setNextAttemptAt(null);
-
-        } else {
-
-            notification.setStatus(
-                    NotificationStatus.PENDING);
-
-            notification.setNextAttemptAt(
-                    calculateNextAttempt(
-                            notification.getAttemptCount()));
-        }
-
-        notificationRepository.save(notification);
+    if (notification.getStatus() != NotificationStatus.PROCESSING) {
+      return;
     }
 
-    private Instant calculateNextAttempt(
-            int attemptCount) {
+    notification.setFailureReason(truncate(failureReason));
 
-        Duration delay =
-                switch (attemptCount) {
-                    case 1 -> Duration.ofMinutes(1);
-                    case 2 -> Duration.ofMinutes(5);
-                    case 3 -> Duration.ofMinutes(15);
-                    default -> Duration.ofHours(1);
-                };
+    if (notification.getAttemptCount() >= MAX_ATTEMPTS) {
 
-        return Instant.now().plus(delay);
+      notification.setStatus(NotificationStatus.FAILED);
+
+      notification.setFailedAt(Instant.now());
+
+      notification.setNextAttemptAt(null);
+
+    } else {
+
+      notification.setStatus(NotificationStatus.PENDING);
+
+      notification.setNextAttemptAt(calculateNextAttempt(notification.getAttemptCount()));
     }
 
-    private String truncate(String value) {
+    notificationRepository.save(notification);
+  }
 
-        if (value == null || value.isBlank()) {
-            return "Unknown email delivery failure";
-        }
+  private Instant calculateNextAttempt(int attemptCount) {
 
-        String normalized = value.trim();
+    Duration delay =
+        switch (attemptCount) {
+          case 1 -> Duration.ofMinutes(1);
+          case 2 -> Duration.ofMinutes(5);
+          case 3 -> Duration.ofMinutes(15);
+          default -> Duration.ofHours(1);
+        };
 
-        return normalized.length() <= 1000
-                ? normalized
-                : normalized.substring(0, 1000);
+    return Instant.now().plus(delay);
+  }
+
+  private String truncate(String value) {
+
+    if (value == null || value.isBlank()) {
+      return "Unknown email delivery failure";
     }
 
-    private String normalize(String value) {
+    String normalized = value.trim();
 
-        if (value == null) {
-            return null;
-        }
+    return normalized.length() <= 1000 ? normalized : normalized.substring(0, 1000);
+  }
 
-        String normalized = value.trim();
+  private String normalize(String value) {
 
-        return normalized.isBlank()
-                ? null
-                : normalized;
+    if (value == null) {
+      return null;
     }
+
+    String normalized = value.trim();
+
+    return normalized.isBlank() ? null : normalized;
+  }
 }

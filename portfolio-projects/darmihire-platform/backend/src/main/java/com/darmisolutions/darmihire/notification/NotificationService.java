@@ -46,6 +46,26 @@ public class NotificationService {
   }
 
   @Transactional
+  public Notification queueEmail(
+      Tenant tenant,
+      NotificationType type,
+      String recipient,
+      String subject,
+      String relatedEntityType,
+      UUID relatedEntityId) {
+
+    Notification notification =
+        createEmailNotification(
+            tenant, type, recipient, subject, relatedEntityType, relatedEntityId);
+
+    notification.setStatus(NotificationStatus.PENDING);
+
+    notification.setNextAttemptAt(Instant.now());
+
+    return notificationRepository.save(notification);
+  }
+
+  @Transactional
   public void markSent(Notification notification, String providerMessageId) {
     notification.setStatus(NotificationStatus.SENT);
 

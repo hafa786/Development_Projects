@@ -12,15 +12,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EmailNotificationHandler {
 
-    private final EmailProvider emailProvider;
-    private final EmailNotificationFactory emailNotificationFactory;
+  private final EmailProvider emailProvider;
+  private final EmailNotificationFactory emailNotificationFactory;
 
-    public EmailSendResult handle(
-            Notification notification) {
+  public EmailSendResult handle(Notification notification) {
 
-        EmailMessage message =
-                emailNotificationFactory.create(notification);
+    EmailMessage message = emailNotificationFactory.create(notification);
 
-        return emailProvider.send(message);
-    }
+    return emailProvider.send(message);
+  }
 }

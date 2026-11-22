@@ -9,14 +9,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class NotificationDispatcher {
 
-    private final EmailNotificationHandler emailNotificationHandler;
+  private final EmailNotificationHandler emailNotificationHandler;
 
-    public EmailSendResult dispatch(
-            Notification notification) {
+  public EmailSendResult dispatch(Notification notification) {
 
-        return switch (notification.getChannel()) {
-            case EMAIL ->
-                    emailNotificationHandler.handle(notification);
-        };
-    }
+    return switch (notification.getChannel()) {
+      case EMAIL -> emailNotificationHandler.handle(notification);
+    };
+  }
 }

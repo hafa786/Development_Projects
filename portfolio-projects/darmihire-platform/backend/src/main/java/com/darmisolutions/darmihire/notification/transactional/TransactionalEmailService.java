@@ -1,6 +1,7 @@
 package com.darmisolutions.darmihire.notification.transactional;
 
 import com.darmisolutions.darmihire.notification.Notification;
+import com.darmisolutions.darmihire.notification.NotificationService;
 import com.darmisolutions.darmihire.notification.NotificationType;
 import com.darmisolutions.darmihire.notification.email.EmailService;
 import com.darmisolutions.darmihire.notification.template.EmailTemplate;
@@ -16,6 +17,7 @@ public class TransactionalEmailService {
 
   private final EmailService emailService;
   private final EmailTemplateService templateService;
+  private final NotificationService notificationService;
 
   public Notification sendApplicationReceived(
       Tenant tenant, String recipient, String candidateName, String jobTitle, UUID applicationId) {
@@ -154,6 +156,22 @@ public class TransactionalEmailService {
         NotificationType.APPLICATION_REJECTED,
         recipient,
         template,
+        "JobApplication",
+        applicationId);
+  }
+
+  public Notification queueApplicationReceived(
+      Tenant tenant, String recipient, String candidateName, String jobTitle, UUID applicationId) {
+
+    EmailTemplate template =
+        templateService.applicationReceived(
+            candidateName, jobTitle, tenant.getName(), applicationId.toString());
+
+    return notificationService.queueEmail(
+        tenant,
+        NotificationType.APPLICATION_RECEIVED,
+        recipient,
+        template.subject(),
         "JobApplication",
         applicationId);
   }
