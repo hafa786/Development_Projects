@@ -408,6 +408,59 @@ public class EmailTemplateService {
     return new EmailTemplate(subject, html, text);
   }
 
+  public EmailTemplate newApplication(
+      String recruiterName, String candidateName, String jobTitle, String companyName) {
+
+    String subject = "New application — " + jobTitle;
+
+    String text =
+        """
+            Hi %s,
+
+            A new candidate has applied for %s.
+
+            Candidate: %s
+            Job: %s
+
+            Open DarmiHire to review the application.
+
+            Best regards,
+            DarmiHire
+            """
+            .formatted(recruiterName, jobTitle, candidateName, jobTitle);
+
+    String html =
+        layout(
+            companyName,
+            """
+            <h2>New candidate application</h2>
+
+            <p>Hi %s,</p>
+
+            <p>
+                A new candidate has applied for
+                <strong>%s</strong>.
+            </p>
+
+            <div class="info">
+                <strong>Candidate</strong><br>
+                %s
+
+                <br><br>
+
+                <strong>Job</strong><br>
+                %s
+            </div>
+
+            <p>
+                Open DarmiHire to review the application.
+            </p>
+            """
+                .formatted(e(recruiterName), e(jobTitle), e(candidateName), e(jobTitle)));
+
+    return new EmailTemplate(subject, html, text);
+  }
+
   private String layout(String companyName, String content) {
 
     return """
