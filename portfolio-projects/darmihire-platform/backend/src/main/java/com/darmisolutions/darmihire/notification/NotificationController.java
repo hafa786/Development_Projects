@@ -1,8 +1,8 @@
 package com.darmisolutions.darmihire.notification;
 
-import com.darmisolutions.darmihire.auth.AuthorizationService;
-import com.darmisolutions.darmihire.auth.Permission;
 import com.darmisolutions.darmihire.notification.dto.NotificationResponse;
+import com.darmisolutions.darmihire.security.AuthorizationService;
+import com.darmisolutions.darmihire.security.Permission;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
