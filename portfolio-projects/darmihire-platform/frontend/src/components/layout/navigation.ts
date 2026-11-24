@@ -10,6 +10,7 @@ import {
     ClipboardCheck,
     FileSignature,
     ClipboardList,
+    Bell,
 } from "lucide-react";
 
 export type NavigationItem = {
@@ -77,6 +78,11 @@ export const navigationSections: NavigationSection[] = [
                 label: "Scorecards",
                 to: "/scorecards",
                 icon: ClipboardCheck,
+            },
+            {
+                label: "Notifications",
+                to: "/notifications",
+                icon: Bell,
             },
             {
                 label: "Candidates",

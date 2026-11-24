@@ -27,6 +27,7 @@ import { ApplicationDetailsPage } from "@/features/applications/ApplicationDetai
 import { ApplicationsPage } from "@/pages/ApplicationsPage";
 import CareersPage from "@/pages/CareersPage";
 import PublicJobDetailsPage from "@/pages/PublicJobDetailsPage";
+import NotificationsPage from "@/pages/NotificationsPage";
 
 export function AppRouter() {
     return (
@@ -84,7 +85,7 @@ export function AppRouter() {
                     <Route path="/offers" element={<OffersPage />} />
                     <Route path="/candidates" element={<CandidatesPage />} />
                     <Route path="/applications" element={<ApplicationsPage />} />
-
+                    <Route path="/notifications" element={<NotificationsPage />} />
                     <Route
                         path="/applications/:applicationId"
                         element={<ApplicationDetailsPage />}
