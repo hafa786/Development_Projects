@@ -13,11 +13,11 @@ import org.springframework.stereotype.Service;
 public class EmailNotificationHandler {
 
   private final EmailProvider emailProvider;
-  private final NotificationEmailFactory emailNotificationFactory;
+  private final NotificationEmailFactory notificationEmailFactory;
 
   public EmailSendResult handle(Notification notification) {
 
-    EmailMessage message = emailNotificationFactory.create(notification);
+    EmailMessage message = notificationEmailFactory.create(notification);
 
     return emailProvider.send(message);
   }
