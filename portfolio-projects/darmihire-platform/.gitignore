@@ -37,3 +37,5 @@ coverage/
 # Temporary
 tmp/
 temp/
+
+scripts/deploy/
