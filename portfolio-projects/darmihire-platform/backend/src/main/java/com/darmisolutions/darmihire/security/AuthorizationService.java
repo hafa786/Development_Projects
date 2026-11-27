@@ -29,14 +29,11 @@ public class AuthorizationService {
               || permission == Permission.MANAGE_JOBS
               || permission == Permission.MANAGE_APPLICATIONS
               || permission == Permission.MANAGE_INTERVIEWS
-              || permission == Permission.MANAGE_SCORECARDS
               || permission == Permission.MANAGE_OFFERS
-              || permission == Permission.MANAGE_DEPARTMENTS
-              || permission == Permission.MANAGE_TEAMS
-              || permission == Permission.MANAGE_LOCATIONS
-              || permission == Permission.MANAGE_JOBS;
+              || permission == Permission.VIEW_NOTIFICATIONS
+              || permission == Permission.MANAGE_NOTIFICATIONS;
 
-      case HIRING_MANAGER -> permission == Permission.APPROVE_OFFERS;
+      case HIRING_MANAGER -> permission == Permission.VIEW_NOTIFICATIONS;
 
       case INTERVIEWER, VIEWER -> false;
     };
