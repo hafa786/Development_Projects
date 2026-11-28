@@ -22,6 +22,7 @@ import type {
     InterviewFeedback,
     InterviewFeedbackRatingRequest,
 } from "./types";
+import { applicationQueryKeys } from "../applications/queryKeys";
 
 type Props = {
     tenantId: string;

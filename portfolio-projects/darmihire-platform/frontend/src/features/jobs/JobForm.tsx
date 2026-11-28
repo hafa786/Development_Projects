@@ -126,9 +126,9 @@ export function JobForm({ job, submitting = false, onSubmit }: JobFormProps) {
 
     function setOptionalValue(
         field: "departmentId" | "teamId" | "locationId" | "recruiterId" | "hiringManagerId",
-        value: string,
+        value: string | null,
     ) {
-        setValue(field, value === NONE_VALUE ? "" : value, {
+        setValue(field, value === null || value === NONE_VALUE ? "" : value, {
             shouldValidate: true,
             shouldDirty: true,
         });
