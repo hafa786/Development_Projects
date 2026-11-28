@@ -75,7 +75,7 @@ export function CreateOfferDialog({ tenantId, applicationId }: Props) {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
                 <Button>
                     <FileSignature className="mr-2 size-4" />
                     Create offer

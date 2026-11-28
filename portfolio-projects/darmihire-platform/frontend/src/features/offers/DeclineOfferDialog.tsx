@@ -28,7 +28,7 @@ export function DeclineOfferDialog({
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
                 <Button size="sm" variant="outline">
                     Decline
                 </Button>

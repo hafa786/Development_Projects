@@ -11,8 +11,10 @@ import { CreateScorecardDialog } from "../features/scorecards/CreateScorecardDia
 import { scorecardQueryKeys } from "../features/scorecards/queryKeys";
 import { ScorecardTemplateCard } from "../features/scorecards/ScorecardTemplateCard";
 import { ScorecardTemplateDetails } from "../features/scorecards/ScorecardTemplateDetails";
+import type { ScorecardTemplate } from "../features/scorecards/types";
 
 const TENANT_STORAGE_KEY = "darmihire_tenant_id";
+const EMPTY_TEMPLATES: readonly ScorecardTemplate[] = [];
 
 export function ScorecardsPage() {
     const tenantId = sessionStorage.getItem(TENANT_STORAGE_KEY);
@@ -29,7 +31,7 @@ export function ScorecardsPage() {
         enabled: Boolean(tenantId),
     });
 
-    const templates = query.data ?? [];
+    const templates = query.data ?? EMPTY_TEMPLATES;
 
     const filteredTemplates = useMemo(() => {
         const normalized = search.trim().toLowerCase();

@@ -70,7 +70,7 @@ export function EditOfferDialog({ tenantId, offer }: { tenantId: string; offer: 
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
                 <Button size="sm" variant="outline">
                     <Pencil className="mr-2 size-4" />
                     Edit

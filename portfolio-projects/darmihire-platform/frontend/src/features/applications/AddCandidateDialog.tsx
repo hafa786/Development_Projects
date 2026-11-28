@@ -45,14 +45,13 @@ export function AddCandidateDialog({
         enabled: open && Boolean(tenantId),
     });
 
-    const candidates = candidatesQuery.data ?? [];
-
     const existingCandidateIds = useMemo(
         () => new Set(applications.map((application) => application.candidateId)),
         [applications],
     );
 
     const availableCandidates = useMemo(() => {
+        const candidates = candidatesQuery.data ?? [];
         const query = search.trim().toLowerCase();
 
         return candidates.filter((candidate) => {
@@ -70,7 +69,7 @@ export function AddCandidateDialog({
                 candidate.location?.toLowerCase().includes(query)
             );
         });
-    }, [candidates, existingCandidateIds, search]);
+    }, [candidatesQuery.data, existingCandidateIds, search]);
 
     return (
         <Dialog

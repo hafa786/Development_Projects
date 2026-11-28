@@ -45,6 +45,7 @@ export function LocationForm({
         reset(defaultValues);
     }, [defaultValues, reset]);
 
+    // eslint-disable-next-line react-hooks/incompatible-library
     const remote = watch("remote");
 
     return (

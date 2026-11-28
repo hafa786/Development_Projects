@@ -166,7 +166,7 @@ export function InterviewCard({ interview }: InterviewCardProps) {
 
                             {hasActions ? (
                                 <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
+                                    <DropdownMenuTrigger>
                                         <Button type="button" variant="ghost" size="icon">
                                             <MoreHorizontal className="size-4" />
 

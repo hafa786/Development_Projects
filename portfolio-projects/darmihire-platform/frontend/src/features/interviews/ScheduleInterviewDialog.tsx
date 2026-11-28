@@ -111,7 +111,7 @@ export function ScheduleInterviewDialog({
             }}
         >
             {showTrigger ? (
-                <DialogTrigger asChild>
+                <DialogTrigger>
                     <Button type="button">
                         <CalendarPlus className="mr-2 size-4" />
                         Schedule interview

@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { getDepartments } from "@/features/departments/api";
 import { departmentQueryKeys } from "@/features/departments/queryKeys";
@@ -48,7 +48,7 @@ export function JobForm({ job, submitting = false, onSubmit }: JobFormProps) {
         register,
         handleSubmit,
         setValue,
-        watch,
+        control,
         formState: { errors },
     } = useForm<JobFormValues>({
         resolver: zodResolver(jobFormSchema),
@@ -99,13 +99,26 @@ export function JobForm({ job, submitting = false, onSubmit }: JobFormProps) {
 
     const activeMembers = membersQuery.data?.filter((member) => member.status === "ACTIVE") ?? [];
 
-    const departmentId = watch("departmentId");
-    const teamId = watch("teamId");
-    const locationId = watch("locationId");
-    const recruiterId = watch("recruiterId");
-    const hiringManagerId = watch("hiringManagerId");
-    const employmentType = watch("employmentType");
-    const workplaceType = watch("workplaceType");
+    const [
+        departmentId,
+        teamId,
+        locationId,
+        recruiterId,
+        hiringManagerId,
+        employmentType,
+        workplaceType,
+    ] = useWatch({
+        control,
+        name: [
+            "departmentId",
+            "teamId",
+            "locationId",
+            "recruiterId",
+            "hiringManagerId",
+            "employmentType",
+            "workplaceType",
+        ],
+    });
 
     function getOptionalSelectValue(value?: string) {
         return value || NONE_VALUE;

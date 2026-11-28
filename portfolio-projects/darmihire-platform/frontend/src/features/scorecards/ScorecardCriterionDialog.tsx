@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -75,11 +75,13 @@ export function ScorecardCriterionDialog({ tenantId, template, criterion }: Prop
         setRequired(true);
     };
 
-    useEffect(() => {
-        if (open) {
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (nextOpen) {
             resetForm();
         }
-    }, [open, criterion, template.criteria.length]);
+
+        setOpen(nextOpen);
+    };
 
     const mutation = useMutation({
         mutationFn: () => {
@@ -147,8 +149,8 @@ export function ScorecardCriterionDialog({ tenantId, template, criterion }: Prop
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+            <DialogTrigger>
                 {criterion ? (
                     <Button variant="ghost" size="sm">
                         <Pencil className="h-4 w-4" />

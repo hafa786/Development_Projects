@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -38,12 +38,14 @@ export function EditScorecardDialog({ tenantId, template }: Props) {
 
     const [description, setDescription] = useState(template.description ?? "");
 
-    useEffect(() => {
-        if (!open) {
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (nextOpen) {
             setName(template.name);
             setDescription(template.description ?? "");
         }
-    }, [open, template.name, template.description]);
+
+        setOpen(nextOpen);
+    };
 
     const mutation = useMutation({
         mutationFn: () =>
@@ -89,8 +91,8 @@ export function EditScorecardDialog({ tenantId, template }: Props) {
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+            <DialogTrigger>
                 <Button variant="outline" size="sm">
                     <Pencil className="mr-2 h-4 w-4" />
                     Edit

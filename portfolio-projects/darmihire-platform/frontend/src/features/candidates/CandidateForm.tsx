@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,7 @@ export function CandidateForm({
         handleSubmit,
         reset,
         setValue,
-        watch,
+        control,
         formState: { errors },
     } = useForm<CandidateFormValues>({
         resolver: zodResolver(candidateSchema),
@@ -69,7 +69,7 @@ export function CandidateForm({
         });
     }, [candidate, reset]);
 
-    const source = watch("source");
+    const source = useWatch({ control, name: "source" });
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

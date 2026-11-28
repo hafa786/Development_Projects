@@ -15,38 +15,7 @@ import { ApplicationOffers } from "@/features/offers/ApplicationOffers";
 import { getApplication, getApplicationActivities } from "./api";
 
 import { applicationQueryKeys } from "./queryKeys";
-
-/*
- * If your existing Application type already lives in
- * ./types.ts, remove this local type and import it:
- *
- * import type { Application } from "./types";
- */
-type Application = {
-    id: string;
-
-    status: "ACTIVE" | "HIRED" | "REJECTED" | "WITHDRAWN";
-
-    stage: "APPLIED" | "SCREENING" | "INTERVIEW" | "OFFER" | "HIRED";
-
-    appliedAt: string | null;
-    hiredAt?: string | null;
-
-    candidate: {
-        id: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-        phone?: string | null;
-        location?: string | null;
-    };
-
-    job: {
-        id: string;
-        title: string;
-        jobCode?: string | null;
-    };
-};
+import type { ApplicationStage, ApplicationStatus, JobApplication } from "./types";
 
 export function ApplicationDetailsPage() {
     const { applicationId } = useParams<{
@@ -129,11 +98,7 @@ export function ApplicationDetailsPage() {
         );
     }
 
-    const application = applicationQuery.data as Application;
-
-    const candidateName = [application.candidate?.firstName, application.candidate?.lastName]
-        .filter(Boolean)
-        .join(" ");
+    const application = applicationQuery.data;
 
     /*
      * Replace this with your existing authenticated
@@ -175,7 +140,7 @@ export function ApplicationDetailsPage() {
                 <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-3">
                         <h1 className="text-3xl font-bold tracking-tight">
-                            {candidateName || "Candidate"}
+                            {application.candidateFullName || "Candidate"}
                         </h1>
 
                         <ApplicationStatusBadge status={application.status} />
@@ -187,10 +152,10 @@ export function ApplicationDetailsPage() {
                         <span className="flex items-center gap-2">
                             <BriefcaseBusiness className="size-4" />
 
-                            {application.job?.title}
+                            {application.jobTitle}
                         </span>
 
-                        {application.job?.jobCode && <span>Job #{application.job.jobCode}</span>}
+                        {application.jobCode && <span>Job #{application.jobCode}</span>}
 
                         {application.appliedAt && (
                             <span className="flex items-center gap-2">
@@ -292,9 +257,7 @@ export function ApplicationDetailsPage() {
  * ==================================================
  */
 
-function CandidateCard({ application }: { application: Application }) {
-    const candidate = application.candidate;
-
+function CandidateCard({ application }: { application: JobApplication }) {
     return (
         <Card>
             <CardHeader>
@@ -304,26 +267,20 @@ function CandidateCard({ application }: { application: Application }) {
                 </CardTitle>
             </CardHeader>
 
-            {JSON.stringify(candidate)}
             <CardContent className="space-y-4">
-                <InfoRow
-                    label="Name"
-                    value={
-                        [candidate?.firstName, candidate?.lastName].filter(Boolean).join(" ") || "—"
-                    }
-                />
+                <InfoRow label="Name" value={application.candidateFullName || "—"} />
 
                 <InfoRow
                     label="Email"
-                    value={candidate?.email || "—"}
+                    value={application.candidateEmail || "—"}
                     icon={<Mail className="size-4" />}
                 />
 
-                <InfoRow label="Phone" value={candidate?.phone || "—"} />
+                <InfoRow label="Phone" value={application.candidatePhone || "—"} />
 
                 <InfoRow
                     label="Location"
-                    value={candidate?.location || "—"}
+                    value={application.candidateLocation || "—"}
                     icon={<MapPin className="size-4" />}
                 />
             </CardContent>
@@ -337,9 +294,7 @@ function CandidateCard({ application }: { application: Application }) {
  * ==================================================
  */
 
-function JobCard({ application }: { application: Application }) {
-    const job = application.job;
-
+function JobCard({ application }: { application: JobApplication }) {
     return (
         <Card>
             <CardHeader>
@@ -348,15 +303,14 @@ function JobCard({ application }: { application: Application }) {
                     Job
                 </CardTitle>
             </CardHeader>
-            {JSON.stringify(job)}
             <CardContent className="space-y-4">
-                <InfoRow label="Position" value={job?.title || "—"} />
+                <InfoRow label="Position" value={application.jobTitle || "—"} />
 
-                <InfoRow label="Job code" value={job?.jobCode || "—"} />
+                <InfoRow label="Job code" value={application.jobCode || "—"} />
 
-                <InfoRow label="Application stage" value={formatEnum(application?.stage)} />
+                <InfoRow label="Application stage" value={formatEnum(application.stage)} />
 
-                <InfoRow label="Application status" value={formatEnum(application?.status)} />
+                <InfoRow label="Application status" value={formatEnum(application.status)} />
             </CardContent>
         </Card>
     );
@@ -438,7 +392,7 @@ function ActivityTimeline({ activities }: { activities: Activity[] }) {
  * ==================================================
  */
 
-function ApplicationStatusBadge({ status }: { status: Application["status"] }) {
+function ApplicationStatusBadge({ status }: { status: ApplicationStatus }) {
     const variant =
         status === "HIRED"
             ? "default"
@@ -449,7 +403,7 @@ function ApplicationStatusBadge({ status }: { status: Application["status"] }) {
     return <Badge variant={variant}>{formatEnum(status)}</Badge>;
 }
 
-function ApplicationStageBadge({ stage }: { stage: Application["stage"] }) {
+function ApplicationStageBadge({ stage }: { stage: ApplicationStage }) {
     return <Badge variant="outline">{formatEnum(stage)}</Badge>;
 }
 

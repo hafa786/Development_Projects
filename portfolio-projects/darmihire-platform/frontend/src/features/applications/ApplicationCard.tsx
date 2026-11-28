@@ -155,7 +155,7 @@ export function ApplicationCard({
                 {isActive && (
                     <div className="shrink-0" onPointerDown={(event) => event.stopPropagation()}>
                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                            <DropdownMenuTrigger>
                                 <Button
                                     type="button"
                                     variant="ghost"

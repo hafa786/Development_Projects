@@ -28,7 +28,7 @@ export function WithdrawOfferDialog({
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
                 <Button size="sm" variant="destructive">
                     Withdraw
                 </Button>
